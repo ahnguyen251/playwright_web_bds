@@ -12,3 +12,15 @@ export interface UserCredentials {
   readonly email: string;
   readonly password: string;
 }
+
+export interface RegistrationData {
+  readonly fullName: string;
+  readonly email: string;
+  readonly phone: string;
+  readonly password: string;
+}
+
+export interface ProfileUpdate {
+  readonly fullName: string;
+  readonly phone: string;
+}
