@@ -1,1 +1,15 @@
 .worktrees/
+node_modules/
+.env
+.env.*
+!.env.example
+.auth/
+playwright-report/
+test-results/
+allure-results/
+allure-report/
+blob-report/
+coverage/
+*.log
+.DS_Store
+Thumbs.db
