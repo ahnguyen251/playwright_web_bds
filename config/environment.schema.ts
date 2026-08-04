@@ -3,7 +3,7 @@ import { z } from 'zod';
 const absoluteUrl = z
   .string()
   .trim()
-  .url()
+  .pipe(z.url())
   .transform((value) => new URL(value).toString());
 
 export const environmentSchema = z.object({
@@ -12,7 +12,7 @@ export const environmentSchema = z.object({
   STAGING_BASE_URL: absoluteUrl,
   PRODUCTION_BASE_URL: absoluteUrl,
   API_BASE_URL: absoluteUrl.optional(),
-  DEFAULT_USER_EMAIL: z.string().trim().email().min(1),
+  DEFAULT_USER_EMAIL: z.string().trim().pipe(z.email()),
   DEFAULT_USER_PASSWORD: z.string().min(1),
   CI: z
     .enum(['true', 'false'])

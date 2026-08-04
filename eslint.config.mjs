@@ -16,6 +16,7 @@ export default tseslint.config(
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
+    files: ['**/*.ts'],
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -27,7 +28,8 @@ export default tseslint.config(
         'error',
         { prefer: 'type-imports', fixStyle: 'inline-type-imports' }
       ],
-      '@typescript-eslint/no-confusing-void-expression': 'off'
+      '@typescript-eslint/no-confusing-void-expression': 'off',
+      '@typescript-eslint/no-extraneous-class': 'off'
     },
   },
   {
@@ -41,5 +43,9 @@ export default tseslint.config(
         }
       ]
     }
+  },
+  {
+    files: ['**/*.mjs'],
+    extends: [tseslint.configs.disableTypeChecked]
   }
 );

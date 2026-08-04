@@ -9,5 +9,5 @@ export const ROUTES = Object.freeze({
   myListings: '/profile?tab=listings',
   appointments: '/profile?tab=appointments',
   transactions: '/profile?tab=transactions',
-  listingDetail: (listingId: string | number): string => `/listings/${listingId}`,
+  listingDetail: (listingId: string | number): string => `/listings/${String(listingId)}`,
 });
