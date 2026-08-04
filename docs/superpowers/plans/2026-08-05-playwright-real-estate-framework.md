@@ -294,40 +294,62 @@ git commit -m "feat: add reusable framework utilities"
 - Create: `pages/base/BasePage.ts`
 - Create: `pages/components/HeaderComponent.ts`
 - Create: `pages/components/ListingFormComponent.ts`
-- Test: `tests/unit/architecture/page-object-boundaries.spec.ts`
+- Test: `tests/component/pages/LoginPage.spec.ts`
 
 **Interfaces:**
 - Produces: `BasePage` constructor `(page: Page)` and protected `navigate`, `waitUntilReady`, `currentUrl`, and `captureScreenshot` methods.
 - Produces: `HeaderComponent` with `openLogin`, `openAccountMenu`, `navigateToProfile`, `logout`, and `isAuthenticated`.
 - Produces: `ListingFormComponent` with typed `fill`, `uploadImages`, and `submit` operations.
 
-- [ ] **Step 1: Write the failing Page Object boundary test**
+- [ ] **Step 1: Write the failing login Page Object behavior test**
 
 ```ts
 import { expect, test } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { LoginPage } from '../../../pages/authentication/LoginPage';
 
-test('shared components keep locators outside tests and workflows', () => {
-  const header = readFileSync(resolve('pages/components/HeaderComponent.ts'), 'utf8');
-  expect(header).toContain('getByRole');
-  expect(header).not.toContain("from '../../fixtures");
+test('submits credentials through the Propify login modal', async ({ page }) => {
+  await page.setContent(`
+    <button aria-label="Đăng nhập">Đăng nhập</button>
+    <section role="dialog" hidden>
+      <input placeholder="Email của bạn" />
+      <input placeholder="Mật khẩu" type="password" />
+      <button>Tiếp tục</button>
+    </section>
+    <script>
+      document.querySelector('[aria-label="Đăng nhập"]').onclick = () => {
+        document.querySelector('[role="dialog"]').hidden = false;
+      };
+      document.querySelector('button:last-of-type').onclick = () => {
+        document.body.dataset.submitted = 'true';
+      };
+    </script>
+  `);
+  const loginPage = new LoginPage(page);
+
+  await loginPage.open();
+  await loginPage.submitCredentials({
+    alias: 'defaultUser',
+    email: 'user@example.test',
+    password: 'secret-value',
+  });
+
+  expect(await page.evaluate(() => document.body.dataset.submitted)).toBe('true');
 });
 ```
 
 - [ ] **Step 2: Run the boundary test and verify RED**
 
-Run: `npm test -- tests/unit/architecture/page-object-boundaries.spec.ts`
+Run: `npm test -- tests/component/pages/LoginPage.spec.ts`
 
-Expected: FAIL because `HeaderComponent.ts` does not exist.
+Expected: FAIL because `LoginPage.ts` does not exist.
 
 - [ ] **Step 3: Implement BasePage and components**
 
-Use constructor injection, protected common behavior, actual Propify accessible names, private readonly locators, intent-based public methods, and no assertions or test data literals.
+Use constructor injection, protected common behavior, actual Propify accessible names, private readonly locators, intent-based public methods, and no assertions or test data literals. Add the minimal `LoginPage` implementation needed by the behavior test, then keep shared header behavior in `HeaderComponent`.
 
 - [ ] **Step 4: Verify GREEN and type safety**
 
-Run: `npm test -- tests/unit/architecture/page-object-boundaries.spec.ts`
+Run: `npm test -- tests/component/pages/LoginPage.spec.ts`
 
 Run: `npm run typecheck`
 
@@ -336,7 +358,7 @@ Expected: boundary test and TypeScript compilation pass.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add pages/base pages/components tests/unit/architecture
+git add pages/base pages/components pages/authentication/LoginPage.ts tests/component/pages
 git commit -m "feat: add Page Object foundation"
 ```
 
@@ -354,59 +376,33 @@ git commit -m "feat: add Page Object foundation"
 - Create: `pages/listings/MyListingsPage.ts`
 - Create: `pages/appointments/AppointmentPage.ts`
 - Create: `pages/transactions/TransactionPage.ts`
-- Test: `tests/unit/architecture/locator-ownership.spec.ts`
 
 **Interfaces:**
 - Produces concrete Page Objects extending `BasePage` and exposing intent-based feature methods.
 - Consumes `HeaderComponent`, `ListingFormComponent`, domain types, `ROUTES`, and Playwright `Page`.
 
-- [ ] **Step 1: Write the failing locator ownership test**
+- [ ] **Step 1: Extend the login component test with observable modal behavior and verify RED**
 
-```ts
-import { expect, test } from '@playwright/test';
-import { readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+Add a scenario that calls `LoginPage.openForgotPassword()` and asserts the visible heading `Quên mật khẩu`. Run `npm test -- tests/component/pages/LoginPage.spec.ts`; expect failure because the method and Forgot Password Page Object do not exist.
 
-const filesUnder = (directory: string): string[] =>
-  readdirSync(directory).flatMap((name) => {
-    const path = join(directory, name);
-    return statSync(path).isDirectory() ? filesUnder(path) : [path];
-  });
-
-test('test and workflow files contain no locator declarations', () => {
-  const forbidden = /getBy(Role|Text|Label|Placeholder|TestId)|\.locator\(/;
-  const files = ['tests', 'workflows'].flatMap((directory) =>
-    filesUnder(resolve(directory)).filter((file) => file.endsWith('.ts')),
-  );
-
-  for (const file of files) {
-    expect(readFileSync(file, 'utf8'), file).not.toMatch(forbidden);
-  }
-});
-```
-
-- [ ] **Step 2: Run the architecture test and verify RED**
-
-Run: `npm test -- tests/unit/architecture/locator-ownership.spec.ts`
-
-Expected: FAIL because the `workflows` directory and required Page Objects do not yet exist.
-
-- [ ] **Step 3: Implement feature Page Objects**
+- [ ] **Step 2: Implement feature Page Objects**
 
 Model the inspected Propify routes and accessible UI: modal login, profile tabs, `/sales`, `/rent`, `/listings/:id`, listing management, appointment filters, and transaction filters. Use reusable components for header and listing forms. Templates must be callable and type-safe without triggering destructive actions by default.
 
-- [ ] **Step 4: Verify architecture and compilation**
+- [ ] **Step 3: Verify Page Object behavior, lint boundaries, and compilation**
 
-Run: `npm test -- tests/unit/architecture`
+Run: `npm test -- tests/component/pages/LoginPage.spec.ts`
+
+Run: `npm run lint`
 
 Run: `npm run typecheck`
 
-Expected: all architecture tests and compilation pass.
+Expected: component behavior, architectural lint rules, and compilation pass.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 4: Commit**
 
 ```bash
-git add pages tests/unit/architecture
+git add pages tests/component/pages
 git commit -m "feat: add Propify feature Page Objects"
 ```
 
@@ -421,7 +417,7 @@ git commit -m "feat: add Propify feature Page Objects"
 - Create: `fixtures/page.fixture.ts`
 - Create: `fixtures/workflow.fixture.ts`
 - Create: `fixtures/test.fixture.ts`
-- Test: `tests/unit/fixtures/test.fixture.spec.ts`
+- Test: `tests/component/fixtures/test.fixture.spec.ts`
 
 **Interfaces:**
 - Produces: `AuthenticationWorkflow.login(credentials): Promise<void>` and `.logout(): Promise<void>`.
@@ -432,20 +428,22 @@ git commit -m "feat: add Propify feature Page Objects"
 - [ ] **Step 1: Write the failing fixture composition test**
 
 ```ts
-import { expect, test } from '@playwright/test';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { expect, test } from '../../../fixtures/test.fixture';
+import { LoginPage } from '../../../pages/authentication/LoginPage';
+import { AuthenticationWorkflow } from '../../../workflows/authentication/AuthenticationWorkflow';
 
-test('BaseTest composition exports typed test and expect', () => {
-  const source = readFileSync(resolve('fixtures/test.fixture.ts'), 'utf8');
-  expect(source).toContain('export const test');
-  expect(source).toContain('export { expect }');
+test('BaseTest composition provides real Page Objects and Workflows', async ({
+  loginPage,
+  authenticationWorkflow,
+}) => {
+  expect(loginPage).toBeInstanceOf(LoginPage);
+  expect(authenticationWorkflow).toBeInstanceOf(AuthenticationWorkflow);
 });
 ```
 
 - [ ] **Step 2: Run the fixture test and verify RED**
 
-Run: `npm test -- tests/unit/fixtures/test.fixture.spec.ts`
+Run: `npm test -- tests/component/fixtures/test.fixture.spec.ts`
 
 Expected: FAIL because `fixtures/test.fixture.ts` does not exist.
 
@@ -455,7 +453,7 @@ Compose fixtures in dependency order: auth identity, Page Objects, then Workflow
 
 - [ ] **Step 4: Verify GREEN, locator ownership, and type safety**
 
-Run: `npm test -- tests/unit/fixtures tests/unit/architecture`
+Run: `npm test -- tests/component/fixtures tests/component/pages`
 
 Run: `npm run typecheck`
 
@@ -464,7 +462,7 @@ Expected: fixture and architecture tests pass with no type errors.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add workflows fixtures tests/unit/fixtures
+git add workflows fixtures tests/component/fixtures
 git commit -m "feat: compose typed Workflows and fixtures"
 ```
 
@@ -476,59 +474,36 @@ git commit -m "feat: compose typed Workflows and fixtures"
 - Create: `tests/authentication/login.spec.ts`
 - Create: `reporters/allure-environment.ts`
 - Create: `test-cases/authentication/login.test-cases.ts`
-- Create: `tests/unit/config/playwright.config.spec.ts`
 
 **Interfaces:**
 - Consumes environment config, `AuthenticationWorkflow`, fixture-composed `test`, tags, and user factory.
 - Produces `auth-setup`, `chromium`, `firefox`, and `webkit` Playwright projects.
 - Produces storage state under `.auth/defaultUser.json`.
 
-- [ ] **Step 1: Write the failing Playwright configuration test**
+- [ ] **Step 1: Write the failing login smoke scenario**
 
-```ts
-import { expect, test } from '@playwright/test';
-import config from '../../../playwright.config';
+Create `login.spec.ts` using the wished-for fixture and Workflow API. Run `npm test -- tests/authentication/login.spec.ts --project=chromium`; expect failure because `playwright.config.ts` and the auth setup do not exist.
 
-test('defines auth setup and three authenticated browsers', () => {
-  const names = config.projects?.map((project) => project.name);
-  expect(names).toEqual(['auth-setup', 'chromium', 'firefox', 'webkit']);
-});
-
-test('retains diagnostic artifacts according to policy', () => {
-  expect(config.use?.screenshot).toBe('only-on-failure');
-  expect(config.use?.video).toBe('retain-on-failure');
-  expect(config.use?.trace).toBe('on-first-retry');
-});
-```
-
-- [ ] **Step 2: Run the config test and verify RED**
-
-Run: `npm test -- tests/unit/config/playwright.config.spec.ts`
-
-Expected: FAIL because `playwright.config.ts` does not exist.
-
-- [ ] **Step 3: Implement projects, auth setup, reporting, and the sample scenario**
+- [ ] **Step 2: Implement projects, auth setup, reporting, and the sample scenario**
 
 Configure HTML, list, and Allure reporters. Make browser projects depend on `auth-setup` and use `.auth/defaultUser.json`. The login smoke test must import `test` and `expect` from `fixtures/test.fixture`, reset storage state, call only the authentication Workflow/Page Object public contract, and assert authenticated state. Add test-case ID `AUTH-LOGIN-001` and tags `@smoke`, `@regression`, and `@authentication`.
 
-- [ ] **Step 4: Verify config GREEN and test discovery**
-
-Run: `npm test -- tests/unit/config/playwright.config.spec.ts`
+- [ ] **Step 3: Verify configuration behavior and test discovery**
 
 Run: `npx playwright test --list`
 
 Expected: configuration tests pass and Playwright lists setup plus three browser projects without executing destructive scenarios.
 
-- [ ] **Step 5: Run the login smoke test when local credentials are available**
+- [ ] **Step 4: Run the login smoke test when local credentials are available**
 
 Run: `npx playwright test tests/authentication/login.spec.ts --project=chromium`
 
 Expected: login completes and the authenticated-header assertion passes. If Propify is unavailable, report the external failure separately while retaining successful compile, unit, and discovery evidence.
 
-- [ ] **Step 6: Commit**
+- [ ] **Step 5: Commit**
 
 ```bash
-git add playwright.config.ts tests/setup tests/authentication tests/unit/config reporters test-cases/authentication
+git add playwright.config.ts tests/setup tests/authentication reporters test-cases/authentication
 git commit -m "feat: add authentication setup and login smoke test"
 ```
 
