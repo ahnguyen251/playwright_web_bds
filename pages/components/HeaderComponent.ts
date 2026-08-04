@@ -40,4 +40,8 @@ export class HeaderComponent {
   public async isAuthenticated(): Promise<boolean> {
     return this.accountButton.isVisible();
   }
+
+  public async waitForAuthenticated(): Promise<void> {
+    await this.accountButton.waitFor({ state: 'visible' });
+  }
 }

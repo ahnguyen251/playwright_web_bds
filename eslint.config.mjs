@@ -45,6 +45,12 @@ export default tseslint.config(
     }
   },
   {
+    files: ['fixtures/**/*.ts'],
+    rules: {
+      'no-empty-pattern': 'off'
+    }
+  },
+  {
     files: ['**/*.mjs'],
     extends: [tseslint.configs.disableTypeChecked]
   }
