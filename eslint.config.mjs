@@ -26,10 +26,10 @@ export default tseslint.config(
     rules: {
       '@typescript-eslint/consistent-type-imports': [
         'error',
-        { prefer: 'type-imports', fixStyle: 'inline-type-imports' }
+        { prefer: 'type-imports', fixStyle: 'inline-type-imports' },
       ],
       '@typescript-eslint/no-confusing-void-expression': 'off',
-      '@typescript-eslint/no-extraneous-class': 'off'
+      '@typescript-eslint/no-extraneous-class': 'off',
     },
   },
   {
@@ -38,20 +38,21 @@ export default tseslint.config(
       'no-restricted-syntax': [
         'error',
         {
-          selector: "CallExpression[callee.property.name=/^(locator|getByRole|getByText|getByLabel|getByPlaceholder|getByTestId)$/]",
-          message: 'Locators belong in Page Objects or Page components.'
-        }
-      ]
-    }
+          selector:
+            'CallExpression[callee.property.name=/^(locator|getByRole|getByText|getByLabel|getByPlaceholder|getByTestId)$/]',
+          message: 'Locators belong in Page Objects or Page components.',
+        },
+      ],
+    },
   },
   {
     files: ['fixtures/**/*.ts'],
     rules: {
-      'no-empty-pattern': 'off'
-    }
+      'no-empty-pattern': 'off',
+    },
   },
   {
     files: ['**/*.mjs'],
-    extends: [tseslint.configs.disableTypeChecked]
-  }
+    extends: [tseslint.configs.disableTypeChecked],
+  },
 );

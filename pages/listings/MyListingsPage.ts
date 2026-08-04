@@ -20,7 +20,12 @@ export class MyListingsPage extends BasePage {
 
   public async filter(keyword: string, transactionType: 'all' | 'sale' | 'rent'): Promise<void> {
     await this.searchInput.fill(keyword);
-    const label = transactionType === 'all' ? 'Loại tin: Tất cả' : transactionType === 'sale' ? 'Mua bán' : 'Cho thuê';
+    const label =
+      transactionType === 'all'
+        ? 'Loại tin: Tất cả'
+        : transactionType === 'sale'
+          ? 'Mua bán'
+          : 'Cho thuê';
     await this.listingTypeSelect.selectOption({ label });
   }
 

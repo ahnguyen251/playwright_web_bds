@@ -1,7 +1,10 @@
 import { randomBytes, randomInt } from 'node:crypto';
 
 const normalizePrefix = (prefix: string): string => {
-  const normalized = prefix.toLowerCase().replace(/[^a-z0-9]+/g, '').slice(0, 24);
+  const normalized = prefix
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '')
+    .slice(0, 24);
   return normalized || 'test';
 };
 

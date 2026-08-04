@@ -1,11 +1,6 @@
 export type AppointmentView = 'guest' | 'owner';
 export type AppointmentStatus =
-  | 'pending'
-  | 'confirmed'
-  | 'completed'
-  | 'owner-cancelled'
-  | 'guest-cancelled'
-  | 'expired';
+  'pending' | 'confirmed' | 'completed' | 'owner-cancelled' | 'guest-cancelled' | 'expired';
 
 export interface AppointmentData {
   readonly listingId: number;

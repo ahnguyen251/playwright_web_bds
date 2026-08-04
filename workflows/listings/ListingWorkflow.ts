@@ -1,4 +1,8 @@
-import type { ListingData, ListingSearchCriteria, TransactionType } from '../../types/listing.types';
+import type {
+  ListingData,
+  ListingSearchCriteria,
+  TransactionType,
+} from '../../types/listing.types';
 import type { CreateListingPage } from '../../pages/listings/CreateListingPage';
 import type { ListingListPage } from '../../pages/listings/ListingListPage';
 import type { MyListingsPage } from '../../pages/listings/MyListingsPage';

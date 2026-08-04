@@ -6,7 +6,8 @@ import { createAllureEnvironment } from './reporters/allure-environment';
 
 const environment = loadEnvironmentConfig();
 const defaultStorageState = '.auth/defaultUser.json';
-const endToEndTestMatch = /(authentication|profile|listings|appointments|transactions)\/.*\.spec\.ts/;
+const endToEndTestMatch =
+  /(authentication|profile|listings|appointments|transactions)\/.*\.spec\.ts/;
 
 export default defineConfig({
   testDir: './tests',
