@@ -9,6 +9,7 @@ export class AuthenticationWorkflow {
   ) {}
 
   public async login(credentials: UserCredentials): Promise<void> {
+    await this.loginPage.openHome();
     await this.loginPage.open();
     await this.loginPage.submitCredentials(credentials);
     await this.header.waitForAuthenticated();

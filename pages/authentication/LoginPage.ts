@@ -1,6 +1,7 @@
 import type { Locator, Page } from '@playwright/test';
 
 import type { UserCredentials } from '../../types/user.types';
+import { ROUTES } from '../../constants/routes';
 import { BasePage } from '../base/BasePage';
 import { HeaderComponent } from '../components/HeaderComponent';
 import { ForgotPasswordPage } from './ForgotPasswordPage';
@@ -27,6 +28,10 @@ export class LoginPage extends BasePage {
   public async open(): Promise<void> {
     await this.header.openLogin();
     await this.emailInput.waitFor({ state: 'visible' });
+  }
+
+  public async openHome(): Promise<void> {
+    await this.navigate(ROUTES.home);
   }
 
   public async submitCredentials(credentials: UserCredentials): Promise<void> {
