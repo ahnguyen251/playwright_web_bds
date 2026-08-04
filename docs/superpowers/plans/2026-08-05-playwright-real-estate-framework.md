@@ -49,6 +49,7 @@
 ### Task 1: Foundation, package scripts, and validated environment configuration
 
 **Files:**
+
 - Create: `package.json`
 - Create: `tsconfig.json`
 - Create: `.env.example`
@@ -62,6 +63,7 @@
 - Test: `tests/unit/config/environment.config.spec.ts`
 
 **Interfaces:**
+
 - Produces: `TestEnvironment = 'dev' | 'staging' | 'production'`.
 - Produces: `EnvironmentConfig` with `environment`, `baseUrl`, `apiBaseUrl`, `defaultUserEmail`, `defaultUserPassword`, and `ci`.
 - Produces: `loadEnvironmentConfig(source?: NodeJS.ProcessEnv): EnvironmentConfig`.
@@ -131,6 +133,7 @@ git commit -m "feat: add validated framework configuration"
 ### Task 2: Typed test data and factories
 
 **Files:**
+
 - Create: `types/user.types.ts`
 - Create: `types/listing.types.ts`
 - Create: `types/appointment.types.ts`
@@ -145,6 +148,7 @@ git commit -m "feat: add validated framework configuration"
 - Test: `tests/unit/test-data/ListingDataFactory.spec.ts`
 
 **Interfaces:**
+
 - Produces: `UserAlias`, `UserRecord`, `UserCredentials`, `ListingData`, `AppointmentData`, `TransactionStatus`, and `TestCaseDefinition`.
 - Produces: `UserDataFactory.getCredentials(alias, source): UserCredentials`.
 - Produces: `ListingDataFactory.create(overrides?): ListingData`.
@@ -169,9 +173,7 @@ test('resolves credentials through environment-key references', () => {
 });
 
 test('reports the missing key without printing credential values', () => {
-  expect(() => UserDataFactory.getCredentials('defaultUser', {})).toThrow(
-    /DEFAULT_USER_EMAIL/,
-  );
+  expect(() => UserDataFactory.getCredentials('defaultUser', {})).toThrow(/DEFAULT_USER_EMAIL/);
 });
 ```
 
@@ -215,6 +217,7 @@ git commit -m "feat: add typed test data factories"
 ### Task 3: Reusable technical utilities
 
 **Files:**
+
 - Create: `utils/DateHelper.ts`
 - Create: `utils/RandomDataGenerator.ts`
 - Create: `utils/FileUploadHelper.ts`
@@ -226,6 +229,7 @@ git commit -m "feat: add typed test data factories"
 - Test: `tests/unit/utils/FileUploadHelper.spec.ts`
 
 **Interfaces:**
+
 - Produces: `DateHelper.format(date, format): string`, `DateHelper.addDays(date, days): Date`.
 - Produces: unique `RandomDataGenerator.string`, `.email`, `.phoneNumber`, and `.integer` methods.
 - Produces: `FileUploadHelper.resolveFixturePath(relativePath): string` and `.upload(locator, relativePath): Promise<void>`.
@@ -240,9 +244,7 @@ import { expect, test } from '@playwright/test';
 import { DateHelper } from '../../../utils/DateHelper';
 
 test('formats a date without using locale-dependent output', () => {
-  expect(DateHelper.format(new Date('2026-08-05T00:00:00Z'), 'DD/MM/YYYY')).toBe(
-    '05/08/2026',
-  );
+  expect(DateHelper.format(new Date('2026-08-05T00:00:00Z'), 'DD/MM/YYYY')).toBe('05/08/2026');
 });
 
 test('adds days without mutating the input date', () => {
@@ -291,12 +293,14 @@ git commit -m "feat: add reusable framework utilities"
 ### Task 4: Base Page Object and shared components
 
 **Files:**
+
 - Create: `pages/base/BasePage.ts`
 - Create: `pages/components/HeaderComponent.ts`
 - Create: `pages/components/ListingFormComponent.ts`
 - Test: `tests/component/pages/LoginPage.spec.ts`
 
 **Interfaces:**
+
 - Produces: `BasePage` constructor `(page: Page)` and protected `navigate`, `waitUntilReady`, `currentUrl`, and `captureScreenshot` methods.
 - Produces: `HeaderComponent` with `openLogin`, `openAccountMenu`, `navigateToProfile`, `logout`, and `isAuthenticated`.
 - Produces: `ListingFormComponent` with typed `fill`, `uploadImages`, and `submit` operations.
@@ -365,6 +369,7 @@ git commit -m "feat: add Page Object foundation"
 ### Task 5: Feature Page Objects
 
 **Files:**
+
 - Create: `pages/authentication/LoginPage.ts`
 - Create: `pages/authentication/RegisterPage.ts`
 - Create: `pages/authentication/ForgotPasswordPage.ts`
@@ -378,6 +383,7 @@ git commit -m "feat: add Page Object foundation"
 - Create: `pages/transactions/TransactionPage.ts`
 
 **Interfaces:**
+
 - Produces concrete Page Objects extending `BasePage` and exposing intent-based feature methods.
 - Consumes `HeaderComponent`, `ListingFormComponent`, domain types, `ROUTES`, and Playwright `Page`.
 
@@ -409,6 +415,7 @@ git commit -m "feat: add Propify feature Page Objects"
 ### Task 6: Workflows and typed fixture composition
 
 **Files:**
+
 - Create: `workflows/authentication/AuthenticationWorkflow.ts`
 - Create: `workflows/listings/ListingWorkflow.ts`
 - Create: `workflows/appointments/AppointmentWorkflow.ts`
@@ -420,6 +427,7 @@ git commit -m "feat: add Propify feature Page Objects"
 - Test: `tests/component/fixtures/test.fixture.spec.ts`
 
 **Interfaces:**
+
 - Produces: `AuthenticationWorkflow.login(credentials): Promise<void>` and `.logout(): Promise<void>`.
 - Produces: typed listing, appointment, and transaction workflow methods.
 - Produces: extended `test` and `expect` from `fixtures/test.fixture.ts`.
@@ -469,6 +477,7 @@ git commit -m "feat: compose typed Workflows and fixtures"
 ### Task 7: Authentication setup, Playwright projects, reporting, and login smoke test
 
 **Files:**
+
 - Create: `playwright.config.ts`
 - Create: `tests/setup/auth.setup.ts`
 - Create: `tests/authentication/login.spec.ts`
@@ -476,6 +485,7 @@ git commit -m "feat: compose typed Workflows and fixtures"
 - Create: `test-cases/authentication/login.test-cases.ts`
 
 **Interfaces:**
+
 - Consumes environment config, `AuthenticationWorkflow`, fixture-composed `test`, tags, and user factory.
 - Produces `auth-setup`, `chromium`, `firefox`, and `webkit` Playwright projects.
 - Produces storage state under `.auth/defaultUser.json`.
@@ -510,6 +520,7 @@ git commit -m "feat: add authentication setup and login smoke test"
 ### Task 8: Documentation, traceability, formatting, and final verification
 
 **Files:**
+
 - Modify: `README.md`
 - Create: `docs/requirements/framework-requirements.md`
 - Create: `docs/prompts/framework-generation-prompt.md`
@@ -524,6 +535,7 @@ git commit -m "feat: add authentication setup and login smoke test"
 - Create: `test-data/files/listing-images/.gitkeep`
 
 **Interfaces:**
+
 - Produces complete onboarding and extension instructions.
 - Produces traceability from requirements to `AUTH-LOGIN-001` and framework files.
 

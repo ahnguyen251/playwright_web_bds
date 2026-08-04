@@ -1,0 +1,12 @@
+{
+  "title": "Căn hộ kiểm thử tự động",
+  "transactionType": "rent",
+  "propertyType": "Căn hộ chung cư",
+  "address": "Quận 1, Thành phố Hồ Chí Minh",
+  "price": 15000000,
+  "area": 75,
+  "bedrooms": 2,
+  "bathrooms": 2,
+  "description": "Dữ liệu kiểm thử không nhạy cảm dành cho framework Playwright.",
+  "imagePaths": []
+}

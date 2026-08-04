@@ -1,0 +1,12 @@
+{
+  "defaultUser": {
+    "displayName": "Default Propify User",
+    "emailEnvironmentKey": "DEFAULT_USER_EMAIL",
+    "passwordEnvironmentKey": "DEFAULT_USER_PASSWORD"
+  },
+  "secondaryUser": {
+    "displayName": "Secondary Propify User",
+    "emailEnvironmentKey": "SECONDARY_USER_EMAIL",
+    "passwordEnvironmentKey": "SECONDARY_USER_PASSWORD"
+  }
+}

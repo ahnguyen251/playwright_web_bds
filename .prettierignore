@@ -1,0 +1,7 @@
+node_modules
+.auth
+allure-report
+allure-results
+playwright-report
+test-results
+package-lock.json
