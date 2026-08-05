@@ -16,7 +16,10 @@ Tài liệu này phản ánh mã nguồn và test case đang tồn tại trên n
 | UC-06    | Đổi mật khẩu, validation và khôi phục credential baseline             | `ProfilePage`, `ChangePasswordComponent`; `ProfileWorkflow`                      | `ProfilePage.spec.ts`; `ProfileWorkflow.spec.ts`                                                                                                            | `AUTH-PASSWORD-001` trong `change-password.validation.spec.ts`                                                         | `AUTH-PASSWORD-MUTATING-001` trong `change-password.mutating.spec.ts`; serial, phục hồi qua OTP; mặc định skip               |
 | UC-07    | Quên mật khẩu qua email, OTP, mật khẩu mới và quay lại Login          | `LoginPage`, `ForgotPasswordPage`; `PasswordRecoveryWorkflow`                    | `ForgotPasswordPage.spec.ts`; `PasswordRecoveryWorkflow.spec.ts`, các test `helpers/otp`                                                                    | `AUTH-RECOVERY-001` trong `password-recovery.validation.spec.ts`; expected failure có điều kiện nếu defect còn tồn tại | `AUTH-RECOVERY-OTP-001` trong `password-recovery.otp.mutating.spec.ts`; serial và phục hồi baseline; mặc định skip           |
 
-Nguồn nghiệp vụ: `NghiepvuPropify.pdf`, mục 2.5.1 đến 2.5.3.4. UC-03 chỉ có bằng chứng
+Nguồn baseline có kiểm soát trong repository:
+[Authentication use-case baseline](../requirements/authentication-use-cases.md), trích xuất mục 2.5.1
+đến 2.5.3.4 từ file nguồn bên ngoài `NghiepvuPropify.pdf`. PDF không nằm trong repository; baseline
+ghi rõ tên nguồn, SHA-256 và quy trình đối chiếu để clone vẫn audit được. UC-03 chỉ có bằng chứng
 component cho bề mặt nút Google. Framework không tuyên bố đã tự động hóa redirect, consent hoặc chọn
 tài khoản Google.
 
