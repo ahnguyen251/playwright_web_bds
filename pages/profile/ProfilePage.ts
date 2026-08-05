@@ -1,13 +1,14 @@
 import type { Locator, Page } from '@playwright/test';
 
 import { ROUTES } from '../../constants/routes';
-import type { ProfileUpdate } from '../../types/user.types';
 import { BasePage } from '../base/BasePage';
+import { ChangePasswordComponent } from '../components/ChangePasswordComponent';
+import { ProfileFormComponent } from '../components/ProfileFormComponent';
 
 export class ProfilePage extends BasePage {
   private readonly accountInformationButton: Locator;
-  private readonly fullNameInput: Locator;
-  private readonly saveButton: Locator;
+  private readonly profileForm: ProfileFormComponent;
+  private readonly changePasswordForm: ChangePasswordComponent;
 
   public constructor(page: Page) {
     super(page);
@@ -15,8 +16,8 @@ export class ProfilePage extends BasePage {
       name: 'Thông tin tài khoản',
       exact: true,
     });
-    this.fullNameInput = page.getByLabel('Họ và tên');
-    this.saveButton = page.getByRole('button', { name: 'Lưu thay đổi', exact: true });
+    this.profileForm = new ProfileFormComponent(page);
+    this.changePasswordForm = new ChangePasswordComponent(page);
   }
 
   public async open(): Promise<void> {
@@ -27,8 +28,11 @@ export class ProfilePage extends BasePage {
     await this.accountInformationButton.click();
   }
 
-  public async updateProfile(profile: ProfileUpdate): Promise<void> {
-    await this.fullNameInput.fill(profile.fullName);
-    await this.saveButton.click();
+  public profile(): ProfileFormComponent {
+    return this.profileForm;
+  }
+
+  public changePassword(): ChangePasswordComponent {
+    return this.changePasswordForm;
   }
 }
