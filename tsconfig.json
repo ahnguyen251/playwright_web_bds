@@ -19,6 +19,7 @@
     "config/**/*.ts",
     "constants/**/*.ts",
     "fixtures/**/*.ts",
+    "helpers/**/*.ts",
     "pages/**/*.ts",
     "reporters/**/*.ts",
     "test-cases/**/*.ts",

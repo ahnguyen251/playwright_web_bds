@@ -1,4 +1,4 @@
-export type UserAlias = 'defaultUser' | 'secondaryUser';
+export type UserAlias = 'defaultUser' | 'secondaryUser' | 'mutatingUser';
 
 export interface UserRecord {
   readonly alias: UserAlias;
@@ -16,11 +16,22 @@ export interface UserCredentials {
 export interface RegistrationData {
   readonly fullName: string;
   readonly email: string;
-  readonly phone: string;
   readonly password: string;
+  readonly passwordConfirmation: string;
 }
 
 export interface ProfileUpdate {
   readonly fullName: string;
-  readonly phone: string;
+}
+
+export interface PasswordChangeData {
+  readonly currentPassword: string;
+  readonly newPassword: string;
+  readonly passwordConfirmation: string;
+}
+
+export interface PasswordResetData {
+  readonly email: string;
+  readonly newPassword: string;
+  readonly passwordConfirmation: string;
 }

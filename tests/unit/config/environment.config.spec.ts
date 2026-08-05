@@ -45,3 +45,21 @@ test('reports a missing credential key without exposing another secret', () => {
     expect(String(error)).not.toContain('secret-value');
   }
 });
+
+test('keeps Gmail integration disabled when optional values are absent', () => {
+  const config = loadEnvironmentConfig(validEnvironment);
+
+  expect(config.runOtpE2e).toBe(false);
+  expect(config.runMutatingE2e).toBe(false);
+  expect(config.gmail).toBeUndefined();
+});
+
+test('requires complete Gmail OAuth configuration when OTP E2E is enabled', () => {
+  expect(() =>
+    loadEnvironmentConfig({
+      ...validEnvironment,
+      RUN_OTP_E2E: 'true',
+      OTP_MAILBOX_ADDRESS: 'automation@gmail.com',
+    }),
+  ).toThrow(/GMAIL_CLIENT_ID|GMAIL_CLIENT_SECRET|GMAIL_REFRESH_TOKEN/);
+});

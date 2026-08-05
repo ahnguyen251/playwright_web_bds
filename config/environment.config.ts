@@ -25,6 +25,30 @@ export const loadEnvironmentConfig = (
     production: parsed.data.PRODUCTION_BASE_URL,
   } as const;
 
+  const gmail =
+    parsed.data.GMAIL_CLIENT_ID &&
+    parsed.data.GMAIL_CLIENT_SECRET &&
+    parsed.data.GMAIL_REFRESH_TOKEN &&
+    parsed.data.OTP_MAILBOX_ADDRESS
+      ? Object.freeze({
+          clientId: parsed.data.GMAIL_CLIENT_ID,
+          clientSecret: parsed.data.GMAIL_CLIENT_SECRET,
+          refreshToken: parsed.data.GMAIL_REFRESH_TOKEN,
+          mailboxAddress: parsed.data.OTP_MAILBOX_ADDRESS,
+        })
+      : undefined;
+
+  const mutatingUser =
+    parsed.data.MUTATING_USER_EMAIL &&
+    parsed.data.MUTATING_USER_BASELINE_PASSWORD &&
+    parsed.data.MUTATING_USER_BASELINE_NAME
+      ? Object.freeze({
+          email: parsed.data.MUTATING_USER_EMAIL,
+          baselinePassword: parsed.data.MUTATING_USER_BASELINE_PASSWORD,
+          baselineName: parsed.data.MUTATING_USER_BASELINE_NAME,
+        })
+      : undefined;
+
   return Object.freeze({
     environment: parsed.data.TEST_ENV,
     baseUrl: baseUrls[parsed.data.TEST_ENV],
@@ -32,5 +56,11 @@ export const loadEnvironmentConfig = (
     defaultUserEmail: parsed.data.DEFAULT_USER_EMAIL,
     defaultUserPassword: parsed.data.DEFAULT_USER_PASSWORD,
     ci: parsed.data.CI,
+    runOtpE2e: parsed.data.RUN_OTP_E2E,
+    runMutatingE2e: parsed.data.RUN_MUTATING_E2E,
+    ...(gmail === undefined ? {} : { gmail }),
+    ...(mutatingUser === undefined ? {} : { mutatingUser }),
+    otpPollIntervalMs: parsed.data.OTP_POLL_INTERVAL_MS,
+    otpTimeoutMs: parsed.data.OTP_TIMEOUT_MS,
   });
 };

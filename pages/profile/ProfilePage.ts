@@ -7,7 +7,6 @@ import { BasePage } from '../base/BasePage';
 export class ProfilePage extends BasePage {
   private readonly accountInformationButton: Locator;
   private readonly fullNameInput: Locator;
-  private readonly phoneInput: Locator;
   private readonly saveButton: Locator;
 
   public constructor(page: Page) {
@@ -17,7 +16,6 @@ export class ProfilePage extends BasePage {
       exact: true,
     });
     this.fullNameInput = page.getByLabel('Họ và tên');
-    this.phoneInput = page.getByLabel('Số điện thoại');
     this.saveButton = page.getByRole('button', { name: 'Lưu thay đổi', exact: true });
   }
 
@@ -31,7 +29,6 @@ export class ProfilePage extends BasePage {
 
   public async updateProfile(profile: ProfileUpdate): Promise<void> {
     await this.fullNameInput.fill(profile.fullName);
-    await this.phoneInput.fill(profile.phone);
     await this.saveButton.click();
   }
 }
