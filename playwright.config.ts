@@ -94,6 +94,9 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: { cookies: [], origins: [] },
+        screenshot: 'off',
+        video: 'off',
+        trace: 'off',
       },
     },
   ],
