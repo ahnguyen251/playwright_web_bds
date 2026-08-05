@@ -12,7 +12,15 @@ test('submits credentials through the Propify login modal', async ({ page }) => 
       <button>Quên mật khẩu?</button>
       <button>Tiếp tục</button>
     </section>
-    <script>
+    <script type="text/javascript">
+      const headerNavigation = document.createElement('nav');
+      const headerLogo = document.createElement('a');
+      headerLogo.href = '/';
+      headerLogo.setAttribute('aria-label', 'Propify');
+      headerLogo.textContent = 'Propify';
+      const headerLoginButton = document.querySelector('button');
+      headerLoginButton.before(headerNavigation);
+      headerNavigation.append(headerLogo, headerLoginButton);
       document.querySelector('[aria-label="Đăng nhập"]').onclick = () => {
         document.querySelector('[role="dialog"]').hidden = false;
       };
@@ -44,7 +52,15 @@ test('opens the forgot-password view from the login modal', async ({ page }) => 
       <button>Tiếp tục</button>
       <h1 hidden>Quên mật khẩu</h1>
     </section>
-    <script>
+    <script type="text/javascript">
+      const headerNavigation = document.createElement('nav');
+      const headerLogo = document.createElement('a');
+      headerLogo.href = '/';
+      headerLogo.setAttribute('aria-label', 'Propify');
+      headerLogo.textContent = 'Propify';
+      const headerLoginButton = document.querySelector('button');
+      headerLoginButton.before(headerNavigation);
+      headerNavigation.append(headerLogo, headerLoginButton);
       document.querySelector('[aria-label="Đăng nhập"]').onclick = () => {
         document.querySelector('[role="dialog"]').hidden = false;
       };
@@ -66,17 +82,26 @@ test('exposes invalid-email feedback without submitting credentials', async ({ p
     <button aria-label="Đăng nhập">Đăng nhập</button>
     <section role="dialog" hidden>
       <h1>Xin chào,</h1>
-      <input placeholder="Email của bạn" />
-      <input placeholder="Mật khẩu" type="password" />
+      <div><input placeholder="Email của bạn" /></div>
+      <p hidden></p>
+      <div><input placeholder="Mật khẩu" type="password" /></div>
+      <p>Thông tin đăng nhập không chính xác</p>
       <button>Quên mật khẩu?</button>
-      <p role="alert" hidden></p>
       <button disabled>Tiếp tục</button>
     </section>
-    <script>
+    <script type="text/javascript">
+      const headerNavigation = document.createElement('nav');
+      const headerLogo = document.createElement('a');
+      headerLogo.href = '/';
+      headerLogo.setAttribute('aria-label', 'Propify');
+      headerLogo.textContent = 'Propify';
+      const headerLoginButton = document.querySelector('button');
+      headerLoginButton.before(headerNavigation);
+      headerNavigation.append(headerLogo, headerLoginButton);
       const dialog = document.querySelector('[role="dialog"]');
       const email = dialog.querySelector('input[placeholder="Email của bạn"]');
       const password = dialog.querySelector('input[placeholder="Mật khẩu"]');
-      const alert = dialog.querySelector('[role="alert"]');
+      const validation = dialog.querySelector('input[placeholder="Email của bạn"]').parentElement.nextElementSibling;
       const submit = dialog.querySelector('button:last-of-type');
       document.querySelector('[aria-label="Đăng nhập"]').onclick = () => {
         dialog.hidden = false;
@@ -88,8 +113,8 @@ test('exposes invalid-email feedback without submitting credentials', async ({ p
       password.oninput = updateState;
       email.onblur = () => {
         if (!email.value.includes('@')) {
-          alert.textContent = 'Vui lòng nhập email hợp lệ';
-          alert.hidden = false;
+          validation.textContent = 'Vui lòng nhập email hợp lệ';
+          validation.hidden = false;
         }
       };
     </script>
@@ -101,6 +126,7 @@ test('exposes invalid-email feedback without submitting credentials', async ({ p
   await loginPage.blurEmail();
 
   expect(await loginPage.validationMessage()).toBe('Vui lòng nhập email hợp lệ');
+  expect(await loginPage.serverMessage()).toBe('Thông tin đăng nhập không chính xác');
   expect(await loginPage.isSubmitEnabled()).toBe(false);
   expect(await page.evaluate(() => document.body.dataset.submitted)).toBeUndefined();
 });

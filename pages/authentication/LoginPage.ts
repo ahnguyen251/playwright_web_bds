@@ -14,7 +14,8 @@ export class LoginPage extends BasePage {
   private readonly passwordInput: Locator;
   private readonly continueButton: Locator;
   private readonly forgotPasswordButton: Locator;
-  private readonly feedbackMessage: Locator;
+  private readonly emailValidationMessage: Locator;
+  private readonly serverFeedbackMessage: Locator;
 
   public constructor(page: Page) {
     super(page);
@@ -30,7 +31,8 @@ export class LoginPage extends BasePage {
       name: 'Quên mật khẩu?',
       exact: true,
     });
-    this.feedbackMessage = this.loginDialog.getByRole('alert');
+    this.emailValidationMessage = this.emailInput.locator('xpath=../following-sibling::p[1]');
+    this.serverFeedbackMessage = this.passwordInput.locator('xpath=../following-sibling::p[1]');
   }
 
   public async open(): Promise<void> {
@@ -70,11 +72,11 @@ export class LoginPage extends BasePage {
   }
 
   public async validationMessage(): Promise<string> {
-    return (await this.feedbackMessage.textContent()) ?? '';
+    return (await this.emailValidationMessage.textContent()) ?? '';
   }
 
   public async serverMessage(): Promise<string> {
-    return (await this.feedbackMessage.textContent()) ?? '';
+    return (await this.serverFeedbackMessage.textContent()) ?? '';
   }
 
   public async isSubmitEnabled(): Promise<boolean> {
