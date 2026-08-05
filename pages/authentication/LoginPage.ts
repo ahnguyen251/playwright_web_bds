@@ -51,7 +51,9 @@ export class LoginPage extends BasePage {
     await this.submit();
   }
 
-  public async fillCredentials(credentials: Pick<UserCredentials, 'email' | 'password'>): Promise<void> {
+  public async fillCredentials(
+    credentials: Pick<UserCredentials, 'email' | 'password'>,
+  ): Promise<void> {
     await this.emailInput.fill(credentials.email);
     await this.passwordInput.fill(credentials.password);
   }

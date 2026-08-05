@@ -2,7 +2,9 @@ import { expect, test } from '@playwright/test';
 
 import { HeaderComponent } from '../../../pages/components/HeaderComponent';
 
-test('opens login from the Propify header when the modal also has a login switch', async ({ page }) => {
+test('opens login from the Propify header when the modal also has a login switch', async ({
+  page,
+}) => {
   await page.setContent(`
     <nav>
       <a href="/" aria-label="Propify">Propify</a>

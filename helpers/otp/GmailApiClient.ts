@@ -14,18 +14,26 @@ export interface GmailMessageClient {
   search(query: string): Promise<readonly GmailMessage[]>;
 }
 
-const headerValue = (headers: readonly gmail_v1.Schema$MessagePartHeader[] | null | undefined, name: string): string =>
-  headers?.find((header) => header.name?.toLowerCase() === name)?.value ?? '';
+const headerValue = (
+  headers: readonly gmail_v1.Schema$MessagePartHeader[] | null | undefined,
+  name: string,
+): string => headers?.find((header) => header.name?.toLowerCase() === name)?.value ?? '';
 
-const recipientAddress = (headers: readonly gmail_v1.Schema$MessagePartHeader[] | null | undefined): string => {
+const recipientAddress = (
+  headers: readonly gmail_v1.Schema$MessagePartHeader[] | null | undefined,
+): string => {
   const recipient = headerValue(headers, 'to');
   return /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.exec(recipient)?.[0] ?? recipient;
 };
 
 const decodeBody = (data: string): string => Buffer.from(data, 'base64url').toString('utf8');
 
-const messageBodyParts = (part: gmail_v1.Schema$MessagePart, mimeType: 'text/plain' | 'text/html'): string[] => {
-  const nestedParts = part.parts?.flatMap((nestedPart) => messageBodyParts(nestedPart, mimeType)) ?? [];
+const messageBodyParts = (
+  part: gmail_v1.Schema$MessagePart,
+  mimeType: 'text/plain' | 'text/html',
+): string[] => {
+  const nestedParts =
+    part.parts?.flatMap((nestedPart) => messageBodyParts(nestedPart, mimeType)) ?? [];
   const data = part.body?.data;
 
   return part.mimeType === mimeType && data !== undefined && data !== null

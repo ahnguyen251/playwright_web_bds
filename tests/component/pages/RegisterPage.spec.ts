@@ -2,9 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { RegisterPage } from '../../../pages/authentication/RegisterPage';
 
-const readValidationPromptly = async (
-  readMessages: () => Promise<string[]>,
-): Promise<string[]> => {
+const readValidationPromptly = async (readMessages: () => Promise<string[]>): Promise<string[]> => {
   let timeout: NodeJS.Timeout | undefined;
 
   try {
@@ -97,9 +95,10 @@ test('exposes only visible registration validation and submit readiness without 
   });
   await registerPage.blurAllFields();
 
-  expect(
-    await readValidationPromptly(() => registerPage.visibleValidationMessages()),
-  ).toEqual(['Mật khẩu phải có ít nhất 8 ký tự', 'Mật khẩu xác nhận không khớp']);
+  expect(await readValidationPromptly(() => registerPage.visibleValidationMessages())).toEqual([
+    'Mật khẩu phải có ít nhất 8 ký tự',
+    'Mật khẩu xác nhận không khớp',
+  ]);
   expect(await registerPage.isSubmitEnabled()).toBe(false);
 
   await registerPage.fillRegistration({
@@ -109,9 +108,9 @@ test('exposes only visible registration validation and submit readiness without 
     passwordConfirmation: 'different',
   });
 
-  expect(
-    await readValidationPromptly(() => registerPage.visibleValidationMessages()),
-  ).toEqual(['Mật khẩu xác nhận không khớp']);
+  expect(await readValidationPromptly(() => registerPage.visibleValidationMessages())).toEqual([
+    'Mật khẩu xác nhận không khớp',
+  ]);
   expect(await readValidationPromptly(() => registerPage.validationMessages())).toEqual([
     'Mật khẩu xác nhận không khớp',
   ]);
@@ -124,9 +123,7 @@ test('exposes only visible registration validation and submit readiness without 
     passwordConfirmation: 'Abcdef12',
   });
 
-  expect(
-    await readValidationPromptly(() => registerPage.visibleValidationMessages()),
-  ).toEqual([]);
+  expect(await readValidationPromptly(() => registerPage.visibleValidationMessages())).toEqual([]);
   expect(await readValidationPromptly(() => registerPage.validationMessages())).toEqual([]);
   expect(await registerPage.isSubmitEnabled()).toBe(true);
   expect(await page.evaluate(() => document.body.dataset.submitted)).toBeUndefined();

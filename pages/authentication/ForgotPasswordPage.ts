@@ -24,7 +24,9 @@ export class ForgotPasswordPage extends BasePage {
     super(page);
     this.emailHeading = page.getByRole('heading', { name: 'Quên mật khẩu?', exact: true });
     this.legacyEmailHeading = page.getByRole('heading', { name: 'Quên mật khẩu', exact: true });
-    this.emailInput = this.emailHeading.locator('..').getByPlaceholder('Email của bạn', { exact: true });
+    this.emailInput = this.emailHeading
+      .locator('..')
+      .getByPlaceholder('Email của bạn', { exact: true });
     this.requestResetButton = this.emailHeading.locator('..').getByRole('button', {
       name: 'Gửi mã OTP',
       exact: true,

@@ -29,3 +29,12 @@ test('default browser projects retain enterprise failure artifacts', () => {
     expect(use.trace).toBe('on-first-retry');
   }
 });
+
+test('Allure omits detailed Playwright steps that can contain typed credentials', () => {
+  const reporters = Array.isArray(playwrightConfig.reporter) ? playwrightConfig.reporter : [];
+  const allureReporter = reporters.find(
+    (reporter) => Array.isArray(reporter) && reporter[0] === 'allure-playwright',
+  );
+
+  expect(allureReporter?.[1]).toMatchObject({ detail: false });
+});

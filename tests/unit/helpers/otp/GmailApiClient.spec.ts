@@ -13,23 +13,24 @@ test('prefers the text body over a duplicate HTML alternative', async () => {
     users: {
       messages: {
         list: () => Promise.resolve({ data: { messages: [{ id: 'message-1' }] } }),
-        get: () => Promise.resolve({
-          data: {
-            id: 'message-1',
-            internalDate: '1785888001000',
-            payload: {
-              headers: [
-                { name: 'To', value: 'automation+auth-1@gmail.com' },
-                { name: 'Subject', value: 'Propify password recovery' },
-              ],
-              mimeType: 'multipart/alternative',
-              parts: [
-                { mimeType: 'text/plain', body: { data: 'VXNlIDMzMzMzMy4=' } },
-                { mimeType: 'text/html', body: { data: 'PHAgPlVzZSAzMzMzMzM8L3A+' } },
-              ],
+        get: () =>
+          Promise.resolve({
+            data: {
+              id: 'message-1',
+              internalDate: '1785888001000',
+              payload: {
+                headers: [
+                  { name: 'To', value: 'automation+auth-1@gmail.com' },
+                  { name: 'Subject', value: 'Propify password recovery' },
+                ],
+                mimeType: 'multipart/alternative',
+                parts: [
+                  { mimeType: 'text/plain', body: { data: 'VXNlIDMzMzMzMy4=' } },
+                  { mimeType: 'text/html', body: { data: 'PHAgPlVzZSAzMzMzMzM8L3A+' } },
+                ],
+              },
             },
-          },
-        }),
+          }),
       },
     },
   };
@@ -57,20 +58,21 @@ test('normalizes a display-name recipient for exact alias correlation', async ()
     users: {
       messages: {
         list: () => Promise.resolve({ data: { messages: [{ id: 'message-2' }] } }),
-        get: () => Promise.resolve({
-          data: {
-            id: 'message-2',
-            internalDate: '1785888001000',
-            payload: {
-              headers: [
-                { name: 'To', value: 'Propify Automation <automation+auth-1@gmail.com>' },
-                { name: 'Subject', value: 'Propify password recovery' },
-              ],
-              mimeType: 'text/plain',
-              body: { data: 'VXNlIDMzMzMzMy4=' },
+        get: () =>
+          Promise.resolve({
+            data: {
+              id: 'message-2',
+              internalDate: '1785888001000',
+              payload: {
+                headers: [
+                  { name: 'To', value: 'Propify Automation <automation+auth-1@gmail.com>' },
+                  { name: 'Subject', value: 'Propify password recovery' },
+                ],
+                mimeType: 'text/plain',
+                body: { data: 'VXNlIDMzMzMzMy4=' },
+              },
             },
-          },
-        }),
+          }),
       },
     },
   };

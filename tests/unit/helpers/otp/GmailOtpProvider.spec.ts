@@ -57,7 +57,12 @@ const advancingClock = (): Clock => {
 test('ignores old and wrong-recipient messages before returning the newest match', async () => {
   const client = new FakeGmailClient([
     message({ id: 'old', recipient: alias, internalDate: beforeRequest, body: 'Use 111111.' }),
-    message({ id: 'wrong', recipient: 'other@gmail.com', internalDate: afterRequest, body: 'Use 222222.' }),
+    message({
+      id: 'wrong',
+      recipient: 'other@gmail.com',
+      internalDate: afterRequest,
+      body: 'Use 222222.',
+    }),
     message({ id: 'match', recipient: alias, internalDate: afterRequest, body: 'Use 333333.' }),
   ]);
   const provider = new GmailOtpProvider(client, immediateClock);

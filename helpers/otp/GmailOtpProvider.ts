@@ -10,7 +10,8 @@ export interface Clock {
 
 const systemClock: Clock = {
   now: () => new Date(),
-  delay: async (milliseconds: number) => new Promise((resolve) => setTimeout(resolve, milliseconds)),
+  delay: async (milliseconds: number) =>
+    new Promise((resolve) => setTimeout(resolve, milliseconds)),
 };
 
 const newestFirst = (first: GmailMessage, second: GmailMessage): number =>
@@ -56,7 +57,8 @@ export class GmailOtpProvider implements OtpProvider {
     const matchingMessages = messages
       .filter(
         (message) =>
-          message.recipient === query.recipient && message.internalDate.getTime() > query.requestedAfter.getTime(),
+          message.recipient === query.recipient &&
+          message.internalDate.getTime() > query.requestedAfter.getTime(),
       )
       .sort(newestFirst);
 
@@ -70,7 +72,10 @@ export class GmailOtpProvider implements OtpProvider {
     return undefined;
   }
 
-  private async searchBeforeDeadline(query: string, remainingMilliseconds: number): Promise<readonly GmailMessage[] | undefined> {
+  private async searchBeforeDeadline(
+    query: string,
+    remainingMilliseconds: number,
+  ): Promise<readonly GmailMessage[] | undefined> {
     return Promise.race([
       this.client.search(query),
       this.clock.delay(remainingMilliseconds).then(() => undefined),

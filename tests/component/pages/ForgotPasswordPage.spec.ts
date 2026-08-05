@@ -89,9 +89,7 @@ test('requires exactly six OTP cells', async ({ page }) => {
   `);
   const forgotPasswordPage = new ForgotPasswordPage(page);
 
-  await expect(forgotPasswordPage.submitOtp()).rejects.toThrow(
-    'Expected six OTP inputs, found 5.',
-  );
+  await expect(forgotPasswordPage.submitOtp()).rejects.toThrow('Expected six OTP inputs, found 5.');
 });
 
 test('does not submit an incomplete OTP', async ({ page }) => {

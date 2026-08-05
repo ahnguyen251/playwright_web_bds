@@ -42,7 +42,10 @@ export class RegisterPage extends BasePage {
       this.registrationView.getByText('Mật khẩu phải có ít nhất 8 ký tự', { exact: true }),
       this.registrationView.getByText('Mật khẩu xác nhận không khớp', { exact: true }),
     ];
-    this.otpVerificationHeading = page.getByRole('heading', { name: 'Xác thực email', exact: true });
+    this.otpVerificationHeading = page.getByRole('heading', {
+      name: 'Xác thực email',
+      exact: true,
+    });
     this.otpVerificationView = this.otpVerificationHeading.locator('..');
     this.otpInputs = this.otpVerificationView.locator(
       'input[type="text"][inputmode="numeric"][maxlength="1"]',

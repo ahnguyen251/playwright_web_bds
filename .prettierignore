@@ -1,4 +1,5 @@
 node_modules
+.superpowers
 .auth
 allure-report
 allure-results

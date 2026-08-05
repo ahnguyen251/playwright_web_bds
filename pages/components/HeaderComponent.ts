@@ -12,7 +12,10 @@ export class HeaderComponent {
     this.headerNavigation = page.getByRole('navigation').filter({
       has: page.getByRole('link', { name: 'Propify', exact: true }),
     });
-    this.loginButton = this.headerNavigation.getByRole('button', { name: 'Đăng nhập', exact: true });
+    this.loginButton = this.headerNavigation.getByRole('button', {
+      name: 'Đăng nhập',
+      exact: true,
+    });
     this.accountButton = page.getByRole('button', { name: 'Tài khoản', exact: true });
     this.profileLink = page.getByRole('link', { name: 'Thông tin tài khoản', exact: true });
     this.logoutButton = page.getByRole('button', { name: 'Đăng xuất', exact: true });
