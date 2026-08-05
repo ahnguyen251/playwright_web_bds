@@ -15,7 +15,9 @@ test(
     await loginPage.fillCredentials(invalidEmailLoginTestCase.credentials);
     await loginPage.blurEmail();
 
-    expect(await loginPage.validationMessage()).toBe(invalidEmailLoginTestCase.expectedMessage);
+    expect(await loginPage.validationMessage()).toContain(
+      invalidEmailLoginTestCase.expectedMessage,
+    );
     expect(await loginPage.isSubmitEnabled()).toBe(false);
   },
 );

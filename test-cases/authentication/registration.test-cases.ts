@@ -6,6 +6,7 @@ import type { RegistrationData } from '../../types/user.types';
 interface RegistrationValidationTestCase extends TestCaseDefinition {
   readonly data: RegistrationData;
   readonly expectedMessages: readonly string[];
+  readonly expectedSubmitEnabled: boolean;
 }
 
 const validationData = AuthenticationDataFactory.getValidationData();
@@ -36,6 +37,7 @@ export const belowMinimumRegistrationPasswordTestCase: RegistrationValidationTes
       'Mật khẩu phải có ít nhất 8 ký tự',
       'Mật khẩu xác nhận không khớp',
     ]),
+    expectedSubmitEnabled: false,
   });
 
 export const minimumRegistrationPasswordTestCase: RegistrationValidationTestCase = Object.freeze({
@@ -53,6 +55,7 @@ export const minimumRegistrationPasswordTestCase: RegistrationValidationTestCase
     passwordConfirmation: 'Abc12!xy',
   }),
   expectedMessages: Object.freeze([]),
+  expectedSubmitEnabled: true,
 });
 
 export const registrationPasswordMismatchTestCase: RegistrationValidationTestCase = Object.freeze({
@@ -70,6 +73,7 @@ export const registrationPasswordMismatchTestCase: RegistrationValidationTestCas
     passwordConfirmation: validationData.mismatchedPassword,
   }),
   expectedMessages: Object.freeze(['Mật khẩu xác nhận không khớp']),
+  expectedSubmitEnabled: false,
 });
 
 export const registrationTestCases = Object.freeze([
