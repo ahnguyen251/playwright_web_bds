@@ -1,15 +1,23 @@
 .worktrees/
 node_modules/
+
+# Local environment and generated authentication state
 .env
 .env.*
 !.env.example
 .auth/
+
+# Playwright and Allure artifacts
 playwright-report/
 test-results/
 allure-results/
 allure-report/
+allure-history/
+.allure/
 blob-report/
 coverage/
+
+# Local logs and operating-system metadata
 *.log
 .DS_Store
 Thumbs.db
