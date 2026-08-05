@@ -46,3 +46,18 @@ test('ignores an OTP without the purpose-specific Propify signal', () => {
 
   expect(otp).toBeUndefined();
 });
+
+test('rejects a six-digit sequence embedded in an alphanumeric identifier', () => {
+  const otp = OtpMessageParser.extract(
+    {
+      id: 'message-4',
+      internalDate: new Date(),
+      recipient: 'automation@gmail.com',
+      subject: 'Propify password recovery',
+      body: 'Reference refABC123456DEF is not a one-time password.',
+    },
+    'passwordRecovery',
+  );
+
+  expect(otp).toBeUndefined();
+});

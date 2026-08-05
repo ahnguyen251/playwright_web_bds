@@ -9,7 +9,7 @@ const purposeSignals: Readonly<Record<OtpPurpose, RegExp>> = {
     /khôi\s+phục\s+mật\s+khẩu|đặt\s+lại\s+mật\s+khẩu|password\s+(?:recovery|reset)|reset\s+(?:your\s+)?password/i,
 };
 
-const candidatePattern = /(?<!\d)\d{6}(?!\d)/g;
+const candidatePattern = /(?<![\p{L}\p{N}_])\d{6}(?![\p{L}\p{N}_])/gu;
 
 export class OtpMessageParser {
   public static extract(message: GmailMessage, purpose: OtpPurpose): string | undefined {
