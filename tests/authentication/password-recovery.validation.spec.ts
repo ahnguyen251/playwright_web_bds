@@ -7,11 +7,6 @@ test(
   `${invalidEmailPasswordRecoveryTestCase.id} ${invalidEmailPasswordRecoveryTestCase.title}`,
   { tag: [...invalidEmailPasswordRecoveryTestCase.tags] },
   async ({ loginPage }) => {
-    test.fail(
-      true,
-      'Known product defect: invalid recovery email is validated only after the OTP request is clicked.',
-    );
-
     await loginPage.openHome();
     await loginPage.open();
     const forgotPasswordPage = await loginPage.openForgotPassword();
@@ -19,9 +14,13 @@ test(
     expect(await forgotPasswordPage.currentStage()).toBe('email');
     await forgotPasswordPage.fillEmail(invalidEmailPasswordRecoveryTestCase.email);
     await forgotPasswordPage.blurEmail();
+    const requestEnabled = await forgotPasswordPage.isRequestEnabled();
 
-    expect(await forgotPasswordPage.isRequestEnabled()).toBe(
-      invalidEmailPasswordRecoveryTestCase.expectedRequestEnabled,
+    test.fail(
+      requestEnabled,
+      'Known product defect: invalid recovery email is validated only after the OTP request is clicked.',
     );
+
+    expect(requestEnabled).toBe(invalidEmailPasswordRecoveryTestCase.expectedRequestEnabled);
   },
 );
