@@ -36,7 +36,7 @@ test(
         newPassword: passwordUnderTest,
         passwordConfirmation: passwordUnderTest,
       });
-      await authenticationWorkflow.logout();
+      await expect.poll(async () => authenticationWorkflow.isAuthenticated()).toBe(false);
       await authenticationWorkflow.login({ ...mutatingUser, password: passwordUnderTest });
 
       expect(await authenticationWorkflow.isAuthenticated()).toBe(true);
