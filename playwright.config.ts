@@ -8,6 +8,7 @@ const environment = loadEnvironmentConfig();
 const defaultStorageState = '.auth/defaultUser.json';
 const endToEndTestMatch =
   /(authentication|profile|listings|appointments|transactions)\/.*\.spec\.ts/;
+const mutatingTestMatch = /(authentication|profile)\/.*\.mutating\.spec\.ts/;
 
 export default defineConfig({
   testDir: './tests',
@@ -58,6 +59,7 @@ export default defineConfig({
     {
       name: 'chromium',
       testMatch: endToEndTestMatch,
+      testIgnore: mutatingTestMatch,
       dependencies: ['auth-setup'],
       use: {
         ...devices['Desktop Chrome'],
@@ -67,6 +69,7 @@ export default defineConfig({
     {
       name: 'firefox',
       testMatch: endToEndTestMatch,
+      testIgnore: mutatingTestMatch,
       dependencies: ['auth-setup'],
       use: {
         ...devices['Desktop Firefox'],
@@ -76,10 +79,21 @@ export default defineConfig({
     {
       name: 'webkit',
       testMatch: endToEndTestMatch,
+      testIgnore: mutatingTestMatch,
       dependencies: ['auth-setup'],
       use: {
         ...devices['Desktop Safari'],
         storageState: defaultStorageState,
+      },
+    },
+    {
+      name: 'mutating-chromium',
+      testMatch: mutatingTestMatch,
+      fullyParallel: false,
+      dependencies: ['auth-setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: { cookies: [], origins: [] },
       },
     },
   ],
