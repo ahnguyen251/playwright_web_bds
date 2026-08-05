@@ -112,12 +112,24 @@ export class RegisterPage extends BasePage {
     await this.resendOtpButton.click();
   }
 
+  public async visibleValidationMessages(): Promise<string[]> {
+    const visibleMessages: string[] = [];
+
+    for (const messageLocator of this.validationMessageLocators) {
+      if (await messageLocator.isVisible()) {
+        visibleMessages.push(((await messageLocator.textContent()) ?? '').trim());
+      }
+    }
+
+    return visibleMessages;
+  }
+
   public async validationMessages(): Promise<string[]> {
-    return Promise.all(
-      this.validationMessageLocators.map(async (messageLocator) => {
-        return (await messageLocator.textContent()) ?? '';
-      }),
-    );
+    return this.visibleValidationMessages();
+  }
+
+  public async isSubmitEnabled(): Promise<boolean> {
+    return this.submitButton.isEnabled();
   }
 
   public async otpError(): Promise<string> {

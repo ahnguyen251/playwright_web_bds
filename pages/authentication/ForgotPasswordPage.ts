@@ -56,8 +56,20 @@ export class ForgotPasswordPage extends BasePage {
   }
 
   public async requestReset(email: string): Promise<void> {
-    await this.emailInput.fill(email);
+    await this.fillEmail(email);
     await this.requestResetButton.click();
+  }
+
+  public async fillEmail(email: string): Promise<void> {
+    await this.emailInput.fill(email);
+  }
+
+  public async blurEmail(): Promise<void> {
+    await this.emailInput.blur();
+  }
+
+  public async isRequestEnabled(): Promise<boolean> {
+    return this.requestResetButton.isEnabled();
   }
 
   public async enterOtp(code: string): Promise<void> {

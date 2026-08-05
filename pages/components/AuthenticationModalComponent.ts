@@ -8,10 +8,14 @@ export class AuthenticationModalComponent {
   private readonly loginSwitchButton: Locator;
 
   public constructor(page: Page) {
-    this.authenticationDialog = page.getByRole('dialog').filter({
-      has: page.getByRole('button', { name: 'Đăng nhập với Google', exact: true }),
+    const googleLoginButton = page.getByRole('button', {
+      name: 'Đăng nhập với Google',
+      exact: true,
     });
-    this.closeButton = this.authenticationDialog.getByRole('button', { name: 'Đóng', exact: true });
+    this.authenticationDialog = googleLoginButton.locator(
+      'xpath=ancestor::div[contains(concat(" ", normalize-space(@class), " "), " fixed ")][1]',
+    );
+    this.closeButton = this.authenticationDialog.locator('button.absolute.top-4.right-4');
     this.googleLoginButton = this.authenticationDialog.getByRole('button', {
       name: 'Đăng nhập với Google',
       exact: true,

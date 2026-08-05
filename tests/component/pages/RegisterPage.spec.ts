@@ -2,11 +2,11 @@ import { expect, test } from '@playwright/test';
 
 import { RegisterPage } from '../../../pages/authentication/RegisterPage';
 
-test('fills deployed registration fields and exposes validation feedback without a phone operation', async ({
+test('exposes only visible registration validation and submit readiness without submitting', async ({
   page,
 }) => {
   await page.setContent(`
-    <section role="dialog">
+    <div class="fixed inset-0">
       <button>Đóng</button>
       <button>Đăng nhập với Google</button>
       <button>Đăng ký ngay</button>
@@ -20,21 +20,31 @@ test('fills deployed registration fields and exposes validation feedback without
         <p hidden>Vui lòng nhập email hợp lệ</p>
         <p hidden>Mật khẩu phải có ít nhất 8 ký tự</p>
         <p hidden>Mật khẩu xác nhận không khớp</p>
-        <button>Tạo tài khoản</button>
+        <button disabled>Tạo tài khoản</button>
       </section>
-    </section>
+    </div>
     <script type="text/javascript">
-      const dialog = document.querySelector('[role="dialog"]');
-      const registrationView = dialog.querySelector('section');
-      dialog.querySelector('button:nth-of-type(3)').onclick = () => {
+      const modal = document.querySelector('.fixed');
+      const registrationView = modal.querySelector('section');
+      const buttons = Array.from(modal.querySelectorAll(':scope > button'));
+      buttons.find((button) => button.textContent === 'Đăng ký ngay').onclick = () => {
         registrationView.hidden = false;
       };
+      const [fullName, email, password, confirmation] = registrationView.querySelectorAll('input');
+      const [emailMessage, passwordMessage, confirmationMessage] = registrationView.querySelectorAll('p');
+      const submitButton = registrationView.querySelector('button');
+      const updateState = () => {
+        const emailValid = /\\S+@\\S+\\.\\S+/.test(email.value);
+        const passwordValid = password.value.length >= 8;
+        const confirmationMatches = password.value === confirmation.value;
+        emailMessage.hidden = emailValid;
+        passwordMessage.hidden = passwordValid;
+        confirmationMessage.hidden = confirmationMatches;
+        submitButton.disabled = !fullName.value.trim() || !emailValid || !passwordValid || !confirmationMatches;
+      };
       registrationView.querySelectorAll('input').forEach((input) => {
-        input.onblur = () => {
-          registrationView.querySelectorAll('p').forEach((message) => {
-            message.hidden = false;
-          });
-        };
+        input.oninput = updateState;
+        input.onblur = updateState;
       });
     </script>
   `);
@@ -43,17 +53,43 @@ test('fills deployed registration fields and exposes validation feedback without
   await registerPage.open();
   await registerPage.fillRegistration({
     fullName: 'Nguyễn Kiểm Thử',
-    email: 'bad',
-    password: 'abc',
-    passwordConfirmation: 'xyz',
+    email: 'tester@example.test',
+    password: 'Abcdef1',
+    passwordConfirmation: 'different',
   });
   await registerPage.blurAllFields();
 
-  expect(await registerPage.validationMessages()).toEqual([
-    'Vui lòng nhập email hợp lệ',
+  expect(await registerPage.visibleValidationMessages()).toEqual([
     'Mật khẩu phải có ít nhất 8 ký tự',
     'Mật khẩu xác nhận không khớp',
   ]);
+  expect(await registerPage.isSubmitEnabled()).toBe(false);
+
+  await registerPage.fillRegistration({
+    fullName: 'Nguyễn Kiểm Thử',
+    email: 'tester@example.test',
+    password: 'Abcdef12',
+    passwordConfirmation: 'different',
+  });
+
+  expect(await registerPage.visibleValidationMessages()).toEqual([
+    'Mật khẩu xác nhận không khớp',
+  ]);
+  expect(await registerPage.validationMessages()).toEqual([
+    'Mật khẩu xác nhận không khớp',
+  ]);
+  expect(await registerPage.isSubmitEnabled()).toBe(false);
+
+  await registerPage.fillRegistration({
+    fullName: 'Nguyễn Kiểm Thử',
+    email: 'tester@example.test',
+    password: 'Abcdef12',
+    passwordConfirmation: 'Abcdef12',
+  });
+
+  expect(await registerPage.visibleValidationMessages()).toEqual([]);
+  expect(await registerPage.isSubmitEnabled()).toBe(true);
+  expect(await page.evaluate(() => document.body.dataset.submitted)).toBeUndefined();
   expect(registerPage).not.toHaveProperty('fillPhone');
 });
 

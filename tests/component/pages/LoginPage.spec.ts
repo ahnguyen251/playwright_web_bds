@@ -2,16 +2,18 @@ import { expect, test } from '@playwright/test';
 
 import { LoginPage } from '../../../pages/authentication/LoginPage';
 
-test('submits credentials through the Propify login modal', async ({ page }) => {
+test('opens and submits through a login modal without a dialog role', async ({ page }) => {
   await page.setContent(`
     <button aria-label="Đăng nhập">Đăng nhập</button>
-    <section role="dialog" hidden>
-      <h1>Xin chào,</h1>
-      <input placeholder="Email của bạn" />
-      <input placeholder="Mật khẩu" type="password" />
-      <button>Quên mật khẩu?</button>
-      <button>Tiếp tục</button>
-    </section>
+    <div class="fixed inset-0" hidden>
+      <section>
+        <h1>Xin chào,</h1>
+        <input placeholder="Email của bạn" />
+        <input placeholder="Mật khẩu" type="password" />
+        <button>Quên mật khẩu?</button>
+        <button>Tiếp tục</button>
+      </section>
+    </div>
     <script type="text/javascript">
       const headerNavigation = document.createElement('nav');
       const headerLogo = document.createElement('a');
@@ -22,9 +24,9 @@ test('submits credentials through the Propify login modal', async ({ page }) => 
       headerLoginButton.before(headerNavigation);
       headerNavigation.append(headerLogo, headerLoginButton);
       document.querySelector('[aria-label="Đăng nhập"]').onclick = () => {
-        document.querySelector('[role="dialog"]').hidden = false;
+        document.querySelector('.fixed').hidden = false;
       };
-      document.querySelector('section button:last-of-type').onclick = () => {
+      document.querySelector('.fixed section button:last-of-type').onclick = () => {
         document.body.dataset.submitted = 'true';
       };
     </script>

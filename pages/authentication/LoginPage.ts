@@ -20,10 +20,8 @@ export class LoginPage extends BasePage {
   public constructor(page: Page) {
     super(page);
     this.header = new HeaderComponent(page);
-    this.loginDialog = page.getByRole('dialog').filter({
-      has: page.getByRole('heading', { name: 'Xin chào,', exact: true }),
-    });
-    this.heading = this.loginDialog.getByRole('heading', { name: 'Xin chào,', exact: true });
+    this.heading = page.getByRole('heading', { name: 'Xin chào,', exact: true });
+    this.loginDialog = this.heading.locator('..');
     this.emailInput = this.loginDialog.getByPlaceholder('Email của bạn', { exact: true });
     this.passwordInput = this.loginDialog.getByPlaceholder('Mật khẩu', { exact: true });
     this.continueButton = this.loginDialog.getByRole('button', { name: 'Tiếp tục', exact: true });

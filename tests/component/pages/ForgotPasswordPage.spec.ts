@@ -25,6 +25,34 @@ test('requests a password reset from the email stage', async ({ page }) => {
   expect(await page.evaluate(() => document.body.dataset.requested)).toBe('true');
 });
 
+test('exposes email interaction and deployed request readiness without requesting a reset', async ({
+  page,
+}) => {
+  await page.setContent(`
+    <section data-stage="email">
+      <h1>Quên mật khẩu?</h1>
+      <p>Nhập email để nhận mã OTP đặt lại mật khẩu</p>
+      <input placeholder="Email của bạn" />
+      <button>Gửi mã OTP</button>
+    </section>
+    <script type="text/javascript">
+      const email = document.querySelector('input');
+      email.onblur = () => { document.body.dataset.emailBlurred = email.value; };
+      document.querySelector('button').onclick = () => {
+        document.body.dataset.requested = 'true';
+      };
+    </script>
+  `);
+  const forgotPasswordPage = new ForgotPasswordPage(page);
+
+  await forgotPasswordPage.fillEmail('bad');
+  await forgotPasswordPage.blurEmail();
+
+  expect(await forgotPasswordPage.isRequestEnabled()).toBe(true);
+  expect(await page.evaluate(() => document.body.dataset.emailBlurred)).toBe('bad');
+  expect(await page.evaluate(() => document.body.dataset.requested)).toBeUndefined();
+});
+
 test('returns to login from the email stage', async ({ page }) => {
   await page.setContent(`
     <section>
