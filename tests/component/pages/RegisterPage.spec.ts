@@ -2,6 +2,27 @@ import { expect, test } from '@playwright/test';
 
 import { RegisterPage } from '../../../pages/authentication/RegisterPage';
 
+const readValidationPromptly = async (
+  readMessages: () => Promise<string[]>,
+): Promise<string[]> => {
+  let timeout: NodeJS.Timeout | undefined;
+
+  try {
+    return await Promise.race([
+      readMessages(),
+      new Promise<never>((_resolve, reject) => {
+        timeout = setTimeout(() => {
+          reject(new Error('Validation messages did not settle promptly.'));
+        }, 500);
+      }),
+    ]);
+  } finally {
+    if (timeout !== undefined) {
+      clearTimeout(timeout);
+    }
+  }
+};
+
 test('exposes only visible registration validation and submit readiness without submitting', async ({
   page,
 }) => {
@@ -17,9 +38,6 @@ test('exposes only visible registration validation and submit readiness without 
         <input placeholder="Email của bạn" />
         <input placeholder="Mật khẩu" type="password" />
         <input placeholder="Nhập lại mật khẩu" type="password" />
-        <p hidden>Vui lòng nhập email hợp lệ</p>
-        <p hidden>Mật khẩu phải có ít nhất 8 ký tự</p>
-        <p hidden>Mật khẩu xác nhận không khớp</p>
         <button disabled>Tạo tài khoản</button>
       </section>
     </div>
@@ -31,17 +49,37 @@ test('exposes only visible registration validation and submit readiness without 
         registrationView.hidden = false;
       };
       const [fullName, email, password, confirmation] = registrationView.querySelectorAll('input');
-      const [emailMessage, passwordMessage, confirmationMessage] = registrationView.querySelectorAll('p');
       const submitButton = registrationView.querySelector('button');
+      const validationMessages = {
+        email: 'Vui lòng nhập email hợp lệ',
+        password: 'Mật khẩu phải có ít nhất 8 ký tự',
+        confirmation: 'Mật khẩu xác nhận không khớp',
+      };
+      const renderValidation = (key, isVisible) => {
+        const selector = '[data-validation="' + key + '"]';
+        const mountedMessage = registrationView.querySelector(selector);
+        if (!isVisible) {
+          mountedMessage?.remove();
+          return;
+        }
+        if (mountedMessage) {
+          return;
+        }
+        const message = document.createElement('p');
+        message.dataset.validation = key;
+        message.textContent = validationMessages[key];
+        submitButton.before(message);
+      };
       const updateState = () => {
         const emailValid = /\\S+@\\S+\\.\\S+/.test(email.value);
         const passwordValid = password.value.length >= 8;
         const confirmationMatches = password.value === confirmation.value;
-        emailMessage.hidden = emailValid;
-        passwordMessage.hidden = passwordValid;
-        confirmationMessage.hidden = confirmationMatches;
+        renderValidation('email', !emailValid);
+        renderValidation('password', !passwordValid);
+        renderValidation('confirmation', !confirmationMatches);
         submitButton.disabled = !fullName.value.trim() || !emailValid || !passwordValid || !confirmationMatches;
       };
+      submitButton.onclick = () => { document.body.dataset.submitted = 'true'; };
       registrationView.querySelectorAll('input').forEach((input) => {
         input.oninput = updateState;
         input.onblur = updateState;
@@ -59,10 +97,9 @@ test('exposes only visible registration validation and submit readiness without 
   });
   await registerPage.blurAllFields();
 
-  expect(await registerPage.visibleValidationMessages()).toEqual([
-    'Mật khẩu phải có ít nhất 8 ký tự',
-    'Mật khẩu xác nhận không khớp',
-  ]);
+  expect(
+    await readValidationPromptly(() => registerPage.visibleValidationMessages()),
+  ).toEqual(['Mật khẩu phải có ít nhất 8 ký tự', 'Mật khẩu xác nhận không khớp']);
   expect(await registerPage.isSubmitEnabled()).toBe(false);
 
   await registerPage.fillRegistration({
@@ -72,10 +109,10 @@ test('exposes only visible registration validation and submit readiness without 
     passwordConfirmation: 'different',
   });
 
-  expect(await registerPage.visibleValidationMessages()).toEqual([
-    'Mật khẩu xác nhận không khớp',
-  ]);
-  expect(await registerPage.validationMessages()).toEqual([
+  expect(
+    await readValidationPromptly(() => registerPage.visibleValidationMessages()),
+  ).toEqual(['Mật khẩu xác nhận không khớp']);
+  expect(await readValidationPromptly(() => registerPage.validationMessages())).toEqual([
     'Mật khẩu xác nhận không khớp',
   ]);
   expect(await registerPage.isSubmitEnabled()).toBe(false);
@@ -87,7 +124,10 @@ test('exposes only visible registration validation and submit readiness without 
     passwordConfirmation: 'Abcdef12',
   });
 
-  expect(await registerPage.visibleValidationMessages()).toEqual([]);
+  expect(
+    await readValidationPromptly(() => registerPage.visibleValidationMessages()),
+  ).toEqual([]);
+  expect(await readValidationPromptly(() => registerPage.validationMessages())).toEqual([]);
   expect(await registerPage.isSubmitEnabled()).toBe(true);
   expect(await page.evaluate(() => document.body.dataset.submitted)).toBeUndefined();
   expect(registerPage).not.toHaveProperty('fillPhone');
