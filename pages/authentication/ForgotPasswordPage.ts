@@ -106,7 +106,7 @@ export class ForgotPasswordPage extends BasePage {
   }
 
   public async currentStage(): Promise<PasswordRecoveryStage> {
-    const stageMarkers: ReadonlyArray<readonly [PasswordRecoveryStage, Locator]> = [
+    const stageMarkers: readonly (readonly [PasswordRecoveryStage, Locator])[] = [
       ['email', this.emailHeading],
       ['otp', this.submitOtpButton],
       ['newPassword', this.submitNewPasswordButton],
@@ -120,11 +120,13 @@ export class ForgotPasswordPage extends BasePage {
       }
     }
 
-    if (visibleStages.length !== 1) {
+    const visibleStage = visibleStages[0];
+
+    if (visibleStages.length !== 1 || visibleStage === undefined) {
       throw new Error('Expected exactly one visible password recovery stage.');
     }
 
-    return visibleStages[0] as PasswordRecoveryStage;
+    return visibleStage;
   }
 
   public async visibleMessage(): Promise<string> {
