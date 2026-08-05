@@ -61,12 +61,28 @@ export class ForgotPasswordPage extends BasePage {
   }
 
   public async enterOtp(code: string): Promise<void> {
-    for (const [index, digit] of Array.from(code).entries()) {
+    await this.requireSixOtpInputs();
+    const otpDigits = Array.from(code).slice(0, 6);
+
+    if (otpDigits.length !== 6 || otpDigits.some((digit) => !/^\d$/.test(digit))) {
+      throw new Error('Expected a six-digit OTP.');
+    }
+
+    for (const [index, digit] of otpDigits.entries()) {
       await this.otpInputs.nth(index).fill(digit);
     }
   }
 
   public async submitOtp(): Promise<void> {
+    await this.requireSixOtpInputs();
+    const otpValues = await Promise.all(
+      Array.from({ length: 6 }, async (_, index) => this.otpInputs.nth(index).inputValue()),
+    );
+
+    if (otpValues.some((value) => !/^\d$/.test(value))) {
+      throw new Error('Cannot submit an incomplete OTP.');
+    }
+
     await this.submitOtpButton.click();
   }
 
@@ -121,5 +137,13 @@ export class ForgotPasswordPage extends BasePage {
 
   public async isOpen(): Promise<boolean> {
     return (await this.emailHeading.isVisible()) || this.legacyEmailHeading.isVisible();
+  }
+
+  private async requireSixOtpInputs(): Promise<void> {
+    const otpInputCount = await this.otpInputs.count();
+
+    if (otpInputCount !== 6) {
+      throw new Error(`Expected six OTP inputs, found ${String(otpInputCount)}.`);
+    }
   }
 }
