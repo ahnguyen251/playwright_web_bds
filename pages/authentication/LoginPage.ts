@@ -31,8 +31,12 @@ export class LoginPage extends BasePage {
       name: 'Quên mật khẩu?',
       exact: true,
     });
-    this.emailValidationMessage = this.emailInput.locator('xpath=../following-sibling::p[1]');
-    this.serverFeedbackMessage = this.passwordInput.locator('xpath=../following-sibling::p[1]');
+    this.emailValidationMessage = this.loginDialog.getByText('Vui lòng nhập email hợp lệ', {
+      exact: true,
+    });
+    this.serverFeedbackMessage = this.loginDialog.locator(
+      'p.text-red-500.text-xs.mb-3.flex.items-center.gap-1',
+    );
   }
 
   public async open(): Promise<void> {

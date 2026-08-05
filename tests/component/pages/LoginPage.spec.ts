@@ -82,10 +82,10 @@ test('exposes invalid-email feedback without submitting credentials', async ({ p
     <button aria-label="Đăng nhập">Đăng nhập</button>
     <section role="dialog" hidden>
       <h1>Xin chào,</h1>
+      <p class="text-red-500 text-xs mb-2 flex items-center gap-1">Vui lòng nhập email hợp lệ</p>
       <div><input placeholder="Email của bạn" /></div>
-      <p hidden></p>
       <div><input placeholder="Mật khẩu" type="password" /></div>
-      <p>Thông tin đăng nhập không chính xác</p>
+      <p class="text-red-500 text-xs mb-3 flex items-center gap-1">Thông tin đăng nhập không chính xác</p>
       <button>Quên mật khẩu?</button>
       <button disabled>Tiếp tục</button>
     </section>
@@ -101,7 +101,6 @@ test('exposes invalid-email feedback without submitting credentials', async ({ p
       const dialog = document.querySelector('[role="dialog"]');
       const email = dialog.querySelector('input[placeholder="Email của bạn"]');
       const password = dialog.querySelector('input[placeholder="Mật khẩu"]');
-      const validation = dialog.querySelector('input[placeholder="Email của bạn"]').parentElement.nextElementSibling;
       const submit = dialog.querySelector('button:last-of-type');
       document.querySelector('[aria-label="Đăng nhập"]').onclick = () => {
         dialog.hidden = false;
@@ -113,8 +112,7 @@ test('exposes invalid-email feedback without submitting credentials', async ({ p
       password.oninput = updateState;
       email.onblur = () => {
         if (!email.value.includes('@')) {
-          validation.textContent = 'Vui lòng nhập email hợp lệ';
-          validation.hidden = false;
+          document.body.dataset.validationTriggered = 'true';
         }
       };
     </script>
@@ -128,5 +126,6 @@ test('exposes invalid-email feedback without submitting credentials', async ({ p
   expect(await loginPage.validationMessage()).toBe('Vui lòng nhập email hợp lệ');
   expect(await loginPage.serverMessage()).toBe('Thông tin đăng nhập không chính xác');
   expect(await loginPage.isSubmitEnabled()).toBe(false);
+  expect(await page.evaluate(() => document.body.dataset.validationTriggered)).toBe('true');
   expect(await page.evaluate(() => document.body.dataset.submitted)).toBeUndefined();
 });
