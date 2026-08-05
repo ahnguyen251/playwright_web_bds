@@ -8,11 +8,15 @@ const PROFILE_MARKUP_VALUES = Object.freeze({
   phone: '0970000000',
 });
 
-async function mountProfile(page: Page): Promise<void> {
+interface ProfileMarkupOptions {
+  readonly profileInitiallyHidden?: boolean;
+}
+
+async function mountProfile(page: Page, options: ProfileMarkupOptions = {}): Promise<void> {
   await page.setContent(`
     <button>Thông tin tài khoản</button>
     <main>
-      <section data-view="profile">
+      <section data-view="profile"${options.profileInitiallyHidden === true ? ' hidden' : ''}>
         <h2>Thông tin tài khoản</h2>
         <h3>Thông tin cá nhân</h3>
         <label>
@@ -78,6 +82,7 @@ async function mountProfile(page: Page): Promise<void> {
 
       accountButton.onclick = () => {
         document.body.dataset.accountInformationOpened = 'true';
+        profileView.hidden = false;
       };
       edit.onclick = () => {
         fullName.disabled = false;
@@ -164,16 +169,21 @@ async function mountProfile(page: Page): Promise<void> {
   `);
 }
 
-test.beforeEach(async ({ page }) => {
-  await mountProfile(page);
-});
+async function createProfilePage(
+  page: Page,
+  options: ProfileMarkupOptions = {},
+): Promise<ProfilePage> {
+  await mountProfile(page, options);
+  return new ProfilePage(page);
+}
 
-test('reads profile data while email and verified phone remain disabled', async ({ page }) => {
-  const profilePage = new ProfilePage(page);
+test('opens account information before reading disabled profile fields', async ({ page }) => {
+  const profilePage = await createProfilePage(page, { profileInitiallyHidden: true });
 
   await profilePage.openAccountInformation();
-  const profile = await profilePage.profile().read();
+  expect(await page.evaluate(() => document.body.dataset.accountInformationOpened)).toBe('true');
 
+  const profile = await profilePage.profile().read();
   expect(profile).toEqual({
     fullName: 'Nguyễn Kiểm Thử',
     email: 'automation@gmail.com',
@@ -184,7 +194,7 @@ test('reads profile data while email and verified phone remain disabled', async 
 });
 
 test('enables only the full name and restores it when editing is cancelled', async ({ page }) => {
-  const profilePage = new ProfilePage(page);
+  const profilePage = await createProfilePage(page);
   const profile = profilePage.profile();
 
   await profile.startEditing();
@@ -208,7 +218,7 @@ test('enables only the full name and restores it when editing is cancelled', asy
 });
 
 test('saves an allowed full-name update through the profile component', async ({ page }) => {
-  const profile = new ProfilePage(page).profile();
+  const profile = (await createProfilePage(page)).profile();
 
   await profile.startEditing();
   await profile.updateFullName('Nguyễn Đã Lưu');
@@ -221,7 +231,7 @@ test('saves an allowed full-name update through the profile component', async ({
 test('exposes password minimum, complexity, and confirmation validation without submitting', async ({
   page,
 }) => {
-  const profilePage = new ProfilePage(page);
+  const profilePage = await createProfilePage(page);
   const changePassword = profilePage.changePassword();
 
   await changePassword.open();
@@ -263,7 +273,7 @@ test('exposes password minimum, complexity, and confirmation validation without 
 });
 
 test('cancels change-password editing and returns to the profile view', async ({ page }) => {
-  const profilePage = new ProfilePage(page);
+  const profilePage = await createProfilePage(page);
   const changePassword = profilePage.changePassword();
 
   await changePassword.open();
@@ -277,7 +287,7 @@ test('cancels change-password editing and returns to the profile view', async ({
 });
 
 test('submits valid change-password data through the explicit operation', async ({ page }) => {
-  const changePassword = new ProfilePage(page).changePassword();
+  const changePassword = (await createProfilePage(page)).changePassword();
 
   await changePassword.open();
   await changePassword.fill({
