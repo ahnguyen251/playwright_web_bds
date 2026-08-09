@@ -228,7 +228,9 @@ export class ListingListPage extends BasePage {
     const total = this.listingTotal(payload);
     if (total !== undefined) {
       this.lastResultTotal = total;
-      await this.resultCountText.filter({ hasText: new RegExp(`\\b${total}\\b`) }).waitFor();
+      await this.resultCountText
+        .filter({ hasText: new RegExp(`\\b${String(total)}\\b`) })
+        .waitFor();
     }
     await this.page.waitForLoadState('networkidle');
   }

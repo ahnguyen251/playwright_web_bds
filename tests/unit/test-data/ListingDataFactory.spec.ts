@@ -37,9 +37,9 @@ test('tạo tiêu đề duy nhất không vượt quá giới hạn giao diện'
 });
 
 test('từ chối tiêu đề và mô tả vượt giới hạn giao diện', () => {
-  expect(() =>
-    ListingDataFactory.create({ title: ListingDataFactory.boundaryText(121) }),
-  ).toThrow('Listing title cannot exceed 120 characters');
+  expect(() => ListingDataFactory.create({ title: ListingDataFactory.boundaryText(121) })).toThrow(
+    'Listing title cannot exceed 120 characters',
+  );
   expect(() =>
     ListingDataFactory.create({ description: ListingDataFactory.boundaryText(5001) }),
   ).toThrow('Listing description cannot exceed 5000 characters');
@@ -49,7 +49,7 @@ test('từ chối số lượng media vượt giới hạn giao diện', () => {
   expect(() =>
     ListingDataFactory.create({
       media: {
-        imagePaths: Array.from({ length: 11 }, (_, index) => `listing-images/${index}.png`),
+        imagePaths: Array.from({ length: 11 }, (_, index) => `listing-images/${String(index)}.png`),
       },
     }),
   ).toThrow('Listing cannot contain more than 10 images');

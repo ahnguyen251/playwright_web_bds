@@ -24,12 +24,14 @@ let uniqueTitleSequence = 0;
 const validateListing = (listing: ListingData): void => {
   if (!listing.title.trim()) throw new Error('Listing title is required');
   if (listing.title.length > LISTING_UI_LIMITS.titleCharacters) {
-    throw new Error(`Listing title cannot exceed ${LISTING_UI_LIMITS.titleCharacters} characters`);
+    throw new Error(
+      `Listing title cannot exceed ${String(LISTING_UI_LIMITS.titleCharacters)} characters`,
+    );
   }
   if (!listing.description.trim()) throw new Error('Listing description is required');
   if (listing.description.length > LISTING_UI_LIMITS.descriptionCharacters) {
     throw new Error(
-      `Listing description cannot exceed ${LISTING_UI_LIMITS.descriptionCharacters} characters`,
+      `Listing description cannot exceed ${String(LISTING_UI_LIMITS.descriptionCharacters)} characters`,
     );
   }
   if (!transactionTypes.has(listing.transactionType)) {
@@ -41,7 +43,9 @@ const validateListing = (listing: ListingData): void => {
     throw new Error('Listing room counts cannot be negative');
   }
   if (listing.media.imagePaths.length > LISTING_UI_LIMITS.maximumImages) {
-    throw new Error(`Listing cannot contain more than ${LISTING_UI_LIMITS.maximumImages} images`);
+    throw new Error(
+      `Listing cannot contain more than ${String(LISTING_UI_LIMITS.maximumImages)} images`,
+    );
   }
 };
 

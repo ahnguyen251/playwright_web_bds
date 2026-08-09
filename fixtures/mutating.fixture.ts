@@ -2,7 +2,7 @@ import { loadEnvironmentConfig } from '../config/environment.config';
 import { expect, test as base } from './test.fixture';
 
 interface MutationSafetyFixture {
-  readonly mutationSafety: void;
+  readonly mutationSafety: undefined;
 }
 
 export const mutatingTest = base.extend<MutationSafetyFixture>({
@@ -15,7 +15,7 @@ export const mutatingTest = base.extend<MutationSafetyFixture>({
         'Mutating E2E is disabled. Set ALLOW_MUTATING_E2E=true only for an approved target.',
       );
 
-      await use();
+      await use(undefined);
     },
     { auto: true },
   ],

@@ -18,8 +18,9 @@ test('rejects path traversal outside the fixture root', () => {
 test('tải nhiều tệp trong một lần để không ghi đè lựa chọn trước', async () => {
   const calls: string[][] = [];
   const locator = {
-    setInputFiles: async (paths: string[]) => {
+    setInputFiles: (paths: string[]): Promise<void> => {
       calls.push(paths);
+      return Promise.resolve();
     },
   } as unknown as Locator;
 
