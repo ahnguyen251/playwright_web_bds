@@ -2,16 +2,16 @@ import type { Locator } from '@playwright/test';
 
 import type { ListingSummary } from '../../types/listing.types';
 
-const parseDecimal = (value: string): number => {
+export const parseListingDecimal = (value: string): number => {
   const normalized = value.trim().replace(/\s/g, '').replace(',', '.');
   const parsed = Number.parseFloat(normalized);
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const parsePriceInBillions = (priceText: string): number | undefined => {
+export const parseListingPriceInBillions = (priceText: string): number | undefined => {
   const numericText = /[\d.,]+/.exec(priceText)?.[0];
   if (numericText === undefined) return undefined;
-  const value = parseDecimal(numericText);
+  const value = parseListingDecimal(numericText);
   const normalized = priceText.toLocaleLowerCase('vi-VN');
   if (normalized.includes('triệu')) return value / 1000;
   if (normalized.includes('nghìn')) return value / 1_000_000;
@@ -31,7 +31,7 @@ export class ListingCardComponent {
     const href = (await this.root.getAttribute('href')) ?? '';
     const id = /\/listings\/([^/?#]+)/.exec(href)?.[1] ?? (await this.dataValue('listingId'));
     const priceText = await this.textValue('listing-price', /[\d.,]+\s*(tỷ|triệu|nghìn)/i);
-    const price = parsePriceInBillions(priceText);
+    const price = parseListingPriceInBillions(priceText);
     const posterText = await this.textValue('listing-poster', /^(Chủ nhà|Môi giới)$/i);
 
     return Object.freeze({
@@ -40,9 +40,9 @@ export class ListingCardComponent {
       address: await this.textValue('listing-address', /Phường|Xã|Tỉnh|Thành phố/i, 'p'),
       ...(price === undefined ? {} : { price }),
       priceText,
-      area: parseDecimal(await this.textValue('listing-area', /[\d.,]+\s*m²/i)),
-      bedrooms: parseDecimal(await this.textValue('listing-bedrooms', /\d+\s*PN/i)),
-      bathrooms: parseDecimal(await this.textValue('listing-bathrooms', /\d+\s*WC/i)),
+      area: parseListingDecimal(await this.textValue('listing-area', /[\d.,]+\s*m²/i)),
+      bedrooms: parseListingDecimal(await this.textValue('listing-bedrooms', /\d+\s*PN/i)),
+      bathrooms: parseListingDecimal(await this.textValue('listing-bathrooms', /\d+\s*WC/i)),
       poster: /Môi giới/i.test(posterText) ? 'broker' : 'owner',
     });
   }
