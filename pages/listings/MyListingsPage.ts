@@ -52,6 +52,7 @@ export class MyListingsPage extends BasePage {
 
   public async open(): Promise<void> {
     await this.navigate(ROUTES.myListings);
+    await this.page.waitForLoadState('networkidle');
   }
 
   public async search(keyword: string): Promise<void> {
@@ -81,6 +82,7 @@ export class MyListingsPage extends BasePage {
     const summaries: ListingSummary[] = [];
     for (const row of rows) {
       if (!(await row.isVisible())) continue;
+      if ((await row.locator('[data-listing-price]').count()) === 0) continue;
       const priceText = await this.rowText(row, 'listing-price');
       const price = parseListingPriceInBillions(priceText);
       summaries.push(
