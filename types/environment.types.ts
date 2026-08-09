@@ -7,4 +7,5 @@ export interface EnvironmentConfig {
   readonly defaultUserEmail: string;
   readonly defaultUserPassword: string;
   readonly ci: boolean;
+  readonly allowMutatingE2E: boolean;
 }

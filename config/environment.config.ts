@@ -32,5 +32,6 @@ export const loadEnvironmentConfig = (
     defaultUserEmail: parsed.data.DEFAULT_USER_EMAIL,
     defaultUserPassword: parsed.data.DEFAULT_USER_PASSWORD,
     ci: parsed.data.CI,
+    allowMutatingE2E: parsed.data.ALLOW_MUTATING_E2E,
   });
 };

@@ -18,6 +18,10 @@ export const environmentSchema = z.object({
     .enum(['true', 'false'])
     .default('false')
     .transform((value) => value === 'true'),
+  ALLOW_MUTATING_E2E: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
 });
 
 export type ValidatedEnvironment = z.infer<typeof environmentSchema>;
