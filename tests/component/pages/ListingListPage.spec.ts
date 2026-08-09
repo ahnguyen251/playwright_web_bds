@@ -21,7 +21,7 @@ const publicListingFixture = (): string => `
       <legend>Mức giá</legend>
       <label><input type="radio" name="price" value="all" checked /> Tất cả</label>
       <label><input type="radio" name="price" value="2_5" /> Từ 2 đến 5 tỷ</label>
-      <label><input type="radio" name="price" value="custom" /> Tùy chỉnh</label>
+      <div><input type="radio" name="price" value="custom" /><span>Khác</span></div>
       <label>Từ <input type="number" placeholder="Từ" /></label>
       <label>Đến <input type="number" placeholder="Đến" /></label>
     </fieldset>
@@ -29,7 +29,7 @@ const publicListingFixture = (): string => `
       <legend>Diện tích</legend>
       <label><input type="radio" name="area" value="all" checked /> Tất cả</label>
       <label><input type="radio" name="area" value="50_80" /> Từ 50 đến 80 m²</label>
-      <label><input type="radio" name="area" value="custom" /> Tùy chỉnh</label>
+      <div><input type="radio" name="area" value="custom" /><span>Khác</span></div>
       <label>Từ <input type="number" placeholder="Từ" /></label>
       <label>Đến <input type="number" placeholder="Đến" /></label>
     </fieldset>
@@ -64,6 +64,9 @@ const publicListingFixture = (): string => `
     <span data-page>1</span>
     <button type="button" aria-label="Trang tiếp theo">Tiếp</button>
   </main>
+  <footer>
+    <a href="/listings/99"><h3>Tin nổi bật ở chân trang</h3></a>
+  </footer>
   <script>
     const cards = [...document.querySelectorAll('[data-listing-card]')];
     const priceGroup = document.querySelector('[data-range="price"]');

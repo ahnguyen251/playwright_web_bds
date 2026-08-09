@@ -43,7 +43,7 @@ export class MyListingsPage extends BasePage {
     this.confirmDialog = page.getByRole('dialog', { name: /Xác nhận gỡ tin/i });
     this.emptyState = page
       .locator('[data-empty]')
-      .or(page.getByText(/Không có tin đăng|Không có kết quả/i))
+      .or(page.getByText(/Không có tin đăng|Không có kết quả|Bạn chưa có tin đăng nào/i))
       .first();
     this.feedbackRegion = page.getByRole('status').or(page.getByRole('alert')).first();
     this.nextButton = page.getByRole('button', { name: /Trang tiếp theo|Tiếp/i }).first();
