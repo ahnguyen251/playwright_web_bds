@@ -455,6 +455,12 @@ Each scenario definition records:
 - priority and tags;
 - linked Playwright test path.
 
+All user-facing Listings test-case content is written in Vietnamese, including title, scenario,
+preconditions, test-data description, required user/listing state, expected result, and generated
+Playwright test title. Stable code identifiers, TypeScript API names, tags, file paths, and scenario
+IDs remain in English/ASCII where appropriate. Listings metadata records `language: 'vi'` so this
+contract can be validated automatically without changing the existing Authentication test cases.
+
 IDs use stable prefixes such as `LIST-UC08-*`, `LIST-UC09-*`, `LIST-UC10-*`,
 `LIST-UC11-EDIT-*`, `LIST-UC11-WITHDRAW-*`, `LIST-UC12-*`, `LIST-UC16-*`, and
 `LIST-UC17-*`. The traceability matrix preserves the duplicated source UC-11 while making edit and
@@ -477,3 +483,4 @@ The design is complete when implementation can demonstrate that:
 11. independent tests do not depend on previous test output;
 12. type checking, lint, formatting, unit tests, component tests, and safe E2E verification pass;
 13. Requirement -> Test Scenario -> Test Case -> Playwright Test traceability is complete.
+14. all user-facing Listings test-case content and generated Playwright titles are in Vietnamese.
