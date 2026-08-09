@@ -111,6 +111,10 @@ export class ListingWorkflow {
     await this.myListingsPage.open();
   }
 
+  public async ownedListingStatus(reference: ListingReference): Promise<ListingStatus> {
+    return this.myListingsPage.statusOf(reference);
+  }
+
   private requireWithdrawalReference(): ListingReference {
     if (this.withdrawalReference === undefined) {
       throw new Error('No listing withdrawal is pending confirmation');
