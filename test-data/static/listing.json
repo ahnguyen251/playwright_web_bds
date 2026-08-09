@@ -1,12 +1,35 @@
 {
-  "title": "Căn hộ kiểm thử tự động",
   "transactionType": "rent",
+  "title": "Căn hộ kiểm thử tự động",
+  "description": "Dữ liệu kiểm thử không nhạy cảm dành cho framework Playwright.",
   "propertyType": "Căn hộ chung cư",
-  "address": "Quận 1, Thành phố Hồ Chí Minh",
   "price": 15000000,
+  "negotiable": false,
   "area": 75,
+  "location": {
+    "province": "Thành phố Hồ Chí Minh",
+    "ward": "Phường Bến Nghé",
+    "street": "Đường Lê Lợi",
+    "addressLine": "Số 1"
+  },
   "bedrooms": 2,
   "bathrooms": 2,
-  "description": "Dữ liệu kiểm thử không nhạy cảm dành cho framework Playwright.",
-  "imagePaths": []
+  "frontage": 5,
+  "depth": 15,
+  "floorNumber": 5,
+  "floors": 10,
+  "houseDirection": "Đông",
+  "balconyDirection": "Nam",
+  "balconies": 1,
+  "furnishing": "furnished",
+  "amenities": ["Bể bơi", "Thang máy"],
+  "contact": {
+    "role": "owner",
+    "fullName": "Người dùng kiểm thử",
+    "phone": "0900000000",
+    "email": "listing.automation@example.com"
+  },
+  "media": {
+    "imagePaths": ["listing-images/property.png"]
+  }
 }
