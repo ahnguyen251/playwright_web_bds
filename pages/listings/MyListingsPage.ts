@@ -76,6 +76,7 @@ export class MyListingsPage extends BasePage {
   }
 
   public async summaries(): Promise<readonly ListingSummary[]> {
+    if ((await this.emptyState.count()) > 0 && (await this.emptyState.isVisible())) return [];
     const rows = await this.rows.all();
     const summaries: ListingSummary[] = [];
     for (const row of rows) {

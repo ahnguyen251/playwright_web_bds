@@ -29,6 +29,7 @@ export class ListingListPage extends BasePage {
   private readonly resetButton: Locator;
   private transactionType: TransactionType = 'sale';
   private lastResultTotal: number | undefined;
+  private lastResultPageSize: number | undefined;
 
   public constructor(page: Page) {
     super(page);
@@ -51,12 +52,10 @@ export class ListingListPage extends BasePage {
     this.posterControls = page.getByRole('region', { name: /Người đăng/i });
     this.priceScope = page
       .locator('[data-range="price"]')
-      .or(page.getByRole('heading', { name: /Khoảng giá|Mức giá/i }).locator('xpath=..'))
-      .first();
+      .or(page.getByRole('heading', { name: /Khoảng giá|Mức giá/i }).locator('xpath=..'));
     this.areaScope = page
       .locator('[data-range="area"]')
-      .or(page.getByRole('heading', { name: 'Diện tích', exact: true }).locator('xpath=..'))
-      .first();
+      .or(page.getByRole('heading', { name: 'Diện tích', exact: true }).locator('xpath=..'));
     this.sortTrigger = page.locator('[data-sort-trigger], button.sort-trigger').first();
     this.nextButton = page.getByRole('button', { name: /Trang tiếp theo|Tiếp/i }).first();
     this.previousButton = page.getByRole('button', { name: /Trang trước|Trước/i }).first();
@@ -66,13 +65,20 @@ export class ListingListPage extends BasePage {
   public async open(transactionType: TransactionType): Promise<void> {
     this.transactionType = transactionType;
     this.lastResultTotal = undefined;
+    this.lastResultPageSize = undefined;
     await this.navigate(transactionType === 'sale' ? ROUTES.sales : ROUTES.rent);
   }
 
   public async search(criteria: ListingSearchCriteria): Promise<void> {
     if (criteria.keyword !== undefined) await this.searchInput.fill(criteria.keyword);
     await this.runAndWaitForListings(
-      () => this.searchButton.click(),
+      async () => {
+        if ((await this.searchButton.count()) > 0 && (await this.searchButton.isVisible())) {
+          await this.searchButton.click();
+          return;
+        }
+        await this.searchInput.press('Enter');
+      },
       (parameters) =>
         criteria.keyword === undefined ||
         [...parameters.values()].some((value) => value === criteria.keyword),
@@ -93,8 +99,16 @@ export class ListingListPage extends BasePage {
     }
     await this.searchInput.fill('');
     await this.selectPoster('all');
-    await this.priceScope.locator('input[type="radio"][value="all"]').check();
-    await this.areaScope.locator('input[type="radio"][value="all"]').check();
+    await this.priceScope
+      .locator('input[type="radio"][value="all"]')
+      .filter({ visible: true })
+      .first()
+      .check();
+    await this.areaScope
+      .locator('input[type="radio"][value="all"]')
+      .filter({ visible: true })
+      .first()
+      .check();
   }
 
   public async sort(label: string): Promise<void> {
@@ -122,8 +136,11 @@ export class ListingListPage extends BasePage {
     for (const root of roots) {
       if (await root.isVisible()) visibleRoots.push(root);
     }
+    const currentPageSize = Math.min(total, this.lastResultPageSize ?? total);
     return Promise.all(
-      visibleRoots.slice(0, total).map(async (root) => new ListingCardComponent(root).summary()),
+      visibleRoots
+        .slice(0, currentPageSize)
+        .map(async (root) => new ListingCardComponent(root).summary()),
     );
   }
 
@@ -172,21 +189,41 @@ export class ListingListPage extends BasePage {
   ): Promise<void> {
     if (selection.kind === 'preset') {
       await this.runAndWaitForListings(() =>
-        scope.getByLabel(selection.label, { exact: true }).check(),
+        scope
+          .getByLabel(selection.label, { exact: true })
+          .filter({ visible: true })
+          .first()
+          .check(),
       );
       return;
     }
-    await scope.locator('input[type="radio"][value="custom"]').check();
-    await scope.getByPlaceholder('Từ', { exact: true }).fill(String(selection.from));
+    await scope
+      .locator('input[type="radio"][value="custom"]')
+      .filter({ visible: true })
+      .first()
+      .check();
+    await scope
+      .getByPlaceholder('Từ', { exact: true })
+      .filter({ visible: true })
+      .first()
+      .fill(String(selection.from));
     await this.runAndWaitForListings(
-      () => scope.getByPlaceholder('Đến', { exact: true }).fill(String(selection.to)),
+      () =>
+        scope
+          .getByPlaceholder('Đến', { exact: true })
+          .filter({ visible: true })
+          .first()
+          .fill(String(selection.to)),
       (parameters) => this.matchesRange(parameters, field, selection),
     );
   }
 
   private rangeInput(field: ListingRangeField): Locator {
     const scope = field.startsWith('price') ? this.priceScope : this.areaScope;
-    return scope.getByPlaceholder(field.endsWith('From') ? 'Từ' : 'Đến', { exact: true });
+    return scope
+      .getByPlaceholder(field.endsWith('From') ? 'Từ' : 'Đến', { exact: true })
+      .filter({ visible: true })
+      .first();
   }
 
   private matchesRange(
@@ -225,21 +262,27 @@ export class ListingListPage extends BasePage {
     await action();
     const response = await responsePromise;
     const payload: unknown = await response.json();
-    const total = this.listingTotal(payload);
-    if (total !== undefined) {
-      this.lastResultTotal = total;
+    const pagination = this.listingPagination(payload);
+    if (pagination !== undefined) {
+      this.lastResultTotal = pagination.total;
+      this.lastResultPageSize = pagination.perPage;
       await this.resultCountText
-        .filter({ hasText: new RegExp(`\\b${String(total)}\\b`) })
+        .filter({ hasText: new RegExp(`\\b${String(pagination.total)}\\b`) })
         .waitFor();
     }
     await this.page.waitForLoadState('networkidle');
   }
 
-  private listingTotal(payload: unknown): number | undefined {
+  private listingPagination(
+    payload: unknown,
+  ): { readonly total: number; readonly perPage: number } | undefined {
     if (typeof payload !== 'object' || payload === null) return undefined;
     const meta = (payload as Record<string, unknown>).meta;
     if (typeof meta !== 'object' || meta === null) return undefined;
     const total = (meta as Record<string, unknown>).total;
-    return typeof total === 'number' ? total : undefined;
+    const perPage = (meta as Record<string, unknown>).per_page;
+    return typeof total === 'number' && typeof perPage === 'number'
+      ? Object.freeze({ total, perPage })
+      : undefined;
   }
 }
