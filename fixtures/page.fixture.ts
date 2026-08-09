@@ -6,6 +6,7 @@ import { RegisterPage } from '../pages/authentication/RegisterPage';
 import { HeaderComponent } from '../pages/components/HeaderComponent';
 import { CreateListingPage } from '../pages/listings/CreateListingPage';
 import { EditListingPage } from '../pages/listings/EditListingPage';
+import { FavoritesPage } from '../pages/listings/FavoritesPage';
 import { ListingDetailPage } from '../pages/listings/ListingDetailPage';
 import { ListingListPage } from '../pages/listings/ListingListPage';
 import { MyListingsPage } from '../pages/listings/MyListingsPage';
@@ -22,6 +23,7 @@ export interface PageFixtures {
   readonly listingDetailPage: ListingDetailPage;
   readonly createListingPage: CreateListingPage;
   readonly editListingPage: EditListingPage;
+  readonly favoritesPage: FavoritesPage;
   readonly myListingsPage: MyListingsPage;
   readonly appointmentPage: AppointmentPage;
   readonly transactionPage: TransactionPage;
@@ -37,6 +39,7 @@ export const pageTest = authTest.extend<PageFixtures>({
   listingDetailPage: async ({ page }, use) => use(new ListingDetailPage(page)),
   createListingPage: async ({ page }, use) => use(new CreateListingPage(page)),
   editListingPage: async ({ page }, use) => use(new EditListingPage(page)),
+  favoritesPage: async ({ page }, use) => use(new FavoritesPage(page)),
   myListingsPage: async ({ page }, use) => use(new MyListingsPage(page)),
   appointmentPage: async ({ page }, use) => use(new AppointmentPage(page)),
   transactionPage: async ({ page }, use) => use(new TransactionPage(page)),

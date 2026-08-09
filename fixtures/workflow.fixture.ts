@@ -14,8 +14,27 @@ export interface WorkflowFixtures {
 export const workflowTest = pageTest.extend<WorkflowFixtures>({
   authenticationWorkflow: async ({ loginPage, header }, use) =>
     use(new AuthenticationWorkflow(loginPage, header)),
-  listingWorkflow: async ({ listingListPage, createListingPage, myListingsPage }, use) =>
-    use(new ListingWorkflow(listingListPage, createListingPage, myListingsPage)),
+  listingWorkflow: async (
+    {
+      listingListPage,
+      listingDetailPage,
+      createListingPage,
+      editListingPage,
+      myListingsPage,
+      favoritesPage,
+    },
+    use,
+  ) =>
+    use(
+      new ListingWorkflow(
+        listingListPage,
+        listingDetailPage,
+        createListingPage,
+        editListingPage,
+        myListingsPage,
+        favoritesPage,
+      ),
+    ),
   appointmentWorkflow: async ({ listingDetailPage, appointmentPage }, use) =>
     use(new AppointmentWorkflow(listingDetailPage, appointmentPage)),
   transactionWorkflow: async ({ transactionPage }, use) =>
