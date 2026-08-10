@@ -5,11 +5,16 @@ export default tseslint.config(
   {
     ignores: [
       '.auth/**',
+      '.worktrees/**',
       'allure-report/**',
       'allure-results/**',
+      'blob-report/**',
+      'coverage/**',
       'node_modules/**',
       'playwright-report/**',
+      'temp/**',
       'test-results/**',
+      'tmp/**',
     ],
   },
   eslint.configs.recommended,

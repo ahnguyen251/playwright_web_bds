@@ -1,15 +1,46 @@
-.worktrees/
+# Dependencies
 node_modules/
+
+# Environment and secrets
 .env
 .env.*
 !.env.example
-.auth/
+
+# Playwright generated artifacts
 playwright-report/
 test-results/
+blob-report/
 allure-results/
 allure-report/
-blob-report/
+
+# Authentication and sensitive browser state
+.auth/
+playwright/.auth/
+storage-state/
+*.storageState.json
+
+# Local worktrees
+.worktrees/
+
+# Coverage and caches
 coverage/
-*.log
+.cache/
+.eslintcache
+*.tsbuildinfo
+
+# IDE and OS files
+.vscode/
+.idea/
 .DS_Store
 Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Temporary files
+tmp/
+temp/
+*.tmp

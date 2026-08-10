@@ -1,7 +1,12 @@
 node_modules
+.worktrees
 .auth
 allure-report
 allure-results
+blob-report
+coverage
 playwright-report
 test-results
+tmp
+temp
 package-lock.json

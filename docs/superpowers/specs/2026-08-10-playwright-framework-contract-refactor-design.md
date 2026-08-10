@@ -104,6 +104,24 @@ The final verification repeats the complete framework-level suite. End-to-end lo
 reported separately and only as passing if it is actually run successfully against the configured
 environment. Missing executable Listings coverage is reported explicitly.
 
+## Repository hygiene and submission readiness
+
+The active refactor runs on branch `codex/playwright-contract-refactor` in the locally ignored
+`.worktrees/codex-playwright-contract-refactor` worktree. The worktree is never merged as a directory
+or committed as repository content.
+
+`.gitignore` protects dependencies, local environment files, authentication and browser state,
+Playwright and Allure output, coverage, caches, IDE state, OS metadata, logs, and temporary files.
+`.env.example` remains tracked and contains placeholders only. Useful project documentation is not
+ignored merely because it is non-executable; untracked documents are classified separately before
+any future decision to add them.
+
+Tracked JSON, TypeScript, configuration, Markdown, and example environment files are scanned for
+credential literals, tokens, cookies, personal email addresses, and generated artifacts. Dummy
+values used by isolated framework tests remain clearly non-production. README instructions explain
+safe installation, environment setup, projects, commands, reports, implemented coverage, and the
+template-only feature boundaries.
+
 ## Non-goals
 
 - full framework rewrite;
@@ -112,6 +130,7 @@ environment. Missing executable Listings coverage is reported explicitly.
 - a new component-test framework or dependency;
 - fabricated Profile, Listings, Appointments, or Transactions test coverage;
 - changing existing test-case identifiers, tags, Playwright project names, or requirement mappings.
+- automatically merging, pushing, opening a pull request, or committing generated/local artifacts.
 
 ## Acceptance criteria
 
@@ -119,4 +138,6 @@ The refactor is complete when the targeted code smells and synchronization risks
 focused framework tests protect the changed contracts, and the recorded type-check, lint, formatting,
 and relevant Playwright commands pass. Any locator that cannot be verified as unique and any feature
 without an executable specification is called out in the final audit rather than represented as
-verified coverage.
+verified coverage. The final branch audit also records ignored-file behavior, tracked generated-file
+checks, sensitive-content findings, `git status`, and `git diff --stat` so the branch can be reviewed
+for eventual GitHub submission without automatic integration.
