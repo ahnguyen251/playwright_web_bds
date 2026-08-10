@@ -376,7 +376,7 @@ git commit -m "refactor: remove redundant readiness wrappers"
 - Consumes: all preceding task outputs.
 - Produces: evidence-backed completion report with explicit unresolved risks and missing coverage.
 
-- [ ] **Step 1: Verify repository scope and source consistency**
+- [x] **Step 1: Verify repository scope and source consistency**
 
 ```powershell
 git status --short
@@ -388,7 +388,7 @@ rg --files tests/listings -g "*.spec.ts"
 Expected: no introduced fixed sleeps, positional/XPath locators, snapshot visibility assertions, or
 generic load-state waits; the Listings spec search returns no file unless one pre-existed the refactor.
 
-- [ ] **Step 2: Run final framework verification**
+- [x] **Step 2: Run final framework verification**
 
 ```powershell
 npm run typecheck
@@ -399,7 +399,10 @@ npx playwright test --project=framework
 
 Expected: all commands exit `0`; record the exact Playwright pass count instead of predicting it.
 
-- [ ] **Step 3: Run login separately when configuration is available**
+Actual: type-check, lint, and formatting exited `0`; the `framework` project passed 21 tests in 9
+specification files.
+
+- [x] **Step 3: Run login separately when configuration is available**
 
 First confirm only that the required variables are present without printing their values. If
 present, run:
@@ -410,7 +413,9 @@ npx playwright test tests/authentication/login.spec.ts --project=chromium
 
 Record the real result. A failure or skipped run must not be reported as success.
 
-- [ ] **Step 4: Review unresolved locator and coverage risks**
+Actual: `auth-setup` and `AUTH-LOGIN-001` passed in Chromium (2 tests total).
+
+- [x] **Step 4: Review unresolved locator and coverage risks**
 
 Report ambiguous template-only locators that cannot be proven unique, including unscoped generic
 comboboxes, the unlabelled file input CSS fallback, broad listing heading/row matching, and header

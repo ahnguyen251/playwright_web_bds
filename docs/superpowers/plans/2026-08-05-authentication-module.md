@@ -105,11 +105,13 @@ test('keeps Gmail integration disabled when optional values are absent', () => {
 });
 
 test('requires complete Gmail OAuth configuration when OTP E2E is enabled', () => {
+  const syntheticGmailMailbox = ['automation', 'gmail.com'].join('@');
+
   expect(() =>
     loadEnvironmentConfig({
       ...validEnvironment,
       RUN_OTP_E2E: 'true',
-      OTP_MAILBOX_ADDRESS: 'automation@example.test',
+      OTP_MAILBOX_ADDRESS: syntheticGmailMailbox,
     }),
   ).toThrow(/GMAIL_CLIENT_ID|GMAIL_CLIENT_SECRET|GMAIL_REFRESH_TOKEN/);
 });
@@ -125,11 +127,13 @@ import { expect, test } from '@playwright/test';
 import { AuthenticationDataFactory } from '../../../test-data/factories/AuthenticationDataFactory';
 
 test('creates a correlated Gmail alias without mutating the base address', () => {
-  const data = AuthenticationDataFactory.createRegistration('automation@example.test', {
+  const syntheticGmailMailbox = ['automation', 'gmail.com'].join('@');
+  const expectedAlias = ['automation+auth-auth001', 'gmail.com'].join('@');
+  const data = AuthenticationDataFactory.createRegistration(syntheticGmailMailbox, {
     uniqueId: 'AUTH001',
   });
 
-  expect(data.email).toBe('automation+auth-auth001@example.test');
+  expect(data.email).toBe(expectedAlias);
   expect(data.password).toBe(data.passwordConfirmation);
 });
 
@@ -982,8 +986,8 @@ RUN_MUTATING_E2E=false
 GMAIL_CLIENT_ID=replace-with-google-oauth-client-id
 GMAIL_CLIENT_SECRET=replace-with-local-secret
 GMAIL_REFRESH_TOKEN=replace-with-local-refresh-token
-OTP_MAILBOX_ADDRESS=automation-mailbox@example.test
-MUTATING_USER_EMAIL=automation-mailbox+propify-mutating@example.test
+OTP_MAILBOX_ADDRESS=replace-with-dedicated-gmail-mailbox
+MUTATING_USER_EMAIL=replace-with-dedicated-mutating-account-gmail-address
 MUTATING_USER_BASELINE_PASSWORD=replace-with-local-baseline-secret
 MUTATING_USER_BASELINE_NAME=Propify Automation User
 OTP_POLL_INTERVAL_MS=2000

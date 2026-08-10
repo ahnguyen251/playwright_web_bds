@@ -129,7 +129,7 @@ Playwright storage state, and generated artifacts are ignored by Git.
 
 ## Step 4 — Base classes
 
-- `BasePage` provides shared navigation, readiness, current URL, and screenshot behavior.
+- `BasePage` provides shared navigation, current URL, and screenshot behavior.
 - Every page-level object inherits `BasePage`.
 - `fixtures/test.fixture.ts` exports `BaseTest`, `test`, and `expect`. This is the Playwright-native
   BaseTest composition root; fixture composition replaces inheritance-based test classes.
@@ -141,7 +141,7 @@ Playwright storage state, and generated artifacts are ignored by Git.
 - `ScreenshotHelper`: named Playwright attachments.
 - `FileUploadHelper`: traversal-safe fixture resolution and uploads.
 - `APIHelper`: typed HTTP GET/POST/PUT/DELETE wrappers with status validation.
-- `BrowserHelper`: page readiness and storage-state persistence.
+- `BrowserHelper`: storage-state persistence.
 
 ## Step 6 — Fixtures and authentication
 
@@ -171,8 +171,9 @@ Implemented templates:
 - `TransactionPage`
 - shared `HeaderComponent` and `ListingFormComponent`
 
-All locator declarations live in these Page Objects/components. Prefer `data-testid`, stable
-attributes, stable routes, accessible roles/names, and finally scoped CSS.
+All locator declarations live in these Page Objects/components. Prefer accessible roles/names,
+labels, and stable placeholders. Use `data-testid` only when the deployed application already
+provides a verified stable value; use short semantic CSS only as a documented last resort.
 
 ## Step 8 — Current executable coverage
 
