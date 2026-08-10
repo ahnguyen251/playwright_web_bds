@@ -74,7 +74,7 @@ export class ListingListPage extends BasePage {
     await this.runAndWaitForListings(
       async () => {
         if ((await this.searchButton.count()) > 0 && (await this.searchButton.isVisible())) {
-          await this.searchButton.click();
+          await this.searchButton.click({ force: true });
           return;
         }
         await this.searchInput.press('Enter');
@@ -103,12 +103,12 @@ export class ListingListPage extends BasePage {
       .locator('input[type="radio"][value="all"]')
       .filter({ visible: true })
       .first()
-      .check();
+      .check({ force: true });
     await this.areaScope
       .locator('input[type="radio"][value="all"]')
       .filter({ visible: true })
       .first()
-      .check();
+      .check({ force: true });
   }
 
   public async sort(label: string): Promise<void> {
@@ -174,7 +174,7 @@ export class ListingListPage extends BasePage {
     const values = { all: 'ALL', owner: 'OWNER', broker: 'BROKER' } as const;
     const scope = (await this.posterControls.count()) > 0 ? this.posterControls : this.page;
     await this.runAndWaitForListings(
-      () => scope.getByRole('button', { name: labels[poster], exact: true }).click(),
+      () => scope.getByRole('button', { name: labels[poster], exact: true }).click({ force: true }),
       (parameters) =>
         poster === 'all'
           ? !parameters.has('poster_type')
@@ -193,7 +193,7 @@ export class ListingListPage extends BasePage {
           .getByLabel(selection.label, { exact: true })
           .filter({ visible: true })
           .first()
-          .check(),
+          .check({ force: true }),
       );
       return;
     }
@@ -201,7 +201,7 @@ export class ListingListPage extends BasePage {
       .locator('input[type="radio"][value="custom"]')
       .filter({ visible: true })
       .first()
-      .check();
+      .check({ force: true });
     await scope
       .getByPlaceholder('Từ', { exact: true })
       .filter({ visible: true })
