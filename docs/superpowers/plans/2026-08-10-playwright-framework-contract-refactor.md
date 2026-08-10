@@ -37,7 +37,7 @@ safety policy.
 - `pages/components/HeaderComponent.ts`: expose the authenticated account control and remove boolean visibility API.
 - `workflows/authentication/AuthenticationWorkflow.ts`: keep action orchestration and remove the snapshot assertion wrapper.
 - `tests/authentication/login.spec.ts`: assert the Page Object locator with a web-first expectation.
-- `tests/component/pages/LoginPage.spec.ts`: protect dialog scoping and retrying assertions.
+- `tests/component/pages/LoginPage.spec.ts`: protect deployed modal behavior and retrying assertions.
 - `utils/FileUploadHelper.ts`: validate and select multiple files in a single Playwright operation.
 - `pages/components/ListingFormComponent.ts`: delegate one collection upload instead of repeatedly replacing input files.
 - `tests/component/pages/ListingFormComponent.spec.ts`: verify real browser multi-file selection and empty-input behavior.
@@ -222,7 +222,7 @@ npm run format:check
 npx playwright test --project=framework
 ```
 
-Expected: every command exits `0`, including the focused component coverage for dialog scoping.
+Expected: every command exits `0`, including focused coverage for deployed modal behavior.
 
 - [x] **Step 5: Commit the authentication contract refactor**
 
