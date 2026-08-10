@@ -6,6 +6,11 @@ const absoluteUrl = z
   .pipe(z.url())
   .transform((value) => new URL(value).toString());
 
+const optionalPositiveInteger = z.preprocess(
+  (value) => (value === undefined || value === '' ? undefined : value),
+  z.coerce.number().int().positive().optional(),
+);
+
 export const environmentSchema = z.object({
   TEST_ENV: z.enum(['dev', 'staging', 'production']).default('production'),
   DEV_BASE_URL: absoluteUrl,
@@ -14,6 +19,11 @@ export const environmentSchema = z.object({
   API_BASE_URL: absoluteUrl.optional(),
   DEFAULT_USER_EMAIL: z.string().trim().pipe(z.email()),
   DEFAULT_USER_PASSWORD: z.string().min(1),
+  APPOINTMENT_LISTING_ID: optionalPositiveInteger,
+  RUN_MUTATING_TESTS: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((value) => value === 'true'),
   CI: z
     .enum(['true', 'false'])
     .default('false')

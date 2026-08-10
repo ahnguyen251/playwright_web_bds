@@ -31,6 +31,10 @@ export const loadEnvironmentConfig = (
     ...(parsed.data.API_BASE_URL === undefined ? {} : { apiBaseUrl: parsed.data.API_BASE_URL }),
     defaultUserEmail: parsed.data.DEFAULT_USER_EMAIL,
     defaultUserPassword: parsed.data.DEFAULT_USER_PASSWORD,
+    ...(parsed.data.APPOINTMENT_LISTING_ID === undefined
+      ? {}
+      : { appointmentListingId: parsed.data.APPOINTMENT_LISTING_ID }),
+    runMutatingTests: parsed.data.RUN_MUTATING_TESTS,
     ci: parsed.data.CI,
   });
 };

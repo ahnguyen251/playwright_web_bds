@@ -17,6 +17,28 @@ test('selects the base URL for the requested environment', () => {
   expect(config.environment).toBe('dev');
   expect(config.baseUrl).toBe('https://dev.example.test/');
   expect(config.ci).toBe(false);
+  expect(config.runMutatingTests).toBe(false);
+  expect(config.appointmentListingId).toBeUndefined();
+});
+
+test('parses appointment mutation configuration', () => {
+  const config = loadEnvironmentConfig({
+    ...validEnvironment,
+    RUN_MUTATING_TESTS: 'true',
+    APPOINTMENT_LISTING_ID: '48',
+  });
+
+  expect(config.runMutatingTests).toBe(true);
+  expect(config.appointmentListingId).toBe(48);
+});
+
+test('rejects an invalid appointment listing id', () => {
+  expect(() =>
+    loadEnvironmentConfig({
+      ...validEnvironment,
+      APPOINTMENT_LISTING_ID: '0',
+    }),
+  ).toThrow(/APPOINTMENT_LISTING_ID/);
 });
 
 test('rejects an unsupported environment before browser launch', () => {

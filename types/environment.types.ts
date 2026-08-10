@@ -6,5 +6,7 @@ export interface EnvironmentConfig {
   readonly apiBaseUrl?: string;
   readonly defaultUserEmail: string;
   readonly defaultUserPassword: string;
+  readonly appointmentListingId?: number;
+  readonly runMutatingTests: boolean;
   readonly ci: boolean;
 }
