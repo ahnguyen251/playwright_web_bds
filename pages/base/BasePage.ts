@@ -9,10 +9,6 @@ export abstract class BasePage {
     await this.page.goto(path, { waitUntil: 'domcontentloaded', timeout: TIMEOUTS.navigation });
   }
 
-  protected async waitUntilReady(): Promise<void> {
-    await this.page.waitForLoadState('domcontentloaded');
-  }
-
   public currentUrl(): string {
     return this.page.url();
   }

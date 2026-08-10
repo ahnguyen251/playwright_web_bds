@@ -324,7 +324,7 @@ git commit -m "fix: select listing uploads atomically"
 - Consumes: current navigation and storage-state persistence APIs.
 - Produces: unchanged `BasePage.navigate()`, `BrowserHelper.saveStorageState()`, and fixture lifecycle behavior.
 
-- [ ] **Step 1: Confirm the wrappers have no consumers**
+- [x] **Step 1: Confirm the wrappers have no consumers**
 
 Run:
 
@@ -334,7 +334,7 @@ rg -n "waitUntilReady|waitForDocumentReady" --glob "*.ts"
 
 Expected before the change: only the two method declarations are returned.
 
-- [ ] **Step 2: Remove duplicate unused wrappers and simplify cleanup**
+- [x] **Step 2: Remove duplicate unused wrappers and simplify cleanup**
 
 Delete `BasePage.waitUntilReady()` and `BrowserHelper.waitForDocumentReady()`; neither represents a
 specific application-ready state. Remove the now-unused `Page` import from `BrowserHelper`.
@@ -351,7 +351,7 @@ with:
 await Promise.all(contexts.map((context) => context.close()));
 ```
 
-- [ ] **Step 3: Run the complete task verification gate**
+- [x] **Step 3: Run the complete task verification gate**
 
 ```powershell
 npm run typecheck
@@ -363,7 +363,7 @@ npx playwright test --project=framework
 Expected: every command exits `0`, proving the removed wrappers were not required by executable
 framework behavior.
 
-- [ ] **Step 4: Commit the cleanup**
+- [x] **Step 4: Commit the cleanup**
 
 ```powershell
 git add -- pages/base/BasePage.ts utils/BrowserHelper.ts fixtures/auth.fixture.ts

@@ -25,6 +25,6 @@ export const authTest = base.extend<AuthFixtures>({
     };
 
     await use(contextFactory);
-    await Promise.all(contexts.map(async (context) => context.close()));
+    await Promise.all(contexts.map((context) => context.close()));
   },
 });
