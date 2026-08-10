@@ -18,8 +18,4 @@ export class AuthenticationWorkflow {
   public async logout(): Promise<void> {
     await this.header.logout();
   }
-
-  public async isAuthenticated(): Promise<boolean> {
-    return this.header.isAuthenticated();
-  }
 }

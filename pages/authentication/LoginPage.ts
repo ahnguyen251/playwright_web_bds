@@ -15,11 +15,12 @@ export class LoginPage extends BasePage {
 
   public constructor(page: Page) {
     super(page);
+    const dialog = page.getByRole('dialog');
     this.header = new HeaderComponent(page);
-    this.emailInput = page.getByPlaceholder('Email của bạn', { exact: true });
-    this.passwordInput = page.getByPlaceholder('Mật khẩu', { exact: true });
-    this.continueButton = page.getByRole('button', { name: 'Tiếp tục', exact: true });
-    this.forgotPasswordButton = page.getByRole('button', {
+    this.emailInput = dialog.getByPlaceholder('Email của bạn', { exact: true });
+    this.passwordInput = dialog.getByPlaceholder('Mật khẩu', { exact: true });
+    this.continueButton = dialog.getByRole('button', { name: 'Tiếp tục', exact: true });
+    this.forgotPasswordButton = dialog.getByRole('button', {
       name: 'Quên mật khẩu?',
       exact: true,
     });
@@ -43,9 +44,5 @@ export class LoginPage extends BasePage {
   public async openForgotPassword(): Promise<ForgotPasswordPage> {
     await this.forgotPasswordButton.click();
     return new ForgotPasswordPage(this.page);
-  }
-
-  public async isOpen(): Promise<boolean> {
-    return this.emailInput.isVisible();
   }
 }

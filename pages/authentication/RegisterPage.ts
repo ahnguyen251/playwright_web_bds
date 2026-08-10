@@ -14,16 +14,17 @@ export class RegisterPage extends BasePage {
 
   public constructor(page: Page) {
     super(page);
-    this.openRegistrationButton = page.getByRole('button', {
+    const dialog = page.getByRole('dialog');
+    this.openRegistrationButton = dialog.getByRole('button', {
       name: 'Đăng ký ngay',
       exact: true,
     });
-    this.fullNameInput = page.getByLabel('Họ và tên');
-    this.emailInput = page.getByPlaceholder('Email của bạn', { exact: true });
-    this.phoneInput = page.getByLabel('Số điện thoại');
-    this.passwordInput = page.getByPlaceholder('Mật khẩu', { exact: true });
-    this.confirmPasswordInput = page.getByLabel('Xác nhận mật khẩu');
-    this.submitButton = page.getByRole('button', { name: 'Đăng ký', exact: true });
+    this.fullNameInput = dialog.getByLabel('Họ và tên');
+    this.emailInput = dialog.getByPlaceholder('Email của bạn', { exact: true });
+    this.phoneInput = dialog.getByLabel('Số điện thoại');
+    this.passwordInput = dialog.getByPlaceholder('Mật khẩu', { exact: true });
+    this.confirmPasswordInput = dialog.getByLabel('Xác nhận mật khẩu');
+    this.submitButton = dialog.getByRole('button', { name: 'Đăng ký', exact: true });
   }
 
   public async open(): Promise<void> {

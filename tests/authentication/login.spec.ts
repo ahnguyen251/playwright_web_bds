@@ -6,8 +6,9 @@ test.use({ storageState: { cookies: [], origins: [] } });
 test(`${validLoginTestCase.id} ${validLoginTestCase.title} ${validLoginTestCase.tags.join(' ')}`, async ({
   authenticationWorkflow,
   defaultUser,
+  header,
 }) => {
   await authenticationWorkflow.login(defaultUser);
 
-  expect(await authenticationWorkflow.isAuthenticated()).toBe(true);
+  await expect(header.authenticatedUserControl).toBeVisible();
 });

@@ -160,7 +160,7 @@ git commit -m "chore: isolate framework quality checks"
 - Produces: `HeaderComponent.authenticatedUserControl: Locator` and
   `ForgotPasswordPage.heading: Locator` for retrying expectations.
 
-- [ ] **Step 1: Write failing component assertions for modal scoping and web-first state**
+- [x] **Step 1: Write failing component assertions for modal scoping and web-first state**
 
 Update the login component markup to include decoy email/password/continue controls outside the
 existing `role="dialog"`. After `LoginPage.submitCredentials()`, use `expect.poll()` around a single
@@ -187,7 +187,7 @@ npx playwright test tests/component/pages/LoginPage.spec.ts --project=framework
 
 Expected: FAIL because `heading` is private and login locators are not yet scoped to the dialog.
 
-- [ ] **Step 2: Scope authentication modal locators and expose assertion targets**
+- [x] **Step 2: Scope authentication modal locators and expose assertion targets**
 
 In each authentication Page Object, create the existing dialog locator with:
 
@@ -199,7 +199,7 @@ Resolve modal inputs, buttons, and headings from `dialog` rather than the whole 
 `ForgotPasswordPage.heading` public and readonly. Remove `LoginPage.isOpen()` and
 `ForgotPasswordPage.isOpen()` because they return non-retrying visibility snapshots.
 
-- [ ] **Step 3: Expose authenticated state without putting assertions in workflows**
+- [x] **Step 3: Expose authenticated state without putting assertions in workflows**
 
 Rename the private header account locator to:
 
@@ -218,7 +218,7 @@ await expect(header.authenticatedUserControl).toBeVisible();
 
 The `AUTH-LOGIN-001` title, tags, unauthenticated storage state, and workflow call stay unchanged.
 
-- [ ] **Step 4: Run the complete task verification gate**
+- [x] **Step 4: Run the complete task verification gate**
 
 ```powershell
 npm run typecheck
@@ -229,7 +229,7 @@ npx playwright test --project=framework
 
 Expected: every command exits `0`, including the focused component coverage for dialog scoping.
 
-- [ ] **Step 5: Commit the authentication contract refactor**
+- [x] **Step 5: Commit the authentication contract refactor**
 
 ```powershell
 git add -- pages/authentication/LoginPage.ts pages/authentication/ForgotPasswordPage.ts pages/authentication/RegisterPage.ts pages/components/HeaderComponent.ts workflows/authentication/AuthenticationWorkflow.ts tests/authentication/login.spec.ts tests/component/pages/LoginPage.spec.ts
