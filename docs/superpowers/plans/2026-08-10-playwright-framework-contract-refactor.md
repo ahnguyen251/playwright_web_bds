@@ -40,7 +40,7 @@ safety policy.
 - `tests/component/pages/LoginPage.spec.ts`: protect dialog scoping and retrying assertions.
 - `utils/FileUploadHelper.ts`: validate and select multiple files in a single Playwright operation.
 - `pages/components/ListingFormComponent.ts`: delegate one collection upload instead of repeatedly replacing input files.
-- `tests/unit/utils/FileUploadHelper.spec.ts`: verify one multi-file selection and empty-input behavior.
+- `tests/component/pages/ListingFormComponent.spec.ts`: verify real browser multi-file selection and empty-input behavior.
 - `pages/base/BasePage.ts`: remove the unused generic readiness wrapper.
 - `utils/BrowserHelper.ts`: remove the duplicate unused document-readiness wrapper.
 - `fixtures/auth.fixture.ts`: simplify concurrent context cleanup without changing lifecycle behavior.
@@ -242,7 +242,7 @@ git commit -m "refactor: use web-first authentication contracts"
 
 - Modify: `utils/FileUploadHelper.ts`
 - Modify: `pages/components/ListingFormComponent.ts`
-- Modify: `tests/unit/utils/FileUploadHelper.spec.ts`
+- Create: `tests/component/pages/ListingFormComponent.spec.ts`
 
 **Interfaces:**
 
@@ -250,25 +250,24 @@ git commit -m "refactor: use web-first authentication contracts"
   `FileUploadHelper.upload(locator: Locator, relativePath: string): Promise<void>`.
 - Produces: `FileUploadHelper.uploadMany(locator: Locator, relativePaths: readonly string[]): Promise<void>`.
 
-- [ ] **Step 1: Write a failing test for atomic multi-file selection**
+- [x] **Step 1: Write a failing test for atomic multi-file selection**
 
-Create two unique temporary files beneath the existing `test-data/files` root. Pass a narrow fake
-`Locator` whose `setInputFiles()` records its argument to `uploadMany()`. Assert one invocation with
-both absolute fixture paths in input order. Clean up only the unique temporary directory in a
-`finally` block.
+Create two unique temporary files beneath the existing `test-data/files` root. Use a real browser
+file input and `ListingFormComponent.uploadImages()` to assert that both filenames remain selected
+in input order. Clean up only the unique temporary directory in a `finally` block.
 
-Add a second test that passes an empty list and asserts `setInputFiles()` is never called, preserving
-the previous loop's no-op behavior.
+Add a second test that selects one file, passes an empty list, and asserts the existing browser file
+list is unchanged, preserving the previous loop's no-op behavior.
 
 Run:
 
 ```powershell
-npx playwright test tests/unit/utils/FileUploadHelper.spec.ts --project=framework
+npx playwright test tests/component/pages/ListingFormComponent.spec.ts --project=framework
 ```
 
 Expected: FAIL because `uploadMany()` does not exist.
 
-- [ ] **Step 2: Implement validated collection upload**
+- [x] **Step 2: Implement validated collection upload**
 
 Add:
 
@@ -293,7 +292,7 @@ Keep `upload()` as a compatibility method delegating to `uploadMany(locator, [re
 Change `ListingFormComponent.uploadImages()` to one
 `FileUploadHelper.uploadMany(this.imageInput, relativePaths)` call.
 
-- [ ] **Step 3: Run the complete task verification gate**
+- [x] **Step 3: Run the complete task verification gate**
 
 ```powershell
 npm run typecheck
@@ -305,10 +304,10 @@ npx playwright test --project=framework
 Expected: every command exits `0`; the upload tests prove one selection for multiple files and no
 selection for an empty array. This is framework behavior, not executable Listings coverage.
 
-- [ ] **Step 4: Commit the upload fix**
+- [x] **Step 4: Commit the upload fix**
 
 ```powershell
-git add -- utils/FileUploadHelper.ts pages/components/ListingFormComponent.ts tests/unit/utils/FileUploadHelper.spec.ts
+git add -- utils/FileUploadHelper.ts pages/components/ListingFormComponent.ts tests/component/pages/ListingFormComponent.spec.ts
 git commit -m "fix: select listing uploads atomically"
 ```
 

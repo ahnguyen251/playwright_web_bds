@@ -43,9 +43,7 @@ export class ListingFormComponent {
   }
 
   public async uploadImages(relativePaths: readonly string[]): Promise<void> {
-    for (const relativePath of relativePaths) {
-      await FileUploadHelper.upload(this.imageInput, relativePath);
-    }
+    await FileUploadHelper.uploadMany(this.imageInput, relativePaths);
   }
 
   public async submit(): Promise<void> {
