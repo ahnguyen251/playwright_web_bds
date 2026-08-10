@@ -7,7 +7,7 @@ The current delivery implements the reusable framework foundation, Page Object t
 Authentication, Profile, Listings, Appointments, and Transactions, plus an executable login smoke
 test. Admin operations and destructive production scenarios are outside the current scope.
 
-## Technology
+## Technology stack
 
 - Node.js 20+
 - npm
@@ -17,6 +17,17 @@ test. Admin operations and destructive production scenarios are outside the curr
 - Zod environment validation
 - HTML and Allure-ready reporting
 - ESLint and Prettier
+
+## Prerequisites
+
+- Git
+- Node.js 20 or newer
+- npm (included with Node.js)
+- Java only when generating or opening Allure reports
+- Access to a non-destructive Propify test account supplied through local environment variables
+
+The repository does not contain credentials, browser storage state, generated reports, or installed
+dependencies. Keep those files local and ignored.
 
 ## Step 1 — Folder structure
 
@@ -86,16 +97,16 @@ Tests -> Fixtures -> Workflows -> Page Objects -> Playwright
 
 Page Objects never depend on tests, fixtures, or Workflows. Workflows never declare locators.
 
-## Step 3 — Configuration
+## Step 3 — Installation and environment configuration
 
-Install dependencies and the required browsers:
+Clone the repository, then install the locked dependency versions and Playwright browsers:
 
 ```bash
-npm install
+npm ci
 npx playwright install
 ```
 
-Create a local environment file:
+Copy the safe placeholder file to a local `.env`:
 
 ```powershell
 Copy-Item .env.example .env
@@ -113,7 +124,8 @@ DEFAULT_USER_PASSWORD=your-local-secret
 ```
 
 Never add credentials to `users.json`. That file stores aliases and environment-key references
-only. `.env` and `.auth` are ignored by Git.
+only. Do not replace the placeholders in `.env.example` with real values. `.env`, `.auth`,
+Playwright storage state, and generated artifacts are ignored by Git.
 
 ## Step 4 — Base classes
 
@@ -162,9 +174,10 @@ Implemented templates:
 All locator declarations live in these Page Objects/components. Prefer `data-testid`, stable
 attributes, stable routes, accessible roles/names, and finally scoped CSS.
 
-## Step 8 — Sample login test
+## Step 8 — Current executable coverage
 
-The executable scenario is `AUTH-LOGIN-001` in `tests/authentication/login.spec.ts`. The test:
+The executable end-to-end scenario is `AUTH-LOGIN-001` in
+`tests/authentication/login.spec.ts`. The test:
 
 1. starts without storage state;
 2. receives the default user and `AuthenticationWorkflow` from fixtures;
@@ -172,6 +185,20 @@ The executable scenario is `AUTH-LOGIN-001` in `tests/authentication/login.spec.
 4. asserts authenticated state.
 
 It contains no locator, password, or repeated UI logic.
+
+The `framework` project also executes focused unit and browser-component specifications for:
+
+- environment validation;
+- safe user and listing test-data factories;
+- deterministic date, random-data, and file-path utilities;
+- fixture composition;
+- login-modal scoping and forgot-password navigation;
+- atomic multi-file selection in the reusable listing form component.
+
+Profile, Listings, Appointments, and Transactions currently contain reusable Page Object and
+Workflow templates only. They do not have executable feature `.spec.ts` files and are not claimed as
+automated coverage. The listing-form component specification verifies framework upload behavior; it
+is not a Listings business-flow test.
 
 ## Step 9 — How the architecture works
 
@@ -181,7 +208,20 @@ journey into UI interactions. Typed data crosses layer boundaries through interf
 remain independent and stateless. This separation lets new feature modules be added without
 modifying current tests.
 
-## Running tests
+## Playwright projects
+
+| Project      | Purpose                                                                |
+| ------------ | ---------------------------------------------------------------------- |
+| `framework`  | Unit and focused browser-component specifications.                     |
+| `auth-setup` | Creates the default user's local storage state through the login UI.   |
+| `chromium`   | Authenticated end-to-end specifications using Desktop Chrome settings. |
+| `firefox`    | Authenticated end-to-end specifications using Desktop Firefox.         |
+| `webkit`     | Authenticated end-to-end specifications using Desktop Safari settings. |
+
+The three browser projects depend on `auth-setup`. The `framework` project does not. Environment
+configuration is validated when Playwright loads, so prepare `.env` before running either category.
+
+## Running quality checks and tests
 
 ```bash
 npm run typecheck
@@ -199,6 +239,12 @@ Run only framework tests:
 
 ```bash
 npx playwright test --project=framework
+```
+
+List every discovered project and executable specification without running it:
+
+```bash
+npx playwright test --list
 ```
 
 Run the non-destructive login smoke test:
@@ -239,6 +285,9 @@ npx playwright test --grep @smoke
 - HTML report: `playwright-report/`.
 - Allure raw results: `allure-results/`.
 
+All report and runtime artifact directories are generated locally and ignored by Git. Do not commit
+screenshots, videos, traces, authentication state, or report output.
+
 ```bash
 npm run report:html
 npm run report:allure:generate
@@ -261,6 +310,22 @@ publishing is intentionally deferred.
 Future modules can follow the same contract for Chat, Payment, Notification, Admin, API, Visual,
 and AI testing. The `docs/prompts` area preserves AI-assisted test-design prompts without coupling
 runtime tests to a specific AI provider.
+
+## Known limitations
+
+- Only `AUTH-LOGIN-001` is an executable end-to-end business scenario.
+- Profile, Listings, Appointments, and Transactions remain templates without executable feature
+  specifications.
+- Several template-only controls cannot yet be proven unique against the deployed application,
+  including generic comboboxes, the unlabelled listing image input, broad listing heading/row
+  matching, and potentially duplicated responsive header controls.
+- Propify does not currently guarantee a stable `data-testid` contract. Page Objects therefore use
+  accessible roles, labels, placeholders, and scoped user-facing names where those contracts are
+  known.
+- Allure publishing and history retention are not configured; only local result generation is
+  prepared.
+- Destructive create, edit, appointment-submission, payment, and transaction scenarios require a
+  dedicated safe environment and cleanup policy before automation.
 
 ## Safety
 

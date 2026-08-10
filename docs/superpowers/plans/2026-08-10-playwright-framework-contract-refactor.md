@@ -434,7 +434,7 @@ scan confirms that state.
 - Consumes: verified commands, Playwright project configuration, traceability, and actual executable specs.
 - Produces: clone-to-run guidance that distinguishes implemented coverage from reusable templates.
 
-- [ ] **Step 1: Update README from verified repository facts**
+- [x] **Step 1: Update README from verified repository facts**
 
 Keep the existing purpose, stack, architecture, setup, command, reporting, and safety material.
 Clarify Node/npm prerequisites, `.env.example` copying, browser installation, the five Playwright
@@ -442,7 +442,7 @@ projects, available quality/test commands, current login and framework coverage,
 Profile/Listings/Appointments/Transactions modules, and report directories. Do not claim a feature
 test exists unless `rg --files tests/<feature> -g '*.spec.ts'` finds one.
 
-- [ ] **Step 2: Run the complete verification gate after documentation changes**
+- [x] **Step 2: Run the complete verification gate after documentation changes**
 
 ```powershell
 npm run typecheck
@@ -453,7 +453,7 @@ npx playwright test --project=framework
 
 Expected: every command exits `0`; record actual test counts.
 
-- [ ] **Step 3: Perform tracked and untracked cleanliness audit**
+- [x] **Step 3: Perform tracked and untracked cleanliness audit**
 
 Use `git ls-files` to check generated/local/sensitive path patterns and secret-keyword scans over
 tracked JSON, TypeScript, configuration, Markdown, and example environment files. Review matches
@@ -461,7 +461,7 @@ manually to distinguish placeholder/dummy values from credentials. Inspect untra
 adding or deleting them. Record `git status --short`, `git diff --stat main...HEAD`, and the exact
 branch/worktree paths.
 
-- [ ] **Step 4: Commit README only after its claims match verification**
+- [x] **Step 4: Commit README only after its claims match verification**
 
 ```powershell
 git add -- README.md
