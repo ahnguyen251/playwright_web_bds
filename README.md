@@ -192,7 +192,7 @@ The `framework` project also executes focused unit and browser-component specifi
 - safe user and listing test-data factories;
 - deterministic date, random-data, and file-path utilities;
 - fixture composition;
-- login-modal scoping and forgot-password navigation;
+- login-modal actions and forgot-password navigation;
 - atomic multi-file selection in the reusable listing form component.
 
 Profile, Listings, Appointments, and Transactions currently contain reusable Page Object and
@@ -319,6 +319,9 @@ runtime tests to a specific AI provider.
 - Several template-only controls cannot yet be proven unique against the deployed application,
   including generic comboboxes, the unlabelled listing image input, broad listing heading/row
   matching, and potentially duplicated responsive header controls.
+- The deployed authentication modal does not expose a dialog landmark. Its user-facing input and
+  button names are currently unique and verified by the Chromium login flow, but the application
+  should add correct dialog semantics so Page Objects can scope modal locators reliably.
 - Propify does not currently guarantee a stable `data-testid` contract. Page Objects therefore use
   accessible roles, labels, placeholders, and scoped user-facing names where those contracts are
   known.

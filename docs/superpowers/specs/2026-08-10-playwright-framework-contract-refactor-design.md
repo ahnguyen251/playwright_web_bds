@@ -35,6 +35,11 @@ long CSS chains, absolute XPath, or `nth()`. Ambiguous locators will be narrowed
 semantic region when possible. If uniqueness cannot be established from the repository or focused
 component tests, the risk will be recorded instead of hiding it behind a brittle selector.
 
+Live verification showed that the deployed authentication modal has no dialog landmark. Its email,
+password, and action names are currently unique, so those verified global user-facing locators are
+retained. The missing dialog semantics remain an explicit application accessibility risk rather than
+being replaced by parent traversal, a dynamic class, or an invented test ID.
+
 ## Synchronization and assertions
 
 Tests use Playwright web-first assertions such as `toBeVisible()` and `toHaveAttribute()` so that
@@ -82,9 +87,9 @@ verification fail.
 
 Tests are added or adjusted only where they protect a refactoring contract:
 
-- login interactions use stable, scoped user-facing locators;
+- login interactions use the stable user-facing locators exposed by the deployed modal;
 - authentication state is asserted with a web-first expectation;
-- locator scoping prevents collisions with similar controls outside the target modal or region;
+- component tests model the deployed modal's lack of a dialog landmark;
 - multi-file upload performs one selection with all validated fixtures;
 - framework project selection does not imply unimplemented feature coverage.
 

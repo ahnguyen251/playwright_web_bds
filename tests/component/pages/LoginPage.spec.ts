@@ -4,21 +4,18 @@ import { LoginPage } from '../../../pages/authentication/LoginPage';
 
 test('submits credentials through the Propify login modal', async ({ page }) => {
   await page.setContent(`
-    <input id="decoy-email" placeholder="Email của bạn" value="unchanged@example.test" />
-    <input id="decoy-password" placeholder="Mật khẩu" type="password" value="unchanged" />
-    <button id="decoy-continue">Tiếp tục</button>
     <button aria-label="Đăng nhập">Đăng nhập</button>
-    <section role="dialog" hidden>
-      <input id="dialog-email" placeholder="Email của bạn" />
-      <input id="dialog-password" placeholder="Mật khẩu" type="password" />
+    <section id="authentication-modal" hidden>
+      <input id="email" placeholder="Email của bạn" />
+      <input id="password" placeholder="Mật khẩu" type="password" />
       <button>Quên mật khẩu?</button>
-      <button id="dialog-continue">Tiếp tục</button>
+      <button id="continue">Tiếp tục</button>
     </section>
     <script>
       document.querySelector('[aria-label="Đăng nhập"]').onclick = () => {
-        document.querySelector('[role="dialog"]').hidden = false;
+        document.querySelector('#authentication-modal').hidden = false;
       };
-      document.querySelector('#dialog-continue').onclick = () => {
+      document.querySelector('#continue').onclick = () => {
         document.body.dataset.submitted = 'true';
       };
     </script>
@@ -44,19 +41,15 @@ test('submits credentials through the Propify login modal', async ({ page }) => 
         };
 
         return {
-          decoyEmail: inputValue('#decoy-email'),
-          decoyPassword: inputValue('#decoy-password'),
-          dialogEmail: inputValue('#dialog-email'),
-          dialogPassword: inputValue('#dialog-password'),
+          email: inputValue('#email'),
+          password: inputValue('#password'),
           submitted: document.body.dataset.submitted,
         };
       }),
     )
     .toEqual({
-      decoyEmail: 'unchanged@example.test',
-      decoyPassword: 'unchanged',
-      dialogEmail: 'user@example.test',
-      dialogPassword: 'secret-value',
+      email: 'user@example.test',
+      password: 'secret-value',
       submitted: 'true',
     });
 });
@@ -64,7 +57,7 @@ test('submits credentials through the Propify login modal', async ({ page }) => 
 test('opens the forgot-password view from the login modal', async ({ page }) => {
   await page.setContent(`
     <button aria-label="Đăng nhập">Đăng nhập</button>
-    <section role="dialog" hidden>
+    <section id="authentication-modal" hidden>
       <input placeholder="Email của bạn" />
       <input placeholder="Mật khẩu" type="password" />
       <button>Quên mật khẩu?</button>
@@ -73,7 +66,7 @@ test('opens the forgot-password view from the login modal', async ({ page }) => 
     </section>
     <script>
       document.querySelector('[aria-label="Đăng nhập"]').onclick = () => {
-        document.querySelector('[role="dialog"]').hidden = false;
+        document.querySelector('#authentication-modal').hidden = false;
       };
       document.querySelector('section button:first-of-type').onclick = () => {
         document.querySelector('h1').hidden = false;

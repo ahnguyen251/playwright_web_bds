@@ -9,10 +9,9 @@ export class ForgotPasswordPage extends BasePage {
 
   public constructor(page: Page) {
     super(page);
-    const dialog = page.getByRole('dialog');
-    this.heading = dialog.getByRole('heading', { name: 'Quên mật khẩu', exact: true });
-    this.emailInput = dialog.getByPlaceholder('Email của bạn', { exact: true });
-    this.submitButton = dialog.getByRole('button', { name: 'Gửi liên kết', exact: true });
+    this.heading = page.getByRole('heading', { name: 'Quên mật khẩu', exact: true });
+    this.emailInput = page.getByPlaceholder('Email của bạn', { exact: true });
+    this.submitButton = page.getByRole('button', { name: 'Gửi liên kết', exact: true });
   }
 
   public async requestReset(email: string): Promise<void> {

@@ -31,9 +31,9 @@ safety policy.
 - `.prettierignore`: exclude ignored worktrees from formatting traversal.
 - `.prettierrc.json`: accept checkout-native line endings without rewriting the repository.
 - `eslint.config.mjs`: exclude ignored worktrees from lint traversal.
-- `pages/authentication/LoginPage.ts`: scope modal controls to the login dialog and remove snapshot visibility API.
-- `pages/authentication/ForgotPasswordPage.ts`: scope the modal view and expose its heading for web-first assertions.
-- `pages/authentication/RegisterPage.ts`: scope registration controls to the existing authentication dialog.
+- `pages/authentication/LoginPage.ts`: use deployed user-facing modal controls and remove snapshot visibility API.
+- `pages/authentication/ForgotPasswordPage.ts`: expose its heading for web-first assertions.
+- `pages/authentication/RegisterPage.ts`: retain verified user-facing registration controls.
 - `pages/components/HeaderComponent.ts`: expose the authenticated account control and remove boolean visibility API.
 - `workflows/authentication/AuthenticationWorkflow.ts`: keep action orchestration and remove the snapshot assertion wrapper.
 - `tests/authentication/login.spec.ts`: assert the Page Object locator with a web-first expectation.
@@ -141,7 +141,7 @@ git add -- .prettierignore .prettierrc.json eslint.config.mjs
 git commit -m "chore: isolate framework quality checks"
 ```
 
-### Task 2: Replace snapshot authentication assertions with locator contracts
+### Task 2: Replace snapshot authentication assertions with deployed locator contracts
 
 **Files:**
 
@@ -160,12 +160,11 @@ git commit -m "chore: isolate framework quality checks"
 - Produces: `HeaderComponent.authenticatedUserControl: Locator` and
   `ForgotPasswordPage.heading: Locator` for retrying expectations.
 
-- [x] **Step 1: Write failing component assertions for modal scoping and web-first state**
+- [x] **Step 1: Write failing component assertions for modal behavior and web-first state**
 
-Update the login component markup to include decoy email/password/continue controls outside the
-existing `role="dialog"`. After `LoginPage.submitCredentials()`, use `expect.poll()` around a single
-`page.evaluate()` result to prove that the dialog controls received the values and the dialog submit
-handler ran while the decoy controls remained unchanged.
+Model the deployed modal without an invented dialog landmark. After `LoginPage.submitCredentials()`,
+use `expect.poll()` around a single `page.evaluate()` result to prove that its controls received the
+values and its submit handler ran.
 
 Replace:
 
@@ -185,19 +184,15 @@ Run:
 npx playwright test tests/component/pages/LoginPage.spec.ts --project=framework
 ```
 
-Expected: FAIL because `heading` is private and login locators are not yet scoped to the dialog.
+Expected: FAIL while the Page Objects still require a dialog role that the deployed modal does not expose.
 
-- [x] **Step 2: Scope authentication modal locators and expose assertion targets**
+- [x] **Step 2: Match deployed modal semantics and expose assertion targets**
 
-In each authentication Page Object, create the existing dialog locator with:
-
-```ts
-const dialog = page.getByRole('dialog');
-```
-
-Resolve modal inputs, buttons, and headings from `dialog` rather than the whole page. Make
-`ForgotPasswordPage.heading` public and readonly. Remove `LoginPage.isOpen()` and
-`ForgotPasswordPage.isOpen()` because they return non-retrying visibility snapshots.
+Use the modal's currently unique roles, placeholders, labels, and accessible names without inventing
+a role, test ID, CSS boundary, or DOM traversal. Make `ForgotPasswordPage.heading` public and
+readonly. Remove `LoginPage.isOpen()` and `ForgotPasswordPage.isOpen()` because they return
+non-retrying visibility snapshots. Record the missing dialog landmark as an unresolved application
+accessibility risk.
 
 - [x] **Step 3: Expose authenticated state without putting assertions in workflows**
 
