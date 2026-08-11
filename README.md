@@ -323,6 +323,15 @@ runtime tests to a specific AI provider.
 - The deployed authentication modal does not expose a dialog landmark. Its user-facing input and
   button names are currently unique and verified by the Chromium login flow, but the application
   should add correct dialog semantics so Page Objects can scope modal locators reliably.
+- The six deployed registration OTP inputs have no unique accessible names and no guaranteed stable
+  test IDs. Successful OTP entry remains blocked under the locator policy until Propify deploys a
+  unique accessible name for each input. No positional selector or invented test ID is used as a
+  workaround.
+- Dynamic wrong/expired-OTP feedback has no verified stable unique semantic locator. The framework
+  therefore does not add a negative OTP assertion or an automatic resend scenario.
+- Registration currently has framework-level configuration, Gmail parsing, polling, and Page Object
+  contract coverage only. It is not claimed as executable production registration coverage while
+  the OTP accessibility contract remains unresolved.
 - Propify does not currently guarantee a stable `data-testid` contract. Page Objects therefore use
   accessible roles, labels, placeholders, and scoped user-facing names where those contracts are
   known.

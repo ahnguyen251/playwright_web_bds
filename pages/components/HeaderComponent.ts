@@ -22,6 +22,10 @@ export class HeaderComponent {
     await this.loginButton.click();
   }
 
+  public accountEmail(email: string): Locator {
+    return this.page.getByText(email, { exact: true });
+  }
+
   public async openAccountMenu(): Promise<void> {
     await this.authenticatedUserControl.click();
   }
