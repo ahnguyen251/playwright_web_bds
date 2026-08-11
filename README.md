@@ -127,6 +127,46 @@ Never add credentials to `users.json`. That file stores aliases and environment-
 only. Do not replace the placeholders in `.env.example` with real values. `.env`, `.auth`,
 Playwright storage state, and generated artifacts are ignored by Git.
 
+### Optional production registration and Gmail OTP
+
+The real registration scenario is opt-in and disabled by default. It reads a unique registration
+identity and Gmail OAuth credentials from the local environment only. `REGISTRATION_EMAIL_TEMPLATE`
+must contain exactly one `{unique}` token; the factory replaces it for every run so parallel or
+historical messages cannot share the same registration identity.
+
+Required when `RUN_PRODUCTION_REGISTRATION_E2E=true`:
+
+| Variable                      | Purpose                                                         |
+| ----------------------------- | --------------------------------------------------------------- |
+| `REGISTRATION_EMAIL_TEMPLATE` | Email template containing exactly one `{unique}` token.         |
+| `REGISTRATION_FULL_NAME`      | Synthetic display name used by the registration flow.           |
+| `REGISTRATION_PASSWORD`       | Local secret for the unique production registration identity.   |
+| `GMAIL_CLIENT_ID`             | Google OAuth client identifier.                                 |
+| `GMAIL_CLIENT_SECRET`         | Google OAuth client secret.                                     |
+| `GMAIL_REFRESH_TOKEN`         | Offline OAuth token for the dedicated OTP mailbox.              |
+| `GMAIL_OTP_PATTERN`           | Verified regex source containing a named `(?<otp>...)` capture. |
+
+Optional Gmail filters and polling controls:
+
+| Variable                     | Default | Purpose                                                   |
+| ---------------------------- | ------- | --------------------------------------------------------- |
+| `GMAIL_OTP_SENDER`           | unset   | Stable sender filter, rechecked against decoded headers.  |
+| `GMAIL_OTP_SUBJECT`          | unset   | Stable subject filter, rechecked against decoded headers. |
+| `GMAIL_OTP_TIMEOUT_MS`       | `60000` | Maximum bounded mailbox polling time.                     |
+| `GMAIL_OTP_POLL_INTERVAL_MS` | `2000`  | Delay between mailbox polling attempts.                   |
+
+Gmail is accessed through the REST API rather than Gmail's browser UI. This avoids coupling the
+test to Gmail page layout, browser login state, 2FA prompts, cookies, and storage state. Create the
+OAuth client and refresh token outside this repository and grant only the
+`https://www.googleapis.com/auth/gmail.readonly` scope. Store the client secret and refresh token in
+a local ignored `.env` or CI secret store. Never commit them, place them in test data, attach them to
+reports, or print access tokens, OTP values, or email bodies in logs.
+
+The Gmail adapter performs read-only list/get operations. It never labels, marks read, deletes, or
+modifies messages. It considers only messages received after registration submission, correlates the
+exact generated email, applies configured sender/subject filters when supplied, and extracts only the
+configured named OTP capture.
+
 ## Step 4 — Base classes
 
 - `BasePage` provides shared navigation, current URL, and screenshot behavior.
@@ -194,7 +234,17 @@ The `framework` project also executes focused unit and browser-component specifi
 - deterministic date, random-data, and file-path utilities;
 - fixture composition;
 - login-modal actions and forgot-password navigation;
+- registration configuration, unique registration identity generation, and deployed form contracts;
+- Gmail OAuth/REST contracts, MIME parsing, exact OTP extraction, correlation, and bounded polling;
+- registration Workflow orchestration, lazy fixture composition, and the explicit OTP accessibility
+  blocker;
 - atomic multi-file selection in the reusable listing form component.
+
+`tests/authentication/registration.production.spec.ts` is discoverable but disabled by default. It
+runs only in Chromium, serially, with zero retries, empty authentication state, and retained failure
+traces. It creates a persistent unique production account and has no resend or cleanup behavior. The
+live flow has not been executed successfully and is currently blocked at OTP entry until the deployed
+application exposes the required unique accessible names.
 
 Profile, Listings, Appointments, and Transactions currently contain reusable Page Object and
 Workflow templates only. They do not have executable feature `.spec.ts` files and are not claimed as
@@ -253,6 +303,28 @@ Run the non-destructive login smoke test:
 ```bash
 npx playwright test tests/authentication/login.spec.ts --project=chromium
 ```
+
+Discover or safely execute the disabled production registration scenario:
+
+```bash
+npx playwright test tests/authentication/registration.production.spec.ts --project=chromium --no-deps
+```
+
+With `RUN_PRODUCTION_REGISTRATION_E2E` unset or `false`, this reports one intentional skip and does
+not submit the registration form. When the flag is `true`, configuration is validated while the test
+file loads; missing registration/Gmail keys fail immediately before any browser-backed fixture.
+
+Only after the OTP accessibility contract is deployed and verified, configure all secrets outside
+Git and explicitly enable the run:
+
+```powershell
+$env:RUN_PRODUCTION_REGISTRATION_E2E='true'
+npx playwright test tests/authentication/registration.production.spec.ts --project=chromium --no-deps
+```
+
+Do not run this command merely to test configuration: it creates a real persistent account once the
+external gates are satisfied. A skipped or accessibility-blocked result is not successful production
+registration coverage.
 
 Run tests in parallel using the configured projects and workers:
 
@@ -333,8 +405,9 @@ runtime tests to a specific AI provider.
 - Dynamic wrong/expired-OTP feedback has no verified stable unique semantic locator. The framework
   therefore does not add a negative OTP assertion or an automatic resend scenario.
 - Registration currently has framework-level configuration, Gmail parsing, polling, and Page Object
-  contract coverage only. It is not claimed as executable production registration coverage while
-  the OTP accessibility contract remains unresolved.
+  and Workflow contract coverage. The production spec is discoverable and safely gated, but it is not
+  claimed as successfully executed production registration coverage while the OTP accessibility
+  contract remains unresolved.
 - Propify does not currently guarantee a stable `data-testid` contract. Page Objects therefore use
   accessible roles, labels, placeholders, and scoped user-facing names where those contracts are
   known.
@@ -348,3 +421,8 @@ runtime tests to a specific AI provider.
 The initial suite does not create or edit listings, submit appointments, perform payments, or mutate
 transactions against production. Those Page Objects and Workflows are reusable templates until a
 dedicated safe test environment and cleanup policy are configured.
+
+Production registration is the only designed mutating scenario and remains opt-in, blocked by the
+OTP accessibility contract, and unexecuted in this repository state. When eventually enabled, it
+creates one persistent unique account; there is intentionally no automatic resend, deletion, or
+cleanup workflow.
