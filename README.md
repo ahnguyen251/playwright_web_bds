@@ -3,9 +3,10 @@
 Enterprise Playwright + TypeScript framework for automated user testing of the
 [Propify](https://propifyy.duckdns.org/) real-estate website.
 
-The current delivery implements the reusable framework foundation, Page Object templates for
-Authentication, Profile, Listings, Appointments, and Transactions, plus an executable login smoke
-test. Admin operations and destructive production scenarios are outside the current scope.
+The current delivery implements the reusable framework foundation, Page Objects for Authentication,
+Profile, Listings, Appointments, and Transactions, an executable login smoke test, and a guarded,
+traceable Appointment Booking module. Admin operations and destructive production scenarios are
+outside the current scope.
 
 ## Technology
 
@@ -114,6 +115,17 @@ DEFAULT_USER_PASSWORD=your-local-secret
 
 Never add credentials to `users.json`. That file stores aliases and environment-key references
 only. `.env` and `.auth` are ignored by Git.
+
+Appointment E2E scenarios require a controlled, published listing owned by another user:
+
+```dotenv
+APPOINTMENT_LISTING_ID=replace-with-a-resettable-non-production-listing-id
+RUN_MUTATING_TESTS=false
+```
+
+`APPOINTMENT_LISTING_ID` is optional so unit/component tests and test discovery remain available
+without controlled backend state. `RUN_MUTATING_TESTS` defaults to `false`. Setting it to `true`
+permits mutation only when `TEST_ENV` is `dev` or `staging`; production remains blocked.
 
 ## Step 4 — Base classes
 
@@ -262,8 +274,53 @@ Future modules can follow the same contract for Chat, Payment, Notification, Adm
 and AI testing. The `docs/prompts` area preserves AI-assisted test-design prompts without coupling
 runtime tests to a specific AI provider.
 
+## Appointment Booking module
+
+The Appointment module implements the UC-18 journey through
+`AppointmentWorkflow.prepareAppointment()` and `submitPreparedAppointment()`. It discovers the
+currently available semantic date/time buttons and selects either an exact option or the earliest
+available option, so no expiring date is stored in source or JSON.
+
+Automated Test Case IDs:
+
+- `APPOINTMENT-001`: create an appointment successfully (mutating, guarded);
+- `APPOINTMENT-002`: require an appointment time;
+- `APPOINTMENT-003`: require a contact name;
+- `APPOINTMENT-004`: validate a Vietnamese phone number;
+- `APPOINTMENT-005`: require a Gmail email address.
+
+Discover all appointment tests without executing them:
+
+```bash
+npx playwright test tests/appointments --list
+```
+
+Run deterministic unit/component coverage:
+
+```bash
+npx playwright test tests/unit tests/component --project=framework
+```
+
+Run read-only appointment validation against a configured controlled listing:
+
+```bash
+npx playwright test tests/appointments/appointment-validation.read-only.spec.ts --project=chromium
+```
+
+Run the create scenario only on an explicitly selected dev/staging environment:
+
+```powershell
+$env:RUN_MUTATING_TESTS='true'
+npx playwright test tests/appointments/appointment-booking.mutating.spec.ts --project=chromium
+```
+
+Do not use that opt-in command against production. The automatic guard still blocks production if
+the flag is set accidentally.
+
 ## Safety
 
-The initial suite does not create or edit listings, submit appointments, perform payments, or mutate
-transactions against production. Those Page Objects and Workflows are reusable templates until a
-dedicated safe test environment and cleanup policy are configured.
+The suite does not create or edit listings, submit appointments, perform payments, or mutate
+transactions against production. Appointment creation is isolated in a mutating spec backed by an
+automatic policy fixture. It skips unless explicit dev/staging opt-in is present and never permits
+production writes. The configured appointment listing must be resettable and must not already have
+an unfinished booking for the test user.
