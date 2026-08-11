@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 
-import { workflowTest } from './workflow.fixture';
+import { appointmentTest } from './appointment.fixture';
 
-export const BaseTest = workflowTest;
+export const BaseTest = appointmentTest;
 export const test = BaseTest;
 export { expect };
