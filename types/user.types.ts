@@ -16,8 +16,8 @@ export interface UserCredentials {
 export interface RegistrationData {
   readonly fullName: string;
   readonly email: string;
-  readonly phone: string;
   readonly password: string;
+  readonly passwordConfirmation: string;
 }
 
 export interface ProfileUpdate {
