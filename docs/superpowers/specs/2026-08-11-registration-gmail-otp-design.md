@@ -1,5 +1,11 @@
 # Registration and Gmail OTP Design
 
+> **Superseded on 2026-08-12.** This document assumed that the configured Gmail
+> account received OTP messages. The approved business contract instead reads the
+> application sender account's Sent mailbox. See
+> `2026-08-12-registration-sent-gmail-otp-design.md`. This file is retained only as
+> design history.
+
 ## 1. Purpose
 
 Add production-safe automation for the successful Propify registration journey while preserving the existing architecture:
