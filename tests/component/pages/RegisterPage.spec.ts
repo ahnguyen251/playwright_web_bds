@@ -95,6 +95,7 @@ test('exposes web-first OTP and success checkpoints and completes registration',
 
   await registerPage.open();
   await registerPage.submit();
+  await registerPage.waitForOtpScreen();
   await expect(registerPage.otpHeading).toBeVisible();
 
   await page.evaluate(() => {
@@ -105,6 +106,7 @@ test('exposes web-first OTP and success checkpoints and completes registration',
     successState.hidden = false;
   });
 
+  await registerPage.waitForRegistrationSuccess();
   await expect(registerPage.registrationSuccessHeading).toBeVisible();
   await registerPage.completeRegistration();
   await expect.poll(() => page.evaluate(() => document.body.dataset.completed)).toBe('true');
@@ -117,6 +119,7 @@ test('locates the authenticated registration email by exact visible text', async
   `);
   const header = new HeaderComponent(page);
 
+  await header.waitForAccountEmail('registration+run@example.test');
   await expect(header.accountEmail('registration+run@example.test')).toBeVisible();
 });
 

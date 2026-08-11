@@ -26,6 +26,10 @@ export class HeaderComponent {
     return this.page.getByText(email, { exact: true });
   }
 
+  public async waitForAccountEmail(email: string): Promise<void> {
+    await this.accountEmail(email).waitFor({ state: 'visible' });
+  }
+
   public async openAccountMenu(): Promise<void> {
     await this.authenticatedUserControl.click();
   }
