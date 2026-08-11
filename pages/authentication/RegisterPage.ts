@@ -57,6 +57,18 @@ export class RegisterPage extends BasePage {
     await this.submitButton.click();
   }
 
+  public enterOtp(code: string): Promise<void> {
+    if (!/^\d{6}$/.test(code)) {
+      return Promise.reject(new Error('OTP must contain exactly six digits.'));
+    }
+
+    return Promise.reject(
+      new Error(
+        'OTP entry is blocked: Propify must expose six unique accessible textbox names: "Mã OTP 1" through "Mã OTP 6".',
+      ),
+    );
+  }
+
   public async completeRegistration(): Promise<void> {
     await this.registrationSuccessHeading.waitFor({ state: 'visible' });
     await this.completeRegistrationButton.click();

@@ -326,7 +326,10 @@ runtime tests to a specific AI provider.
 - The six deployed registration OTP inputs have no unique accessible names and no guaranteed stable
   test IDs. Successful OTP entry remains blocked under the locator policy until Propify deploys a
   unique accessible name for each input. No positional selector or invented test ID is used as a
-  workaround.
+  workaround. The expected accessibility contract is six textboxes with unique names: `Mã OTP 1`,
+  `Mã OTP 2`, `Mã OTP 3`, `Mã OTP 4`, `Mã OTP 5`, and `Mã OTP 6`. Until those names are verified in
+  the deployed DOM, `RegisterPage.enterOtp()` throws an explicit accessibility-blocker error without
+  interacting with the page.
 - Dynamic wrong/expired-OTP feedback has no verified stable unique semantic locator. The framework
   therefore does not add a negative OTP assertion or an automatic resend scenario.
 - Registration currently has framework-level configuration, Gmail parsing, polling, and Page Object

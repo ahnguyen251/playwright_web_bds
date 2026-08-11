@@ -119,3 +119,34 @@ test('locates the authenticated registration email by exact visible text', async
 
   await expect(header.accountEmail('registration+run@example.test')).toBeVisible();
 });
+
+test('blocks valid OTP entry until six unique accessible input names are deployed', async ({
+  page,
+}) => {
+  await page.setContent(`
+    <h1>Xác thực email</h1>
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+  `);
+  const registerPage = new RegisterPage(page);
+
+  await expect(registerPage.enterOtp('123456')).rejects.toThrow(
+    'OTP entry is blocked: Propify must expose six unique accessible textbox names: "Mã OTP 1" through "Mã OTP 6".',
+  );
+  await expect.poll(() => page.evaluate(() => document.body.dataset.otpTouched)).toBeUndefined();
+});
+
+test('rejects an invalid OTP format before evaluating the accessibility contract', async ({
+  page,
+}) => {
+  await page.setContent('<h1>Xác thực email</h1>');
+  const registerPage = new RegisterPage(page);
+
+  await expect(registerPage.enterOtp('12A456')).rejects.toThrow(
+    'OTP must contain exactly six digits.',
+  );
+});
