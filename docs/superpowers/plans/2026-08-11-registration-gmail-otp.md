@@ -1,5 +1,11 @@
 # Registration and Gmail OTP Implementation Plan
 
+> **Superseded on 2026-08-12.** This plan assumes that the configured Gmail
+> account receives OTP messages. The approved business contract reads the
+> application sender account's Sent mailbox instead. Use
+> `2026-08-12-registration-sent-gmail-otp.md`. This file is retained only as
+> implementation history.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deliver an opt-in, serial, zero-retry Propify production registration test that verifies the OTP screen, retrieves the correctly correlated OTP through Gmail OAuth, and verifies the newly authenticated email without leaking secrets or inventing locators.
