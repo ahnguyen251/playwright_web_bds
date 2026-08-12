@@ -3,10 +3,12 @@ import type { Locator, Page } from '@playwright/test';
 import { ROUTES } from '../../constants/routes';
 import type { RegistrationData } from '../../types/user.types';
 import { BasePage } from '../base/BasePage';
+import { HeaderComponent } from '../components/HeaderComponent';
 
 export class RegisterPage extends BasePage {
   public readonly otpHeading: Locator;
   public readonly registrationSuccessHeading: Locator;
+  private readonly header: HeaderComponent;
   private readonly openRegistrationButton: Locator;
   private readonly fullNameInput: Locator;
   private readonly emailInput: Locator;
@@ -17,6 +19,7 @@ export class RegisterPage extends BasePage {
 
   public constructor(page: Page) {
     super(page);
+    this.header = new HeaderComponent(page);
     this.openRegistrationButton = page.getByRole('button', {
       name: 'Đăng ký ngay',
       exact: true,
@@ -42,6 +45,7 @@ export class RegisterPage extends BasePage {
   }
 
   public async open(): Promise<void> {
+    await this.header.openLogin();
     await this.openRegistrationButton.click();
     await this.fullNameInput.waitFor({ state: 'visible' });
   }

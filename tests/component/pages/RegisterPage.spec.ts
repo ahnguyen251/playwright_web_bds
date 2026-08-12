@@ -5,8 +5,11 @@ import { HeaderComponent } from '../../../pages/components/HeaderComponent';
 
 test('opens, fills, and submits the deployed registration form contract', async ({ page }) => {
   await page.setContent(`
-    <button>Đăng ký ngay</button>
-    <section hidden>
+    <button id="open-login">Đăng nhập</button>
+    <section id="login-form" hidden>
+      <button id="open-registration">Đăng ký ngay</button>
+    </section>
+    <section id="registration-form" hidden>
       <h1>Tạo tài khoản</h1>
       <input id="full-name" placeholder="Họ và tên" />
       <input id="email" placeholder="Email của bạn" />
@@ -15,8 +18,11 @@ test('opens, fills, and submits the deployed registration form contract', async 
       <button id="submit-registration">Tạo tài khoản</button>
     </section>
     <script>
-      document.querySelector('body > button').onclick = () => {
-        document.querySelector('section').hidden = false;
+      document.querySelector('#open-login').onclick = () => {
+        document.querySelector('#login-form').hidden = false;
+      };
+      document.querySelector('#open-registration').onclick = () => {
+        document.querySelector('#registration-form').hidden = false;
       };
       document.querySelector('#submit-registration').onclick = () => {
         document.body.dataset.submitted = 'true';
@@ -65,7 +71,10 @@ test('exposes web-first OTP and success checkpoints and completes registration',
   page,
 }) => {
   await page.setContent(`
-    <button>Đăng ký ngay</button>
+    <button id="open-login">Đăng nhập</button>
+    <section id="login-form" hidden>
+      <button id="open-registration">Đăng ký ngay</button>
+    </section>
     <section id="registration-form" hidden>
       <input placeholder="Họ và tên" />
       <input placeholder="Email của bạn" />
@@ -79,7 +88,10 @@ test('exposes web-first OTP and success checkpoints and completes registration',
       <button id="complete-registration">Khám phá ngay</button>
     </section>
     <script>
-      document.querySelector('body > button').onclick = () => {
+      document.querySelector('#open-login').onclick = () => {
+        document.querySelector('#login-form').hidden = false;
+      };
+      document.querySelector('#open-registration').onclick = () => {
         document.querySelector('#registration-form').hidden = false;
       };
       document.querySelector('#submit-registration').onclick = () => {
