@@ -102,6 +102,7 @@ export class GmailOtpProvider implements OtpProvider {
       return await Promise.race([operation(controller.signal), deadlineExceeded]);
     } finally {
       if (timer !== undefined) clearTimeout(timer);
+      if (!controller.signal.aborted) controller.abort();
     }
   }
 

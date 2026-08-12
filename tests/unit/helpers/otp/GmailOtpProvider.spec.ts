@@ -361,6 +361,45 @@ test('bounds never-settling Gmail message reads by one remaining deadline', asyn
   expect(signal?.aborted).toBe(true);
 });
 
+test('aborts a pending sibling Gmail read when another read rejects', async () => {
+  const expected = new GmailApiError(
+    'Gmail API permission denied with status 403; verify API access and gmail.readonly scope.',
+    403,
+  );
+  let activeReads = 0;
+  let siblingSignal: AbortSignal | undefined;
+  const client: GmailClient = {
+    listMessageIds: () => Promise.resolve(['pending', 'rejected']),
+    getMessage: (id, requestSignal) => {
+      if (id === 'rejected') return Promise.reject(expected);
+      if (requestSignal === undefined) {
+        return Promise.reject(new Error('Gmail read requires a deadline signal.'));
+      }
+
+      siblingSignal = requestSignal;
+      activeReads += 1;
+      return new Promise<GmailMessage>((_resolve, reject) => {
+        requestSignal.addEventListener(
+          'abort',
+          () => {
+            activeReads -= 1;
+            reject(new Error('Pending sibling read aborted.'));
+          },
+          { once: true },
+        );
+      });
+    },
+  };
+
+  const error = await new GmailOtpProvider(client, baseConfig, new FakeClock(0))
+    .getOtp(query)
+    .catch((reason: unknown) => reason);
+
+  expect(error).toBe(expected);
+  expect(siblingSignal?.aborted).toBe(true);
+  expect(activeReads).toBe(0);
+});
+
 for (const status of [401, 403] as const) {
   test(`propagates Gmail ${String(status)} immediately without sleeping`, async () => {
     const expected = new GmailApiError(`gmail-${String(status)}`, status);
