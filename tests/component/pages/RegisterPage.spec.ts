@@ -135,6 +135,36 @@ test('locates the authenticated registration email by exact visible text', async
   await expect(header.accountEmail('registration+run@example.test')).toBeVisible();
 });
 
+test('enters and submits OTP through six unique accessible textbox names', async ({ page }) => {
+  await page.setContent(`
+    <h1>Xác thực email</h1>
+    <input aria-label="Mã OTP 1" maxlength="1" oninput="document.body.dataset.otp1 = this.value" />
+    <input aria-label="Mã OTP 2" maxlength="1" oninput="document.body.dataset.otp2 = this.value" />
+    <input aria-label="Mã OTP 3" maxlength="1" oninput="document.body.dataset.otp3 = this.value" />
+    <input aria-label="Mã OTP 4" maxlength="1" oninput="document.body.dataset.otp4 = this.value" />
+    <input aria-label="Mã OTP 5" maxlength="1" oninput="document.body.dataset.otp5 = this.value" />
+    <input aria-label="Mã OTP 6" maxlength="1" oninput="document.body.dataset.otp6 = this.value" />
+    <button onclick="document.body.dataset.verified = 'true'">Xác nhận</button>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  await registerPage.enterOtp('123456');
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        otp1: document.body.dataset.otp1,
+        otp2: document.body.dataset.otp2,
+        otp3: document.body.dataset.otp3,
+        otp4: document.body.dataset.otp4,
+        otp5: document.body.dataset.otp5,
+        otp6: document.body.dataset.otp6,
+      })),
+    )
+    .toEqual({ otp1: '1', otp2: '2', otp3: '3', otp4: '4', otp5: '5', otp6: '6' });
+  await expect.poll(() => page.evaluate(() => document.body.dataset.verified)).toBe('true');
+});
+
 test('blocks valid OTP entry until six unique accessible input names are deployed', async ({
   page,
 }) => {

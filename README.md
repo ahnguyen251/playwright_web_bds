@@ -244,8 +244,8 @@ The `framework` project also executes focused unit and browser-component specifi
 - registration configuration, unique registration identity generation, and deployed form contracts;
 - Gmail OAuth/REST contracts, MIME parsing, Sent-mailbox query, exact header correlation, six-digit
   OTP extraction, and bounded polling;
-- registration Workflow orchestration, lazy fixture composition, and the explicit OTP accessibility
-  blocker;
+- registration Workflow orchestration, lazy fixture composition, successful semantic OTP entry, and
+  explicit enforcement of the OTP accessibility contract;
 - atomic multi-file selection in the reusable listing form component.
 
 `tests/authentication/registration.production.spec.ts` is discoverable but disabled by default. It
@@ -404,12 +404,12 @@ runtime tests to a specific AI provider.
   button names are currently unique and verified by the Chromium login flow, but the application
   should add correct dialog semantics so Page Objects can scope modal locators reliably.
 - The six deployed registration OTP inputs have no unique accessible names and no guaranteed stable
-  test IDs. Successful OTP entry remains blocked under the locator policy until Propify deploys a
-  unique accessible name for each input. No positional selector or invented test ID is used as a
-  workaround. The expected accessibility contract is six textboxes with unique names: `Mã OTP 1`,
-  `Mã OTP 2`, `Mã OTP 3`, `Mã OTP 4`, `Mã OTP 5`, and `Mã OTP 6`. Until those names are verified in
-  the deployed DOM, `RegisterPage.enterOtp()` throws an explicit accessibility-blocker error without
-  interacting with the page.
+  test IDs. Successful production OTP entry remains blocked under the locator policy until Propify
+  deploys a unique accessible name for each input. No positional selector or invented test ID is used
+  as a workaround. The expected accessibility contract is six textboxes named `Mã OTP 1` through
+  `Mã OTP 6`. `RegisterPage.enterOtp()` first verifies that every semantic locator resolves exactly
+  once. It fills and submits the OTP only when that contract is satisfied; otherwise it throws an
+  explicit blocker before touching any OTP input.
 - Dynamic wrong/expired-OTP feedback has no verified stable unique semantic locator. The framework
   therefore does not add a negative OTP assertion or an automatic resend scenario.
 - Registration currently has framework-level configuration, Gmail parsing, polling, and Page Object
