@@ -40,6 +40,12 @@ npm test
 
 If an end-to-end test is blocked by unavailable credentials, browser access, or an external environment, preserve the integrated state and report the exact blocker. Do not remove recovery worktrees until repository-local verification is complete and the merge result is structurally sound.
 
+## Security Constraint
+
+- Do not commit OAuth client secrets, refresh tokens, passwords, or other live credentials.
+- Keep `.env.example` limited to documented placeholder values.
+- Do not copy the exposed OAuth values into `main`; rotate them and configure their replacements only in the ignored root `.env` file.
+
 ## Cleanup and Naming
 
 After the verified result is on `main`:
@@ -54,7 +60,7 @@ Because the worktrees are removed, no directory with the `codex-` prefix remains
 
 ## Success Criteria
 
-- All committed and currently uncommitted feature work is represented in `main`.
+- All committed and intended non-secret uncommitted feature work is represented in `main`.
 - Shared framework conflicts are resolved without silently dropping module coverage.
 - Repository verification results are recorded from the final integrated commit.
 - `git worktree list` reports only `D:\DATN\DATNver3`.
