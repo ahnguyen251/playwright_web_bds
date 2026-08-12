@@ -3,6 +3,7 @@ import { defineConfig, devices } from '@playwright/test';
 import { loadEnvironmentConfig } from './config/environment.config';
 import { TIMEOUTS } from './constants/timeouts';
 import { createAllureEnvironment } from './reporters/allure-environment';
+import type { TestEnvironment } from './types/environment.types';
 
 const environment = loadEnvironmentConfig();
 const defaultStorageState = '.auth/defaultUser.json';
@@ -10,9 +11,27 @@ const endToEndTestMatch =
   /(authentication|profile|listings|appointments|transactions)\/.*\.spec\.ts/;
 const generalMutatingTestMatch = /(authentication|profile|listings)\/.*\.mutating\.spec\.ts/;
 const appointmentMutatingTestMatch = /appointments\/.*\.mutating\.spec\.ts/;
+const genericRegistrationTestMatch = /authentication\/registration\.otp\.mutating\.spec\.ts/;
 const productionRegistrationTestMatch = /authentication\/registration\.production\.spec\.ts/;
 const mutatingTestMatch = [generalMutatingTestMatch, appointmentMutatingTestMatch];
 const normalBrowserTestIgnore = [...mutatingTestMatch, productionRegistrationTestMatch];
+
+export const createGeneralMutatingProject = (testEnvironment: TestEnvironment) => ({
+  name: 'mutating-chromium',
+  testMatch: generalMutatingTestMatch,
+  fullyParallel: false,
+  workers: 1,
+  retries: 0,
+  dependencies: ['auth-setup'],
+  ...(testEnvironment === 'production' ? { testIgnore: genericRegistrationTestMatch } : {}),
+  use: {
+    ...devices['Desktop Chrome'],
+    storageState: { cookies: [], origins: [] },
+    screenshot: 'off' as const,
+    video: 'off' as const,
+    trace: 'off' as const,
+  },
+});
 
 export default defineConfig({
   testDir: './tests',
@@ -108,20 +127,7 @@ export default defineConfig({
         trace: 'off',
       },
     },
-    {
-      name: 'mutating-chromium',
-      testMatch: generalMutatingTestMatch,
-      fullyParallel: false,
-      workers: 1,
-      dependencies: ['auth-setup'],
-      use: {
-        ...devices['Desktop Chrome'],
-        storageState: { cookies: [], origins: [] },
-        screenshot: 'off',
-        video: 'off',
-        trace: 'off',
-      },
-    },
+    createGeneralMutatingProject(environment.environment),
     {
       name: 'appointment-mutating-chromium',
       testMatch: appointmentMutatingTestMatch,

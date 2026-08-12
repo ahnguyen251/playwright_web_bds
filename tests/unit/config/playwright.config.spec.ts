@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import playwrightConfig from '../../../playwright.config';
+import playwrightConfig, { createGeneralMutatingProject } from '../../../playwright.config';
 
 const effectiveUseFor = (projectName: string): Record<string, unknown> => {
   const project = playwrightConfig.projects?.find(({ name }) => name === projectName);
@@ -88,6 +88,29 @@ test('production registration is discovered only by its dedicated Chromium proje
     .map(({ name }) => name);
 
   expect(discoveredBy).toEqual(['production-registration-chromium']);
+});
+
+test('production account creation excludes generic registration discovery', () => {
+  const genericRegistrationFile = 'authentication/registration.otp.mutating.spec.ts';
+  const project = createGeneralMutatingProject('production');
+
+  expect(matches(project.testMatch, genericRegistrationFile)).toBe(true);
+  expect(matches(project.testIgnore, genericRegistrationFile)).toBe(true);
+});
+
+test('non-production account creation retains generic registration in the zero-retry project', () => {
+  const genericRegistrationFile = 'authentication/registration.otp.mutating.spec.ts';
+  const project = createGeneralMutatingProject('staging');
+
+  expect(matches(project.testMatch, genericRegistrationFile)).toBe(true);
+  expect(matches(project.testIgnore, genericRegistrationFile)).toBe(false);
+  expect(project.retries).toBe(0);
+});
+
+test('every account-creating project explicitly disables retries', () => {
+  for (const projectName of ['mutating-chromium', 'production-registration-chromium']) {
+    expect(projectFor(projectName).retries).toBe(0);
+  }
 });
 
 test('production registration project is unauthenticated, serialized, zero-retry, and artifact-free', () => {

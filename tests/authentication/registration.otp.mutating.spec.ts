@@ -1,19 +1,11 @@
 import { TAGS } from '../../constants/tags';
-import { expect, test } from '../../fixtures/test.fixture';
+import {
+  expect,
+  genericRegistrationTest as test,
+} from '../../fixtures/generic-registration.fixture';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 test.describe.configure({ mode: 'serial' });
-
-test.beforeEach(({ executionPolicy }) => {
-  test.skip(
-    !executionPolicy.runOtpE2e || !executionPolicy.runMutatingE2e,
-    'Requires Gmail OTP, mutating E2E, and production approval flags',
-  );
-  test.skip(
-    !executionPolicy.productionMutationsApproved,
-    'Requires explicit production registration approval',
-  );
-});
 
 test(
   'AUTH-REGISTER-OTP-001 registers a fresh Gmail alias and verifies its OTP',

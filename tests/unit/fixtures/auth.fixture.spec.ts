@@ -1,6 +1,9 @@
 import { expect, test } from '@playwright/test';
 
-import { createExecutionPolicy } from '../../../fixtures/auth.fixture';
+import {
+  createExecutionPolicy,
+  genericRegistrationSkipReason,
+} from '../../../fixtures/auth.fixture';
 
 const mutatingPolicy = {
   RUN_OTP_E2E: 'true',
@@ -38,4 +41,47 @@ test('non-production authentication mutations do not require a production approv
   });
 
   expect(policy.productionMutationsApproved).toBe(true);
+});
+
+test('generic OTP registration remains rejected in production under either approval mode', () => {
+  for (const approval of [
+    {
+      RUN_PRODUCTION_REGISTRATION_E2E: 'true',
+      RUN_PRODUCTION_MUTATING_E2E: 'false',
+    },
+    {
+      RUN_PRODUCTION_REGISTRATION_E2E: 'false',
+      RUN_PRODUCTION_MUTATING_E2E: 'true',
+    },
+  ] as const) {
+    const policy = createExecutionPolicy({
+      ...mutatingPolicy,
+      ...approval,
+      TEST_ENV: 'production',
+    });
+
+    expect(policy.genericRegistrationAllowed).toBe(false);
+    expect(genericRegistrationSkipReason(policy)).toContain(
+      'dedicated production registration project',
+    );
+  }
+});
+
+test('generic OTP registration follows the normal OTP and mutation gates outside production', () => {
+  for (const scenario of [
+    { RUN_OTP_E2E: 'true', RUN_MUTATING_E2E: 'true', expected: true },
+    { RUN_OTP_E2E: 'true', RUN_MUTATING_E2E: 'false', expected: false },
+    { RUN_OTP_E2E: 'false', RUN_MUTATING_E2E: 'false', expected: false },
+  ] as const) {
+    const policy = createExecutionPolicy({
+      TEST_ENV: 'staging',
+      RUN_OTP_E2E: scenario.RUN_OTP_E2E,
+      RUN_MUTATING_E2E: scenario.RUN_MUTATING_E2E,
+      RUN_PRODUCTION_REGISTRATION_E2E: 'false',
+      RUN_PRODUCTION_MUTATING_E2E: 'false',
+    });
+
+    expect(policy.genericRegistrationAllowed).toBe(scenario.expected);
+    expect(genericRegistrationSkipReason(policy) === undefined).toBe(scenario.expected);
+  }
 });

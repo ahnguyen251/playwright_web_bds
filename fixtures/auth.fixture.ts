@@ -17,11 +17,24 @@ export interface ExecutionPolicy {
   readonly runProductionRegistrationE2e: boolean;
   readonly runProductionMutatingE2e: boolean;
   readonly productionMutationsApproved: boolean;
+  readonly genericRegistrationAllowed: boolean;
 }
 
 export interface AuthenticationFixtureData {
   readonly registration: RegistrationData;
 }
+
+export const genericRegistrationSkipReason = (
+  policy: Pick<ExecutionPolicy, 'environment' | 'genericRegistrationAllowed'>,
+): string | undefined => {
+  if (policy.environment === 'production') {
+    return 'Generic OTP registration is disabled in production; use the dedicated production registration project.';
+  }
+  if (!policy.genericRegistrationAllowed) {
+    return 'Requires Gmail OTP and mutating E2E gates';
+  }
+  return undefined;
+};
 
 export interface MutatingUserFixture extends UserCredentials {
   readonly baselineName: string;
@@ -65,6 +78,7 @@ export const createExecutionPolicy = (source: NodeJS.ProcessEnv = process.env): 
   const runProductionMutatingE2e = readExecutionFlag('RUN_PRODUCTION_MUTATING_E2E', source);
   const productionMutationsApproved =
     environment !== 'production' || runProductionRegistrationE2e || runProductionMutatingE2e;
+  const genericRegistrationAllowed = environment !== 'production' && runOtpE2e && runMutatingE2e;
   if (runMutatingE2e && !runOtpE2e) {
     throw new Error(
       'Invalid execution policy configuration: RUN_MUTATING_E2E requires RUN_OTP_E2E',
@@ -82,6 +96,7 @@ export const createExecutionPolicy = (source: NodeJS.ProcessEnv = process.env): 
     runProductionRegistrationE2e,
     runProductionMutatingE2e,
     productionMutationsApproved,
+    genericRegistrationAllowed,
   });
 };
 
