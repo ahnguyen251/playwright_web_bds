@@ -76,6 +76,7 @@ export default defineConfig({
       name: 'firefox',
       testMatch: endToEndTestMatch,
       testIgnore: normalBrowserTestIgnore,
+      workers: 2,
       dependencies: ['auth-setup'],
       use: {
         ...devices['Desktop Firefox'],

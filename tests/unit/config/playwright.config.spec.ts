@@ -114,6 +114,10 @@ test('credential-bearing projects disable traces while retaining default screens
   }
 });
 
+test('caps Firefox live-site execution at two workers to avoid browser load contention', () => {
+  expect(projectFor('firefox').workers).toBe(2);
+});
+
 test('secret-free framework project retains enterprise failure artifacts', () => {
   const use = effectiveUseFor('framework');
 
