@@ -8,5 +8,10 @@
     "displayName": "Secondary Propify User",
     "emailEnvironmentKey": "SECONDARY_USER_EMAIL",
     "passwordEnvironmentKey": "SECONDARY_USER_PASSWORD"
+  },
+  "mutatingUser": {
+    "displayName": "Mutating Propify User",
+    "emailEnvironmentKey": "MUTATING_USER_EMAIL",
+    "passwordEnvironmentKey": "MUTATING_USER_BASELINE_PASSWORD"
   }
 }

@@ -1,0 +1,7 @@
+{
+  "validPassword": "Automation1!",
+  "belowMinimumPassword": "Abc123!",
+  "invalidEmails": ["plain-address", "@missing-local.test", "missing-domain@"],
+  "unicodeFullName": "Nguyễn Kiểm Thử",
+  "mismatchedPassword": "Different1!"
+}

@@ -8,6 +8,7 @@ const environment = loadEnvironmentConfig();
 const defaultStorageState = '.auth/defaultUser.json';
 const endToEndTestMatch =
   /(authentication|profile|listings|appointments|transactions)\/.*\.spec\.ts/;
+const mutatingTestMatch = /(authentication|profile)\/.*\.mutating\.spec\.ts/;
 
 export default defineConfig({
   testDir: './tests',
@@ -27,7 +28,7 @@ export default defineConfig({
       'allure-playwright',
       {
         outputFolder: 'allure-results',
-        detail: true,
+        detail: false,
         suiteTitle: false,
         environmentInfo: createAllureEnvironment(environment),
       },
@@ -53,33 +54,53 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: { cookies: [], origins: [] },
+        trace: 'off',
       },
     },
     {
       name: 'chromium',
       testMatch: endToEndTestMatch,
+      testIgnore: mutatingTestMatch,
       dependencies: ['auth-setup'],
       use: {
         ...devices['Desktop Chrome'],
         storageState: defaultStorageState,
+        trace: 'off',
       },
     },
     {
       name: 'firefox',
       testMatch: endToEndTestMatch,
+      testIgnore: mutatingTestMatch,
       dependencies: ['auth-setup'],
       use: {
         ...devices['Desktop Firefox'],
         storageState: defaultStorageState,
+        trace: 'off',
       },
     },
     {
       name: 'webkit',
       testMatch: endToEndTestMatch,
+      testIgnore: mutatingTestMatch,
       dependencies: ['auth-setup'],
       use: {
         ...devices['Desktop Safari'],
         storageState: defaultStorageState,
+        trace: 'off',
+      },
+    },
+    {
+      name: 'mutating-chromium',
+      testMatch: mutatingTestMatch,
+      fullyParallel: false,
+      dependencies: ['auth-setup'],
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: { cookies: [], origins: [] },
+        screenshot: 'off',
+        video: 'off',
+        trace: 'off',
       },
     },
   ],
