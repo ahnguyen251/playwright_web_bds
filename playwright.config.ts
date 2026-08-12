@@ -54,6 +54,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: { cookies: [], origins: [] },
+        trace: 'off',
       },
     },
     {
@@ -64,6 +65,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: defaultStorageState,
+        trace: 'off',
       },
     },
     {
@@ -74,6 +76,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Firefox'],
         storageState: defaultStorageState,
+        trace: 'off',
       },
     },
     {
@@ -84,6 +87,7 @@ export default defineConfig({
       use: {
         ...devices['Desktop Safari'],
         storageState: defaultStorageState,
+        trace: 'off',
       },
     },
     {

@@ -1,6 +1,11 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 
 import { RegisterPage } from '../../../pages/authentication/RegisterPage';
+import {
+  expiredRegistrationOtpFeedbackTestCase,
+  incorrectRegistrationOtpFeedbackTestCase,
+  registrationOtpEntryContractTestCase,
+} from '../../../test-cases/authentication/registration.test-cases';
 
 const readValidationPromptly = async (readMessages: () => Promise<string[]>): Promise<string[]> => {
   let timeout: NodeJS.Timeout | undefined;
@@ -20,6 +25,32 @@ const readValidationPromptly = async (readMessages: () => Promise<string[]>): Pr
     }
   }
 };
+
+async function mountRegistrationOtp(page: Page, inputCount = 6): Promise<void> {
+  const inputs = Array.from(
+    { length: inputCount },
+    () => '<input type="text" inputmode="numeric" maxlength="1" />',
+  ).join('');
+
+  await page.setContent(`
+    <section>
+      <h1>Xác thực email</h1>
+      ${inputs}
+      <p role="alert">Mã OTP không hợp lệ</p>
+      <p>Mã OTP đã hết hạn</p>
+      <button>Xác nhận OTP</button>
+      <button>Gửi lại</button>
+    </section>
+    <script type="text/javascript">
+      document.querySelector('button').onclick = () => {
+        document.body.dataset.verified = 'true';
+      };
+      document.querySelector('button:last-of-type').onclick = () => {
+        document.body.dataset.resent = 'true';
+      };
+    </script>
+  `);
+}
 
 test('exposes only visible registration validation and submit readiness without submitting', async ({
   page,
@@ -130,36 +161,65 @@ test('exposes only visible registration validation and submit readiness without 
   expect(registerPage).not.toHaveProperty('fillPhone');
 });
 
-test('enters six OTP digits and submits the verification', async ({ page }) => {
-  await page.setContent(`
-    <section>
-      <h1>Xác thực email</h1>
-      <input type="text" inputmode="numeric" maxlength="1" />
-      <input type="text" inputmode="numeric" maxlength="1" />
-      <input type="text" inputmode="numeric" maxlength="1" />
-      <input type="text" inputmode="numeric" maxlength="1" />
-      <input type="text" inputmode="numeric" maxlength="1" />
-      <input type="text" inputmode="numeric" maxlength="1" />
-      <p role="alert">Mã OTP không hợp lệ</p>
-      <p>Mã OTP đã hết hạn</p>
-      <button>Xác nhận OTP</button>
-      <button>Gửi lại</button>
-    </section>
-    <script type="text/javascript">
-      document.querySelector('button').onclick = () => {
-        document.body.dataset.verified = 'true';
-      };
-      document.querySelector('button:last-of-type').onclick = () => {
-        document.body.dataset.resent = 'true';
-      };
-    </script>
-  `);
+test(`${registrationOtpEntryContractTestCase.id} ${registrationOtpEntryContractTestCase.title}`, async ({
+  page,
+}) => {
+  await mountRegistrationOtp(page);
   const registerPage = new RegisterPage(page);
 
-  await registerPage.enterOtp('123456');
+  await registerPage.enterOtp(registrationOtpEntryContractTestCase.code ?? '123456');
+
+  expect(
+    await page
+      .locator('input[type="text"][inputmode="numeric"][maxlength="1"]')
+      .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value)),
+  ).toEqual(registrationOtpEntryContractTestCase.expectedValues);
+
   await registerPage.submitOtp();
   await registerPage.resendOtp();
 
   expect(await page.evaluate(() => document.body.dataset.verified)).toBe('true');
   expect(await page.evaluate(() => document.body.dataset.resent)).toBe('true');
+});
+
+test('rejects empty, short, long, or non-numeric OTPs without changing any input', async ({
+  page,
+}) => {
+  await mountRegistrationOtp(page);
+  const registerPage = new RegisterPage(page);
+  const otpInputs = page.locator('input[type="text"][inputmode="numeric"][maxlength="1"]');
+
+  for (const code of ['', '12345', '1234567', '12345x']) {
+    await expect(registerPage.enterOtp(code)).rejects.toThrow('Expected a six-digit OTP.');
+    expect(
+      await otpInputs.evaluateAll((inputs) =>
+        inputs.map((input) => (input as HTMLInputElement).value),
+      ),
+    ).toEqual(['', '', '', '', '', '']);
+  }
+});
+
+test('requires exactly six registration OTP inputs before entering a value', async ({ page }) => {
+  await mountRegistrationOtp(page, 5);
+  const registerPage = new RegisterPage(page);
+
+  await expect(registerPage.enterOtp('123456')).rejects.toThrow(
+    'Expected six OTP inputs, found 5.',
+  );
+});
+
+test(`${incorrectRegistrationOtpFeedbackTestCase.id} ${incorrectRegistrationOtpFeedbackTestCase.title}`, async ({
+  page,
+}) => {
+  await mountRegistrationOtp(page);
+
+  expect(await new RegisterPage(page).otpError()).toBe('Mã OTP không hợp lệ');
+});
+
+test(`${expiredRegistrationOtpFeedbackTestCase.id} ${expiredRegistrationOtpFeedbackTestCase.title}`, async ({
+  page,
+}) => {
+  await mountRegistrationOtp(page);
+
+  expect(await new RegisterPage(page).isOtpExpired()).toBe(true);
 });

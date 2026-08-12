@@ -9,6 +9,11 @@ interface RegistrationValidationTestCase extends TestCaseDefinition {
   readonly expectedSubmitEnabled: boolean;
 }
 
+interface RegistrationOtpTestCase extends TestCaseDefinition {
+  readonly code?: string;
+  readonly expectedValues?: readonly string[];
+}
+
 const validationData = AuthenticationDataFactory.getValidationData();
 const registrationTags = Object.freeze([TAGS.regression, TAGS.authentication]);
 const registrationPreconditions = Object.freeze([
@@ -76,8 +81,56 @@ export const registrationPasswordMismatchTestCase: RegistrationValidationTestCas
   expectedSubmitEnabled: false,
 });
 
+const registrationOtpTags = Object.freeze([
+  TAGS.regression,
+  TAGS.authentication,
+  TAGS.otp,
+]);
+
+export const registrationOtpEntryContractTestCase: RegistrationOtpTestCase = Object.freeze({
+  id: 'AUTH-REGISTER-OTP-002',
+  title: 'Registration OTP entry requires exactly six numeric digits',
+  module: 'Authentication Registration',
+  priority: 'high',
+  tags: registrationOtpTags,
+  preconditions: Object.freeze([
+    'The registration OTP view exposes exactly six single-character numeric inputs.',
+    'No OTP verification request is submitted by this component scenario.',
+  ]),
+  expectedResult: 'The six digits are entered in order and malformed OTP values are rejected.',
+  code: '123456',
+  expectedValues: Object.freeze(['1', '2', '3', '4', '5', '6']),
+});
+
+export const incorrectRegistrationOtpFeedbackTestCase: RegistrationOtpTestCase = Object.freeze({
+  id: 'AUTH-REGISTER-OTP-003',
+  title: 'Registration exposes incorrect OTP feedback',
+  module: 'Authentication Registration',
+  priority: 'high',
+  tags: registrationOtpTags,
+  preconditions: Object.freeze([
+    'The registration OTP view has rendered a server rejection as an alert.',
+  ]),
+  expectedResult: 'The Page Object returns the visible incorrect-OTP feedback.',
+});
+
+export const expiredRegistrationOtpFeedbackTestCase: RegistrationOtpTestCase = Object.freeze({
+  id: 'AUTH-REGISTER-OTP-004',
+  title: 'Registration exposes expired OTP feedback',
+  module: 'Authentication Registration',
+  priority: 'high',
+  tags: registrationOtpTags,
+  preconditions: Object.freeze([
+    'The registration OTP view has rendered the deployed expired-OTP state.',
+  ]),
+  expectedResult: 'The Page Object reports that the OTP has expired.',
+});
+
 export const registrationTestCases = Object.freeze([
   belowMinimumRegistrationPasswordTestCase,
   minimumRegistrationPasswordTestCase,
   registrationPasswordMismatchTestCase,
+  registrationOtpEntryContractTestCase,
+  incorrectRegistrationOtpFeedbackTestCase,
+  expiredRegistrationOtpFeedbackTestCase,
 ]);

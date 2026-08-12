@@ -20,14 +20,22 @@ test('mutating project disables artifacts that can capture account secrets', () 
   expect(use.trace).toBe('off');
 });
 
-test('default browser projects retain enterprise failure artifacts', () => {
-  for (const projectName of ['chromium', 'firefox', 'webkit']) {
+test('credential-bearing projects disable traces while retaining default screenshot and video policies', () => {
+  for (const projectName of ['auth-setup', 'chromium', 'firefox', 'webkit']) {
     const use = effectiveUseFor(projectName);
 
     expect(use.screenshot).toBe('only-on-failure');
     expect(use.video).toBe('retain-on-failure');
-    expect(use.trace).toBe('on-first-retry');
+    expect(use.trace).toBe('off');
   }
+});
+
+test('secret-free framework project retains enterprise failure artifacts', () => {
+  const use = effectiveUseFor('framework');
+
+  expect(use.screenshot).toBe('only-on-failure');
+  expect(use.video).toBe('retain-on-failure');
+  expect(use.trace).toBe('on-first-retry');
 });
 
 test('Allure omits detailed Playwright steps that can contain typed credentials', () => {
