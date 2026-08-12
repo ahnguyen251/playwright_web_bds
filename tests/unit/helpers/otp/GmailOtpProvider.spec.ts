@@ -76,7 +76,8 @@ const baseConfig = {
   clientId: 'client-id',
   clientSecret: 'client-secret',
   refreshToken: 'refresh-token',
-  otpPattern: /Verification code: (?<otp>[A-Z]{2}-\d{4})/,
+  otpPattern: /Verification code: (?<otp>\d{6})/,
+  subject: 'Verify registration',
   timeoutMs: 5_000,
   pollIntervalMs: 2_000,
 } satisfies GmailOtpConfig;
@@ -87,35 +88,35 @@ test('filters by receive time, identity, sender, and subject before selecting th
     new Map([
       [
         'old',
-        message('old', after, `${query.email} — Verification code: OLD-0001`, {
+        message('old', after, `${query.email} — Verification code: 000001`, {
           from: 'otp@example.test',
           subject: 'Verify registration',
         }),
       ],
       [
         'other-email',
-        message('other-email', after + 4_000, 'other@example.test — Verification code: NO-0002', {
+        message('other-email', after + 4_000, 'other@example.test — Verification code: 000002', {
           from: 'otp@example.test',
           subject: 'Verify registration',
         }),
       ],
       [
         'wrong-sender',
-        message('wrong-sender', after + 5_000, `${query.email} — Verification code: NO-0003`, {
+        message('wrong-sender', after + 5_000, `${query.email} — Verification code: 000003`, {
           from: 'attacker@example.test',
           subject: 'Verify registration',
         }),
       ],
       [
         'newest-valid',
-        message('newest-valid', after + 3_000, `${query.email} — Verification code: OK-4821`, {
+        message('newest-valid', after + 3_000, `${query.email} — Verification code: 482108`, {
           from: 'Propify OTP <otp@example.test>',
           subject: 'Verify registration now',
         }),
       ],
       [
         'older-valid',
-        message('older-valid', after + 1_000, `${query.email} — Verification code: OK-1111`, {
+        message('older-valid', after + 1_000, `${query.email} — Verification code: 111111`, {
           from: 'otp@example.test',
           subject: 'Verify registration',
         }),
@@ -129,7 +130,7 @@ test('filters by receive time, identity, sender, and subject before selecting th
     clock,
   );
 
-  await expect(provider.getOtp(query)).resolves.toBe('OK-4821');
+  await expect(provider.getOtp(query)).resolves.toBe('482108');
   expect(client.queries).toEqual([
     'after:2026/08/11 from:otp@example.test subject:"Verify registration"',
   ]);
@@ -142,11 +143,15 @@ test('fails immediately when the newest matching email violates the OTP contract
     new Map([
       [
         'older-valid',
-        message('older-valid', after + 1_000, `${query.email} Verification code: OK-1111`),
+        message('older-valid', after + 1_000, `${query.email} Verification code: 111111`, {
+          subject: 'Verify registration',
+        }),
       ],
       [
         'newest-invalid',
-        message('newest-invalid', after + 2_000, `${query.email} reference 999999`),
+        message('newest-invalid', after + 2_000, `${query.email} reference 999999`, {
+          subject: 'Verify registration',
+        }),
       ],
     ]),
   );

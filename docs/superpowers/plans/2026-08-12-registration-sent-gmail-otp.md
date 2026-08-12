@@ -64,6 +64,7 @@ No file is created or deleted by the runtime refactor. The old receiving-mailbox
 - Modify: `tests/unit/config/registration.config.spec.ts`
 - Modify: `helpers/otp/GmailMessageParser.ts`
 - Modify: `tests/unit/helpers/otp/GmailMessageParser.spec.ts`
+- Modify: `helpers/otp/GmailOtpProvider.ts` — update only the parser call signature.
 - Modify: `tests/unit/test-data/RegistrationDataFactory.spec.ts`
 - Modify: `tests/unit/helpers/otp/GmailApiClient.spec.ts`
 - Modify: `tests/unit/helpers/otp/GmailOtpProvider.spec.ts`
@@ -224,6 +225,12 @@ public static extractOtp(body: string, pattern: RegExp): string | undefined {
 
 Do not move header correlation into this parser method. Keep `parse()` and MIME decoding unchanged.
 
+Update the existing provider call site without changing its correlation logic:
+
+```ts
+const otp = GmailMessageParser.extractOtp(newest.body, this.config.otpPattern);
+```
+
 - [ ] **Step 6: Run focused tests and verify GREEN**
 
 Run the command from Step 3. Expected: all configuration and parser tests PASS.
@@ -244,7 +251,7 @@ Expected: all four commands exit `0`. If any command fails, diagnose and fix wit
 - [ ] **Step 8: Commit Task 1**
 
 ```powershell
-git add -- types/otp.types.ts config/registration.config.ts tests/unit/config/registration.config.spec.ts helpers/otp/GmailMessageParser.ts tests/unit/helpers/otp/GmailMessageParser.spec.ts tests/unit/test-data/RegistrationDataFactory.spec.ts tests/unit/helpers/otp/GmailApiClient.spec.ts tests/unit/helpers/otp/GmailOtpProvider.spec.ts
+git add -- types/otp.types.ts config/registration.config.ts tests/unit/config/registration.config.spec.ts helpers/otp/GmailMessageParser.ts tests/unit/helpers/otp/GmailMessageParser.spec.ts helpers/otp/GmailOtpProvider.ts tests/unit/test-data/RegistrationDataFactory.spec.ts tests/unit/helpers/otp/GmailApiClient.spec.ts tests/unit/helpers/otp/GmailOtpProvider.spec.ts docs/superpowers/plans/2026-08-12-registration-sent-gmail-otp.md
 git commit -m "refactor: require registration otp email contract"
 ```
 

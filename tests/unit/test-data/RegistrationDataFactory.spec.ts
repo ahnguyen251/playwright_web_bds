@@ -12,6 +12,7 @@ const config = {
     clientSecret: 'client-secret',
     refreshToken: 'refresh-token',
     otpPattern: /Mã OTP: (?<otp>\d{6})/,
+    subject: 'Verify registration',
     timeoutMs: 60_000,
     pollIntervalMs: 2_000,
   },

@@ -13,7 +13,8 @@ const completeSource: NodeJS.ProcessEnv = {
   GMAIL_CLIENT_ID: 'client-id',
   GMAIL_CLIENT_SECRET: 'client-secret',
   GMAIL_REFRESH_TOKEN: 'refresh-token',
-  GMAIL_OTP_PATTERN: 'Mã OTP: (?<otp>\\d{6})',
+  GMAIL_OTP_PATTERN: 'Verification code: (?<otp>\\d{6})',
+  GMAIL_OTP_SUBJECT: 'Verify registration',
   GMAIL_OTP_TIMEOUT_MS: '60000',
   GMAIL_OTP_POLL_INTERVAL_MS: '2000',
 };
@@ -59,4 +60,22 @@ test('requires a compilable OTP pattern with a named otp capture', () => {
       GMAIL_OTP_PATTERN: '\\d{6}',
     }),
   ).toThrow(/GMAIL_OTP_PATTERN/);
+});
+
+test('requires the exact registration subject when production registration is enabled', () => {
+  const source = { ...completeSource };
+  delete source.GMAIL_OTP_SUBJECT;
+
+  expect(() => loadProductionRegistrationConfig(source)).toThrow(
+    'Invalid production registration configuration: GMAIL_OTP_SUBJECT',
+  );
+});
+
+test('loads a trimmed registration subject', () => {
+  const config = loadProductionRegistrationConfig({
+    ...completeSource,
+    GMAIL_OTP_SUBJECT: '  Verify registration  ',
+  });
+
+  expect(config.gmail.subject).toBe('Verify registration');
 });

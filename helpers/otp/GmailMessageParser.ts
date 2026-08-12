@@ -71,13 +71,9 @@ export class GmailMessageParser {
     };
   }
 
-  public static extractOtp(body: string, email: string, pattern: RegExp): string | undefined {
-    if (!body.includes(email)) {
-      return undefined;
-    }
-
+  public static extractOtp(body: string, pattern: RegExp): string | undefined {
     const match = new RegExp(pattern.source, pattern.flags.replace(/[gy]/g, '')).exec(body);
     const otp = match?.groups?.otp;
-    return otp === undefined || otp.length === 0 ? undefined : otp;
+    return otp !== undefined && /^\d{6}$/.test(otp) ? otp : undefined;
   }
 }

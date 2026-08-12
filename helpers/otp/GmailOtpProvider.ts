@@ -43,7 +43,7 @@ export class GmailOtpProvider implements OtpProvider {
 
       const newest = matching[0];
       if (newest !== undefined) {
-        const otp = GmailMessageParser.extractOtp(newest.body, query.email, this.config.otpPattern);
+        const otp = GmailMessageParser.extractOtp(newest.body, this.config.otpPattern);
         if (otp === undefined) {
           throw new Error('Matching OTP email found but OTP contract did not match.');
         }
@@ -70,9 +70,7 @@ export class GmailOtpProvider implements OtpProvider {
     return [
       `after:${requestDate}`,
       ...(this.config.sender === undefined ? [] : [`from:${this.config.sender}`]),
-      ...(this.config.subject === undefined
-        ? []
-        : [`subject:${quoteSearchValue(this.config.subject)}`]),
+      `subject:${quoteSearchValue(this.config.subject)}`,
     ].join(' ');
   }
 
@@ -80,7 +78,7 @@ export class GmailOtpProvider implements OtpProvider {
     if (this.config.sender !== undefined && !message.from?.includes(this.config.sender)) {
       return false;
     }
-    if (this.config.subject !== undefined && !message.subject?.includes(this.config.subject)) {
+    if (!message.subject?.includes(this.config.subject)) {
       return false;
     }
     return true;

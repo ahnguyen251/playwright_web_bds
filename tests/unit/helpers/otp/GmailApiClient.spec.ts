@@ -8,6 +8,7 @@ const config = {
   clientSecret: 'client-secret',
   refreshToken: 'refresh-token',
   otpPattern: /Code: (?<otp>\d{6})/,
+  subject: 'Verify registration',
   timeoutMs: 60_000,
   pollIntervalMs: 2_000,
 } satisfies GmailOtpConfig;

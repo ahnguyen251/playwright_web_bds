@@ -68,36 +68,24 @@ test('rejects a missing or non-finite Gmail receive time', () => {
   ).toThrow('Gmail message has an invalid internalDate.');
 });
 
-test('extracts only the configured named otp capture for the exact email', () => {
-  const body = 'registration+run-1@example.test — Verification code: AB-4821';
-
+test('extracts a six-digit named otp capture without requiring the recipient in the body', () => {
   expect(
     GmailMessageParser.extractOtp(
-      body,
-      'registration+run-1@example.test',
-      /Verification code: (?<otp>[A-Z]{2}-\d{4})/,
+      'Your verification code is 482108',
+      /verification code is (?<otp>\d{6})/i,
     ),
-  ).toBe('AB-4821');
+  ).toBe('482108');
 });
 
 test('does not use an arbitrary number when the configured contract misses', () => {
-  const body = 'registration+run-1@example.test reference 999999';
-
   expect(
-    GmailMessageParser.extractOtp(
-      body,
-      'registration+run-1@example.test',
-      /Verification code: (?<otp>[A-Z]{2}-\d{4})/,
-    ),
+    GmailMessageParser.extractOtp('Reference 999999', /verification code is (?<otp>\d{6})/i),
   ).toBeUndefined();
 });
 
-test('rejects a message for another registration identity', () => {
+test('rejects a named capture that is not exactly six digits', () => {
   expect(
-    GmailMessageParser.extractOtp(
-      'other@example.test — Verification code: AB-4821',
-      'registration+run-1@example.test',
-      /Verification code: (?<otp>[A-Z]{2}-\d{4})/,
-    ),
+    GmailMessageParser.extractOtp('Code AB-4821', /Code (?<otp>[A-Z]{2}-\d{4})/),
   ).toBeUndefined();
+  expect(GmailMessageParser.extractOtp('Code 48210', /Code (?<otp>\d{5})/)).toBeUndefined();
 });

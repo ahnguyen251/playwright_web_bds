@@ -14,8 +14,8 @@ export interface GmailOtpConfig {
   readonly clientSecret: string;
   readonly refreshToken: string;
   readonly otpPattern: RegExp;
+  readonly subject: string;
   readonly sender?: string;
-  readonly subject?: string;
   readonly timeoutMs: number;
   readonly pollIntervalMs: number;
 }

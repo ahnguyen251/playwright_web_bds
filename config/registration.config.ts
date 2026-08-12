@@ -17,7 +17,7 @@ const registrationSchema = z
     GMAIL_REFRESH_TOKEN: z.string().min(1),
     GMAIL_OTP_PATTERN: z.string().min(1),
     GMAIL_OTP_SENDER: optionalNonEmptyString,
-    GMAIL_OTP_SUBJECT: optionalNonEmptyString,
+    GMAIL_OTP_SUBJECT: z.string().trim().min(1),
     GMAIL_OTP_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
     GMAIL_OTP_POLL_INTERVAL_MS: z.coerce.number().int().positive().default(2_000),
   })
@@ -78,12 +78,10 @@ export const loadProductionRegistrationConfig = (
     clientSecret: parsed.data.GMAIL_CLIENT_SECRET,
     refreshToken: parsed.data.GMAIL_REFRESH_TOKEN,
     otpPattern: new RegExp(parsed.data.GMAIL_OTP_PATTERN),
+    subject: parsed.data.GMAIL_OTP_SUBJECT,
     timeoutMs: parsed.data.GMAIL_OTP_TIMEOUT_MS,
     pollIntervalMs: parsed.data.GMAIL_OTP_POLL_INTERVAL_MS,
     ...(parsed.data.GMAIL_OTP_SENDER === undefined ? {} : { sender: parsed.data.GMAIL_OTP_SENDER }),
-    ...(parsed.data.GMAIL_OTP_SUBJECT === undefined
-      ? {}
-      : { subject: parsed.data.GMAIL_OTP_SUBJECT }),
   });
 
   return Object.freeze({
