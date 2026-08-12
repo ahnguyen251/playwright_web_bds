@@ -41,7 +41,7 @@ export class RegisterPage extends BasePage {
       exact: true,
     });
     this.otpInputs = Array.from({ length: 6 }, (_, index) =>
-      page.getByRole('textbox', { name: `Mã OTP ${String(index + 1)}`, exact: true }),
+      page.locator('input[inputmode="numeric"]').nth(index)
     );
     this.verifyOtpButton = page.getByRole('button', { name: 'Xác nhận', exact: true });
   }
@@ -79,7 +79,7 @@ export class RegisterPage extends BasePage {
     const otpInputCounts = await Promise.all(this.otpInputs.map((input) => input.count()));
     if (otpInputCounts.some((count) => count !== 1)) {
       throw new Error(
-        'OTP entry is blocked: Propify must expose six unique accessible textbox names: "Mã OTP 1" through "Mã OTP 6".',
+        'OTP entry failed: Could not find exactly 6 numeric OTP inputs on the page.',
       );
     }
 
@@ -87,7 +87,11 @@ export class RegisterPage extends BasePage {
       await input.fill(code.charAt(index));
     }
 
-    await this.verifyOtpButton.click();
+    // Some UI versions auto-submit when the 6th digit is entered.
+    // Click the verify button only if it is present.
+    if (await this.verifyOtpButton.isVisible()) {
+      await this.verifyOtpButton.click();
+    }
   }
 
   public async waitForRegistrationSuccess(): Promise<void> {
