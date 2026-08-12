@@ -15,9 +15,6 @@ const resolveOption = (
   kind: AppointmentOptionKind,
 ): string => {
   if (preference.strategy === 'exact') {
-    if (!availableLabels.includes(preference.label)) {
-      throw new Error(`Appointment ${kind} option is not available: ${preference.label}`);
-    }
     return preference.label;
   }
 

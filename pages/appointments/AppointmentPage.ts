@@ -19,14 +19,30 @@ const statusLabels: Readonly<Record<AppointmentStatus, string>> = {
 
 const normalizeOptionLabels = async (options: Locator): Promise<readonly string[]> =>
   options.evaluateAll((elements) =>
-    elements.map((element) => {
-      const childSegments = [...element.children]
-        .map((child) => child.textContent.trim())
-        .filter(Boolean);
-      const text = childSegments.length > 0 ? childSegments.join(' ') : element.textContent;
-      return text.replace(/\s+/g, ' ').trim();
-    }),
+    elements
+      .filter((element) => !(element instanceof HTMLButtonElement) || !element.disabled)
+      .map((element) => {
+        const childSegments = [...element.children]
+          .map((child) => child.textContent.trim())
+          .filter(Boolean);
+        const text = childSegments.length > 0 ? childSegments.join(' ') : element.textContent;
+        return text.replace(/\s+/g, ' ').trim();
+      }),
   );
+
+const selectEnabledOption = async (
+  option: Locator,
+  kind: 'date' | 'time slot',
+  label: string,
+): Promise<void> => {
+  if ((await option.count()) === 0) {
+    throw new Error(`Appointment ${kind} option is not available: ${label}`);
+  }
+  if (await option.isDisabled()) {
+    throw new Error(`Appointment ${kind} option is disabled: ${label}`);
+  }
+  await option.click();
+};
 
 export class AppointmentPage extends BasePage {
   public readonly formHeading: Locator;
@@ -95,11 +111,19 @@ export class AppointmentPage extends BasePage {
   }
 
   public async selectDate(label: string): Promise<void> {
-    await this.page.getByRole('button', { name: label, exact: true }).click();
+    await selectEnabledOption(
+      this.page.getByRole('button', { name: label, exact: true }),
+      'date',
+      label,
+    );
   }
 
   public async selectTimeSlot(label: string): Promise<void> {
-    await this.page.getByRole('button', { name: label, exact: true }).click();
+    await selectEnabledOption(
+      this.page.getByRole('button', { name: label, exact: true }),
+      'time slot',
+      label,
+    );
   }
 
   public async fillContact(data: AppointmentContactData): Promise<void> {

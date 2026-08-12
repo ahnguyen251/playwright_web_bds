@@ -155,17 +155,23 @@ chứng tương ứng và giữ nguyên mã kịch bản.
 
 ## Appointment Booking - UC-18
 
-| Test Case ID      | Requirement / observable rule                                                         | Classification                | Automated evidence                                                    |
-| ----------------- | ------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------- |
-| `APPOINTMENT-001` | Authenticated non-owner creates a valid appointment for an eligible published listing | Mutating E2E; default blocked | `tests/appointments/appointment-booking.mutating.spec.ts`             |
-| `APPOINTMENT-002` | A time slot is required before submission is enabled                                  | Read-only E2E and component   | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts` |
-| `APPOINTMENT-003` | Contact name is required                                                              | Read-only E2E and component   | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts` |
-| `APPOINTMENT-004` | Phone must match the deployed Vietnamese format                                       | Read-only E2E and component   | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts` |
-| `APPOINTMENT-005` | Email must use the deployed Gmail format                                              | Read-only E2E and component   | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts` |
+| Test Case ID      | Requirement / observable rule                                                         | Classification                                                    | Automated evidence                                                                                            |
+| ----------------- | ------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `APPOINTMENT-001` | Authenticated non-owner creates a valid appointment for an eligible published listing | Manual/reseed required; automated placeholder permanently skipped | `tests/component/pages/AppointmentPage.spec.ts`; manual placeholder in `appointment-booking.mutating.spec.ts` |
+| `APPOINTMENT-002` | A time slot is required before submission is enabled                                  | Read-only E2E and component                                       | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts`                                         |
+| `APPOINTMENT-003` | Contact name is required                                                              | Read-only E2E and component                                       | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts`                                         |
+| `APPOINTMENT-004` | Phone must match the deployed Vietnamese format                                       | Read-only E2E and component                                       | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts`                                         |
+| `APPOINTMENT-005` | Email must use the deployed Gmail format                                              | Read-only E2E and component                                       | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts`                                         |
 
 Every E2E title is generated from `test-cases/appointments/appointment.test-cases.ts` and includes
-the Test Case ID plus centralized tags. `APPOINTMENT-001` imports only the automatic centralized
-mutating fixture and runs exclusively in the serialized `mutating-chromium` project.
+the Test Case ID plus centralized tags. `APPOINTMENT-001` has no executable external success flow:
+its placeholder imports the centralized mutating fixture but always skips with `MANUAL/RESEED
+REQUIRED`. It is isolated in authenticated `appointment-mutating-chromium`, while deterministic
+component coverage verifies preparation and submit UI behavior without backend persistence.
+
+Manual evidence for `APPOINTMENT-001` requires a dedicated published listing owned by another user,
+an authenticated test identity with no unfinished appointment for that listing, and explicit reseed
+afterward. Do not record a skip as successful execution evidence.
 
 ## Appointment business rules not verified
 

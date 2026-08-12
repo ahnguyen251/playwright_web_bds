@@ -4,6 +4,9 @@ export const appointmentFormFixture = (): string => `
     <section data-appointment-form>
       <h2>Đặt lịch xem nhà</h2>
       <p>Chọn ngày</p>
+      <button type="button" aria-label="Thứ 3 11 Tháng 8" data-date-option disabled>
+        <span>Thứ 3</span><span>11</span><span>Tháng 8</span>
+      </button>
       <button type="button" aria-label="Thứ 4 12 Tháng 8" data-date-option>
         <span>Thứ 4</span><span>12</span><span>Tháng 8</span>
       </button>
@@ -11,6 +14,7 @@ export const appointmentFormFixture = (): string => `
         <span>Thứ 5</span><span>13</span><span>Tháng 8</span>
       </button>
       <p>Chọn giờ</p>
+      <button type="button" data-time-option disabled>09:00 - 10:00</button>
       <button type="button" data-time-option>10:00 - 11:00</button>
       <input type="text" placeholder="Họ và tên *" />
       <p data-error="name" hidden>Vui lòng nhập họ và tên.</p>

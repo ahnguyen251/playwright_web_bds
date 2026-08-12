@@ -31,23 +31,49 @@ test('mutating project disables artifacts that can capture account secrets', () 
   expect(use.trace).toBe('off');
 });
 
-test('all mutating specs run only in the single-worker mutating project', () => {
-  const mutatingFiles = [
+test('appointment mutation has authenticated serialized isolation without changing registration state', () => {
+  const generalMutationUse = effectiveUseFor('mutating-chromium');
+  const appointmentMutationUse = effectiveUseFor('appointment-mutating-chromium');
+  const appointmentProject = projectFor('appointment-mutating-chromium');
+
+  expect(generalMutationUse.storageState).toEqual({ cookies: [], origins: [] });
+  expect(appointmentMutationUse.storageState).toBe('.auth/defaultUser.json');
+  expect(appointmentMutationUse.screenshot).toBe('off');
+  expect(appointmentMutationUse.video).toBe('off');
+  expect(appointmentMutationUse.trace).toBe('off');
+  expect(appointmentProject.dependencies).toEqual(['auth-setup']);
+  expect(appointmentProject.fullyParallel).toBe(false);
+  expect(appointmentProject.workers).toBe(1);
+});
+
+test('all mutating specs run only in their single-worker mutation project', () => {
+  const generalMutatingFiles = [
     'authentication/registration.otp.mutating.spec.ts',
     'profile/profile.mutating.spec.ts',
     'listings/create-listing.mutating.spec.ts',
-    'appointments/appointment-booking.mutating.spec.ts',
   ];
+  const appointmentMutatingFile = 'appointments/appointment-booking.mutating.spec.ts';
 
   for (const projectName of ['chromium', 'firefox', 'webkit']) {
     const project = projectFor(projectName);
-    for (const file of mutatingFiles) expect(matches(project.testIgnore, file)).toBe(true);
+    for (const file of [...generalMutatingFiles, appointmentMutatingFile]) {
+      expect(matches(project.testIgnore, file)).toBe(true);
+    }
   }
 
   const mutatingProject = projectFor('mutating-chromium');
-  for (const file of mutatingFiles) expect(matches(mutatingProject.testMatch, file)).toBe(true);
+  for (const file of generalMutatingFiles) {
+    expect(matches(mutatingProject.testMatch, file)).toBe(true);
+  }
+  expect(matches(mutatingProject.testMatch, appointmentMutatingFile)).toBe(false);
   expect(mutatingProject.fullyParallel).toBe(false);
   expect(mutatingProject.workers).toBe(1);
+
+  const appointmentProject = projectFor('appointment-mutating-chromium');
+  expect(matches(appointmentProject.testMatch, appointmentMutatingFile)).toBe(true);
+  for (const file of generalMutatingFiles) {
+    expect(matches(appointmentProject.testMatch, file)).toBe(false);
+  }
 });
 
 test('credential-bearing projects disable traces while retaining default screenshot and video policies', () => {

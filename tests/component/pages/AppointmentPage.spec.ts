@@ -42,6 +42,22 @@ test('keeps submission disabled without a time slot', async ({ page }) => {
   await expect(appointmentPage.submitButton).toBeDisabled();
 });
 
+test('rejects an exact disabled appointment date descriptively', async ({ page }) => {
+  const appointmentPage = new AppointmentPage(page);
+
+  await expect(appointmentPage.selectDate('Thứ 3 11 Tháng 8')).rejects.toThrow(
+    'Appointment date option is disabled: Thứ 3 11 Tháng 8',
+  );
+});
+
+test('rejects an exact disabled appointment time slot descriptively', async ({ page }) => {
+  const appointmentPage = new AppointmentPage(page);
+
+  await expect(appointmentPage.selectTimeSlot('09:00 - 10:00')).rejects.toThrow(
+    'Appointment time slot option is disabled: 09:00 - 10:00',
+  );
+});
+
 test('exposes the required contact name error', async ({ page }) => {
   const appointmentPage = new AppointmentPage(page);
 

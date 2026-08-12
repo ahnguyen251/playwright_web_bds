@@ -325,13 +325,15 @@ Test xác nhận hàng/bản ghi vẫn tồn tại; framework không thực hi�
 ## Appointment Booking module
 
 The Appointment module implements the UC-18 journey through
-`AppointmentWorkflow.prepareAppointment()` and `submitPreparedAppointment()`. It discovers the
-currently available semantic date/time buttons and selects either an exact option or the earliest
-available option, so no expiring date is stored in source or JSON.
+`AppointmentWorkflow.prepareAppointment()` and `submitPreparedAppointment()`. It discovers only
+enabled semantic date/time buttons and selects either an exact enabled option or the earliest enabled
+option, so no expiring date is stored in source or JSON. Exact disabled options fail immediately with
+a descriptive error instead of waiting for a browser click timeout.
 
-Automated Test Case IDs:
+Test Case IDs:
 
-- `APPOINTMENT-001`: create an appointment successfully (mutating, guarded);
+- `APPOINTMENT-001`: create an appointment successfully (manual/reseed required; automation is
+  permanently skipped until an approved cleanup contract exists);
 - `APPOINTMENT-002`: require an appointment time;
 - `APPOINTMENT-003`: require a contact name;
 - `APPOINTMENT-004`: validate a Vietnamese phone number;
@@ -355,22 +357,22 @@ Run read-only appointment validation against a configured controlled listing:
 npx playwright test tests/appointments/appointment-validation.read-only.spec.ts --project=chromium
 ```
 
-Run the create scenario only on an explicitly selected dev/staging environment:
+Do not automate the create scenario against an external target. The UI/API currently provides no
+confirmed cleanup operation, so a successful run leaves persistent appointment state and is not
+repeatable. `APPOINTMENT-001` remains as a permanently skipped manual evidence placeholder. A manual
+run requires an authenticated non-owner test user, a dedicated published listing, confirmation that
+no unfinished appointment exists, and explicit reseeding afterward.
 
-```powershell
-$env:TEST_ENV='staging'
-$env:ALLOW_MUTATING_E2E='true'
-npx playwright test tests/appointments/appointment-booking.mutating.spec.ts --project=mutating-chromium
-```
-
-Do not use that opt-in command against production. Appointment mutation shares the centralized
-policy fixture with Listings; production additionally requires `RUN_PRODUCTION_MUTATING_E2E=true`.
-All appointment mutation runs are isolated in the serialized, single-worker `mutating-chromium`
-project and are excluded from normal browser projects.
+The placeholder remains behind the centralized mutation policy and is discovered only by the
+authenticated `appointment-mutating-chromium` project. That project depends on `auth-setup`, uses the
+default authenticated storage state, disables artifacts, and runs serially with one worker. The
+general `mutating-chromium` project keeps empty storage for registration and other flows that require
+it. Normal browser projects exclude every `*.mutating.spec.ts` file.
 
 ## Safety
 
 Test Listings chỉ đọc chạy mặc định. Các luồng tạo, sửa, gỡ và yêu thích được bảo vệ bởi cổng an
-toàn tập trung nêu trên. Appointment creation cũng dùng cổng này và chỉ chạy trong project mutation
-tuần tự; tin cấu hình phải reset được và không có lịch hẹn chưa hoàn tất cho người dùng kiểm thử.
+toàn tập trung nêu trên. Appointment creation không còn là E2E thành công có thể thực thi: placeholder
+luôn skip cho đến khi có cleanup contract được phê duyệt; kiểm tra submit thành công chỉ chạy bằng
+component fixture xác định, không ghi backend.
 Payment và Transaction mutation vẫn cần môi trường kiểm thử cùng chính sách dọn dữ liệu riêng.
