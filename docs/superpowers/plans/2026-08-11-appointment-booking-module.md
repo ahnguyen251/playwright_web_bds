@@ -57,6 +57,7 @@ Prettier 3.
 ### Task 1: Environment contract and mutation policy
 
 **Files:**
+
 - Modify: `config/environment.schema.ts`
 - Modify: `config/environment.config.ts`
 - Create: `config/mutation.policy.ts`
@@ -66,6 +67,7 @@ Prettier 3.
 - Create: `tests/unit/config/mutation.policy.spec.ts`
 
 **Interfaces:**
+
 - Produces: `EnvironmentConfig.runMutatingTests: boolean`.
 - Produces: `EnvironmentConfig.appointmentListingId?: number`.
 - Produces: `mutationBlockReason(config): string | undefined`.
@@ -86,9 +88,9 @@ expect(
   }),
 ).toMatchObject({ runMutatingTests: true, appointmentListingId: 48 });
 
-expect(
-  mutationBlockReason({ environment: 'production', runMutatingTests: true }),
-).toContain('production');
+expect(mutationBlockReason({ environment: 'production', runMutatingTests: true })).toContain(
+  'production',
+);
 expect(mutationBlockReason({ environment: 'staging', runMutatingTests: true })).toBeUndefined();
 ```
 
@@ -137,12 +139,14 @@ git commit -m "feat: guard appointment mutations"
 ### Task 2: Typed independent appointment data
 
 **Files:**
+
 - Modify: `types/appointment.types.ts`
 - Modify: `test-data/static/appointment.json`
 - Create: `test-data/factories/AppointmentDataFactory.ts`
 - Create: `tests/unit/test-data/AppointmentDataFactory.spec.ts`
 
 **Interfaces:**
+
 - Produces: `AppointmentContactData`, `AppointmentOptionPreference`, `AppointmentData`, and
   `ResolvedAppointmentSelection`.
 - Produces: `AppointmentDataFactory.create(listingId, overrides?)`.
@@ -208,11 +212,13 @@ git commit -m "feat: add appointment test data factory"
 ### Task 3: Appointment Page Object contract
 
 **Files:**
+
 - Modify: `pages/appointments/AppointmentPage.ts`
 - Create: `tests/component/support/appointment-form.fixture.ts`
 - Create: `tests/component/pages/AppointmentPage.spec.ts`
 
 **Interfaces:**
+
 - Produces public Locator properties `formHeading`, `submitButton`, `successHeading`,
   `nameRequiredError`, `phoneInvalidError`, and `emailInvalidError`.
 - Produces `availableDateLabels`, `availableTimeSlotLabels`, `selectDate`, `selectTimeSlot`,
@@ -282,10 +288,12 @@ git commit -m "feat: model appointment booking popup"
 ### Task 4: Appointment Workflow orchestration
 
 **Files:**
+
 - Modify: `workflows/appointments/AppointmentWorkflow.ts`
 - Create: `tests/component/workflows/AppointmentWorkflow.spec.ts`
 
 **Interfaces:**
+
 - Produces `prepareAppointment(data): Promise<ResolvedAppointmentSelection>`.
 - Produces `prepareAppointmentWithoutTime(data): Promise<string>`.
 - Preserves `submitPreparedAppointment` and future appointment-list navigation.
@@ -329,12 +337,14 @@ git commit -m "feat: orchestrate appointment booking"
 ### Task 5: Appointment and mutation fixtures
 
 **Files:**
+
 - Create: `fixtures/appointment.fixture.ts`
 - Create: `fixtures/mutating.fixture.ts`
 - Modify: `fixtures/test.fixture.ts`
 - Modify: `tests/component/fixtures/test.fixture.spec.ts`
 
 **Interfaces:**
+
 - Produces fixture `appointmentData: AppointmentData` for configured E2E scenarios.
 - Produces fixture `appointmentDataFor(listingId): AppointmentData` for environment-independent
   composition and future controlled-state consumers.
@@ -389,11 +399,13 @@ git commit -m "feat: compose appointment fixtures"
 ### Task 6: Traceable E2E scenario files
 
 **Files:**
+
 - Create: `test-cases/appointments/appointment.test-cases.ts`
 - Create: `tests/appointments/appointment-booking.mutating.spec.ts`
 - Create: `tests/appointments/appointment-validation.read-only.spec.ts`
 
 **Interfaces:**
+
 - Produces immutable APPOINTMENT-001 through APPOINTMENT-005 metadata and title generation.
 - Consumes ordinary `test` for read-only scenarios and only `mutatingTest` for APPOINTMENT-001.
 
@@ -438,10 +450,12 @@ git commit -m "test: add appointment booking scenarios"
 ### Task 7: Documentation and traceability
 
 **Files:**
+
 - Modify: `README.md`
 - Modify: `docs/traceability/requirements-to-tests.md`
 
 **Interfaces:**
+
 - Produces operational setup, safe commands, locator risks, and requirement mappings.
 
 - [ ] **Step 1: Add exact documentation**
@@ -466,6 +480,7 @@ git commit -m "docs: document appointment coverage"
 ### Task 8: Final verification and audit
 
 **Files:**
+
 - Verify all appointment changes; modify only a file whose focused check exposes a defect.
 
 - [ ] **Step 1: Run focused appointment quality gates**
@@ -522,6 +537,6 @@ appointment was created unless the guarded scenario actually ran in dev/staging 
 - [x] APPOINTMENT-001 imports only the centralized mutating fixture.
 - [x] The required-date scenario is excluded because the verified UI has no blank-date state.
 - [x] Owner, duplicate, urgent-timeout, notification, and fault-injection rules remain explicitly
-  unverified.
+      unverified.
 - [x] No task introduces positional locators, arbitrary waits, fragile selectors, or dependent test
-  ordering.
+      ordering.

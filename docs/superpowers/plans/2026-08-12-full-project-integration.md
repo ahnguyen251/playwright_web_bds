@@ -23,6 +23,7 @@
 ### Task 1: Secure and Commit Authentication Worktree Changes
 
 **Files:**
+
 - Modify: `.worktrees/codex-authentication-module/.env.example`
 - Commit: `.worktrees/codex-authentication-module/package.json`
 - Commit: `.worktrees/codex-authentication-module/package-lock.json`
@@ -33,6 +34,7 @@
 - Commit: `.worktrees/codex-authentication-module/tests/unit/config/playwright.config.spec.ts`
 
 **Interfaces:**
+
 - Consumes: the dirty `codex/authentication-module` checkout.
 - Produces: a clean authentication branch containing all intended non-secret changes.
 
@@ -79,9 +81,11 @@
 ### Task 2: Normalize the Contract-Refactor Worktree
 
 **Files:**
+
 - Inspect: `.worktrees/codex-playwright-contract-refactor/pages/authentication/RegisterPage.ts`
 
 **Interfaces:**
+
 - Consumes: the dirty `codex/playwright-contract-refactor` checkout.
 - Produces: a clean refactor branch, with a commit only if a real content change exists.
 
@@ -125,9 +129,11 @@
 ### Task 3: Create the Recovery-Safe Integration Branch
 
 **Files:**
+
 - Modify: Git references only.
 
 **Interfaces:**
+
 - Consumes: clean feature branches and the current `main` commit.
 - Produces: `integration/full-project` rooted at the current `main`.
 
@@ -150,9 +156,11 @@
 ### Task 4: Merge the Authentication Module
 
 **Files:**
+
 - Modify: files changed by `codex/authentication-module` and any shared conflict resolutions.
 
 **Interfaces:**
+
 - Consumes: `integration/full-project` and `codex/authentication-module`.
 - Produces: an integration commit containing authentication functionality and coverage.
 
@@ -183,9 +191,11 @@
 ### Task 5: Merge the Listings Module
 
 **Files:**
+
 - Modify: files changed by `codex/listings-module` and shared framework conflict resolutions.
 
 **Interfaces:**
+
 - Consumes: the authentication-integrated branch and `codex/listings-module`.
 - Produces: an integration commit containing authentication and listings behavior.
 
@@ -216,9 +226,11 @@
 ### Task 6: Merge the Appointment Booking Module
 
 **Files:**
+
 - Modify: files changed by `codex/appointment-booking` and shared framework conflict resolutions.
 
 **Interfaces:**
+
 - Consumes: the authentication-and-listings integration and `codex/appointment-booking`.
 - Produces: an integration commit containing all three functional modules.
 
@@ -249,9 +261,11 @@
 ### Task 7: Apply the Playwright Contract Refactor
 
 **Files:**
+
 - Modify: files changed by `codex/playwright-contract-refactor` and shared contract conflict resolutions.
 
 **Interfaces:**
+
 - Consumes: the three-module integration and `codex/playwright-contract-refactor`.
 - Produces: the complete project using the final shared Playwright contracts.
 
@@ -284,9 +298,11 @@
 ### Task 8: Advance Main and Re-verify
 
 **Files:**
+
 - Modify: Git references only.
 
 **Interfaces:**
+
 - Consumes: the verified `integration/full-project` branch.
 - Produces: `main` pointing to the integrated result.
 
@@ -319,6 +335,7 @@
 ### Task 9: Remove Merged Worktrees and Branches
 
 **Files:**
+
 - Remove: `.worktrees/appointment-booking`
 - Remove: `.worktrees/codex-authentication-module`
 - Remove: `.worktrees/codex-listings-module`
@@ -326,6 +343,7 @@
 - Remove: `.worktrees/` after confirming it is empty.
 
 **Interfaces:**
+
 - Consumes: verified `main` and clean, fully merged worktrees.
 - Produces: one registered project checkout with no `codex-` worktree directories.
 

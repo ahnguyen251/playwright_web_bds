@@ -1,7 +1,4 @@
-import type {
-  ControlledListingAlias,
-  ListingReference,
-} from '../../types/listing.types';
+import type { ControlledListingAlias, ListingReference } from '../../types/listing.types';
 
 type EnvironmentSource = Readonly<Record<string, string | undefined>>;
 

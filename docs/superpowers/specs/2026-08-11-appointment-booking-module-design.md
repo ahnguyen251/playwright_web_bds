@@ -183,13 +183,13 @@ No credentials enter test data. No static date, slot, or listing identifier is e
 
 ## 6. Test scenarios and traceability
 
-| Test Case ID | Scenario | Classification | Evidence |
-| --- | --- | --- | --- |
-| `APPOINTMENT-001` | Create an appointment successfully | Mutating E2E, guarded | UC-18 main flow and deployed success dialog |
-| `APPOINTMENT-002` | Submission remains disabled without a time slot | Read-only E2E and component | Deployed submit predicate |
-| `APPOINTMENT-003` | Contact name is required | Read-only E2E and component | Deployed field error |
-| `APPOINTMENT-004` | Vietnamese phone format is required | Read-only E2E and component | Deployed regex and field error |
-| `APPOINTMENT-005` | Gmail email address is required | Read-only E2E and component | Deployed regex and field error |
+| Test Case ID      | Scenario                                        | Classification              | Evidence                                    |
+| ----------------- | ----------------------------------------------- | --------------------------- | ------------------------------------------- |
+| `APPOINTMENT-001` | Create an appointment successfully              | Mutating E2E, guarded       | UC-18 main flow and deployed success dialog |
+| `APPOINTMENT-002` | Submission remains disabled without a time slot | Read-only E2E and component | Deployed submit predicate                   |
+| `APPOINTMENT-003` | Contact name is required                        | Read-only E2E and component | Deployed field error                        |
+| `APPOINTMENT-004` | Vietnamese phone format is required             | Read-only E2E and component | Deployed regex and field error              |
+| `APPOINTMENT-005` | Gmail email address is required                 | Read-only E2E and component | Deployed regex and field error              |
 
 Test titles will be generated from immutable test-case metadata and include the ID plus centralized
 appointment tags. Documentation will map each ID to the requirement, implementation files, and

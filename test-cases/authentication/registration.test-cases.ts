@@ -81,11 +81,7 @@ export const registrationPasswordMismatchTestCase: RegistrationValidationTestCas
   expectedSubmitEnabled: false,
 });
 
-const registrationOtpTags = Object.freeze([
-  TAGS.regression,
-  TAGS.authentication,
-  TAGS.otp,
-]);
+const registrationOtpTags = Object.freeze([TAGS.regression, TAGS.authentication, TAGS.otp]);
 
 export const registrationOtpEntryContractTestCase: RegistrationOtpTestCase = Object.freeze({
   id: 'AUTH-REGISTER-OTP-002',

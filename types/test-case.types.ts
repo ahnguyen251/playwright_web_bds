@@ -11,14 +11,7 @@ export interface TestCaseDefinition {
 }
 
 export type ListingRequirementId =
-  | 'UC-08'
-  | 'UC-09'
-  | 'UC-10'
-  | 'UC-11-EDIT'
-  | 'UC-11-WITHDRAW'
-  | 'UC-12'
-  | 'UC-16'
-  | 'UC-17';
+  'UC-08' | 'UC-09' | 'UC-10' | 'UC-11-EDIT' | 'UC-11-WITHDRAW' | 'UC-12' | 'UC-16' | 'UC-17';
 
 export type TestClassification = 'read-only' | 'mutating';
 

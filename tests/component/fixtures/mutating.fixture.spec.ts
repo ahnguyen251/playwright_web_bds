@@ -1,9 +1,6 @@
 import { expect, test } from '@playwright/test';
 
-import {
-  listingMutationSkipReason,
-  mutatingTest,
-} from '../../../fixtures/mutating.fixture';
+import { listingMutationSkipReason, mutatingTest } from '../../../fixtures/mutating.fixture';
 
 test('production listing mutation requires the dedicated production approval', () => {
   expect(

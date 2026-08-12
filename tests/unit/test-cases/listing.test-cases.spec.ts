@@ -83,12 +83,7 @@ test('mọi bằng chứng tự động tồn tại và bằng chứng thủ cô
 });
 
 test('các mapping bộ lọc bị rà soát khai báo đúng case ID trong file bằng chứng', () => {
-  const reviewedIds = [
-    'LIST-UC17-002',
-    'LIST-UC17-003',
-    'LIST-UC17-005',
-    'LIST-UC17-008',
-  ] as const;
+  const reviewedIds = ['LIST-UC17-002', 'LIST-UC17-003', 'LIST-UC17-005', 'LIST-UC17-008'] as const;
 
   for (const id of reviewedIds) {
     const testCase = getListingTestCase(id);
