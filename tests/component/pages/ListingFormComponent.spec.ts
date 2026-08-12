@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { basename } from 'node:path';
 
 import { ListingFormComponent } from '../../../pages/components/ListingFormComponent';
 import { CreateListingPage } from '../../../pages/listings/CreateListingPage';
@@ -117,6 +118,36 @@ test('điền biểu mẫu tin đăng Propify hiện tại và tải media', asy
     imageCount: 2,
     hasVideo: true,
   });
+});
+
+test('selects every listing image atomically in one browser file list', async ({ page }) => {
+  await page.setContent('<label>Hình ảnh <input type="file" accept="image/*" multiple /></label>');
+  const form = new ListingFormComponent(page);
+  const paths = ['listing-images/property.png', 'listing-images/property.png'];
+
+  await form.uploadImages(paths);
+
+  const fileNames = await page.evaluate(() => {
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+    return Array.from(input?.files ?? []).map((file) => file.name);
+  });
+  expect(fileNames).toEqual(paths.map((path) => basename(path)));
+});
+
+test('does not clear an existing listing image selection when no images are supplied', async ({
+  page,
+}) => {
+  await page.setContent('<label>Hình ảnh <input type="file" accept="image/*" multiple /></label>');
+  const form = new ListingFormComponent(page);
+  await form.uploadImages(['listing-images/property.png']);
+
+  await form.uploadImages([]);
+
+  const fileNames = await page.evaluate(() => {
+    const input = document.querySelector<HTMLInputElement>('input[type="file"]');
+    return Array.from(input?.files ?? []).map((file) => file.name);
+  });
+  expect(fileNames).toEqual(['property.png']);
 });
 
 test('trả về thông báo validation của trường và media', async ({ page }) => {

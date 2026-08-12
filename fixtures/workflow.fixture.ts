@@ -8,7 +8,7 @@ import { RegistrationWorkflow } from '../workflows/authentication/RegistrationWo
 import { ListingWorkflow } from '../workflows/listings/ListingWorkflow';
 import { TransactionWorkflow } from '../workflows/transactions/TransactionWorkflow';
 
-const systemClock = Object.freeze({ now: () => new Date() });
+const systemClock = (): Date => new Date();
 
 export interface WorkflowFixtures {
   readonly authenticationWorkflow: AuthenticationWorkflow;
@@ -23,22 +23,13 @@ export interface WorkflowFixtures {
 
 export const workflowTest = pageTest.extend<WorkflowFixtures>({
   loginWorkflow: async ({ loginPage, header }, use) => use(new LoginWorkflow(loginPage, header)),
-  registrationWorkflow: async ({ loginPage, registerPage, otpProvider, otpQueryPolicy }, use) =>
+  registrationWorkflow: async ({ registerPage, header, otpProvider }, use) =>
+    use(new RegistrationWorkflow(registerPage, header, otpProvider, systemClock)),
+  passwordRecoveryWorkflow: async ({ loginPage, forgotPasswordPage, otpProvider }, use) =>
     use(
-      new RegistrationWorkflow(loginPage, registerPage, otpProvider, otpQueryPolicy, systemClock),
-    ),
-  passwordRecoveryWorkflow: async (
-    { loginPage, forgotPasswordPage, otpProvider, otpQueryPolicy },
-    use,
-  ) =>
-    use(
-      new PasswordRecoveryWorkflow(
-        loginPage,
-        forgotPasswordPage,
-        otpProvider,
-        otpQueryPolicy,
-        systemClock,
-      ),
+      new PasswordRecoveryWorkflow(loginPage, forgotPasswordPage, otpProvider, {
+        now: systemClock,
+      }),
     ),
   profileWorkflow: async ({ profilePage }, use) => use(new ProfileWorkflow(profilePage)),
   authenticationWorkflow: async ({ loginWorkflow, header }, use) =>

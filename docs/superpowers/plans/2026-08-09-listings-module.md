@@ -117,126 +117,127 @@ LISTING_OTHER_OWNER_TITLE=
 
 ### UC-08 - Tạo tin đăng
 
-| Mã kịch bản | Kịch bản | Điều kiện tiên quyết | Dữ liệu kiểm thử | Kết quả mong đợi | Phân loại | Trạng thái yêu cầu | Bằng chứng Playwright |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| LIST-UC08-001 | Tạo tin đăng hợp lệ kèm ảnh | Người dùng đã đăng nhập và có số điện thoại hợp lệ | `ListingDataFactory.create()` và `property.png` | Tin được lưu, media được liên kết, hiển thị thông báo thành công và trạng thái `Chờ duyệt`; không kiểm tra hiển thị công khai | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | `create-listing.mutating.spec.ts` |
-| LIST-UC08-002 | Tạo tin đăng hợp lệ kèm video tùy chọn | Người dùng đã đăng nhập và có số điện thoại hợp lệ | Ảnh hợp lệ và video tổng hợp `property.mp4` | Biểu mẫu chấp nhận video; tạo tin thành công với trạng thái `Chờ duyệt` | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | Component và E2E có safety gate |
-| LIST-UC08-003 | Người dùng chưa có số điện thoại hợp lệ | Tài khoản đã đăng nhập nhưng chưa có số điện thoại | Dữ liệu tin đăng hợp lệ | Hệ thống yêu cầu cập nhật số điện thoại và không tạo tin | Có thay đổi | Tài khoản kiểm thử chưa có số điện thoại | E2E khi có alias; nếu chưa có thì lưu bằng chứng manual |
-| LIST-UC08-004 | Thiếu dữ liệu bắt buộc | Người dùng đã đăng nhập và có số điện thoại hợp lệ | Các trường bắt buộc để trống | Hiển thị lỗi theo từng trường và không hiển thị thông báo thành công | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | Component và E2E có safety gate |
-| LIST-UC08-005 | Kiểm tra biên văn bản và số | Người dùng đã đăng nhập và có số điện thoại hợp lệ | Tiêu đề 120/121 ký tự, mô tả 5000/5001 ký tự, diện tích hoặc giá bằng 0/số âm | Giá trị đúng biên được chấp nhận; giá trị ngoài biên hiển thị lỗi và không được lưu | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | Component và E2E validation có safety gate |
-| LIST-UC08-006 | Kiểm tra biên số lượng và dung lượng media | Người dùng đã đăng nhập và có số điện thoại hợp lệ | 10/11 ảnh, ảnh 3MB/lớn hơn 3MB, một video 10MB/lớn hơn 10MB | Giá trị đúng giới hạn UI được chấp nhận; giá trị vượt giới hạn bị từ chối và không báo thành công sai | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | Component xác định; E2E có gate chỉ dùng fixture nhỏ đã commit |
-| LIST-UC08-007 | Từ chối định dạng hoặc upload media không hợp lệ | Người dùng đã đăng nhập và có số điện thoại hợp lệ | `invalid.txt` hoặc media gây lỗi xác định | Hiển thị lỗi media và cho phép thử tải lại | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | Component; E2E có gate khi client validation ổn định |
-| LIST-UC08-008 | Lỗi upload, mạng, timeout hoặc hệ thống | Người dùng đã đăng nhập, có số điện thoại hợp lệ; mọi trường và media đều hợp lệ | Route upload/request được cấu hình lỗi xác định | Hiển thị lỗi hoặc tùy chọn thử lại; không hiển thị thành công sai | Có thay đổi | Đã xác định endpoint ổn định để chặn | Playwright route khi tái hiện xác định; nếu không thì manual |
+| Mã kịch bản   | Kịch bản                                         | Điều kiện tiên quyết                                                             | Dữ liệu kiểm thử                                                              | Kết quả mong đợi                                                                                                              | Phân loại   | Trạng thái yêu cầu                        | Bằng chứng Playwright                                          |
+| ------------- | ------------------------------------------------ | -------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ----------- | ----------------------------------------- | -------------------------------------------------------------- |
+| LIST-UC08-001 | Tạo tin đăng hợp lệ kèm ảnh                      | Người dùng đã đăng nhập và có số điện thoại hợp lệ                               | `ListingDataFactory.create()` và `property.png`                               | Tin được lưu, media được liên kết, hiển thị thông báo thành công và trạng thái `Chờ duyệt`; không kiểm tra hiển thị công khai | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | `create-listing.mutating.spec.ts`                              |
+| LIST-UC08-002 | Tạo tin đăng hợp lệ kèm video tùy chọn           | Người dùng đã đăng nhập và có số điện thoại hợp lệ                               | Ảnh hợp lệ và video tổng hợp `property.mp4`                                   | Biểu mẫu chấp nhận video; tạo tin thành công với trạng thái `Chờ duyệt`                                                       | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | Component và E2E có safety gate                                |
+| LIST-UC08-003 | Người dùng chưa có số điện thoại hợp lệ          | Tài khoản đã đăng nhập nhưng chưa có số điện thoại                               | Dữ liệu tin đăng hợp lệ                                                       | Hệ thống yêu cầu cập nhật số điện thoại và không tạo tin                                                                      | Có thay đổi | Tài khoản kiểm thử chưa có số điện thoại  | E2E khi có alias; nếu chưa có thì lưu bằng chứng manual        |
+| LIST-UC08-004 | Thiếu dữ liệu bắt buộc                           | Người dùng đã đăng nhập và có số điện thoại hợp lệ                               | Các trường bắt buộc để trống                                                  | Hiển thị lỗi theo từng trường và không hiển thị thông báo thành công                                                          | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | Component và E2E có safety gate                                |
+| LIST-UC08-005 | Kiểm tra biên văn bản và số                      | Người dùng đã đăng nhập và có số điện thoại hợp lệ                               | Tiêu đề 120/121 ký tự, mô tả 5000/5001 ký tự, diện tích hoặc giá bằng 0/số âm | Giá trị đúng biên được chấp nhận; giá trị ngoài biên hiển thị lỗi và không được lưu                                           | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | Component và E2E validation có safety gate                     |
+| LIST-UC08-006 | Kiểm tra biên số lượng và dung lượng media       | Người dùng đã đăng nhập và có số điện thoại hợp lệ                               | 10/11 ảnh, ảnh 3MB/lớn hơn 3MB, một video 10MB/lớn hơn 10MB                   | Giá trị đúng giới hạn UI được chấp nhận; giá trị vượt giới hạn bị từ chối và không báo thành công sai                         | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | Component xác định; E2E có gate chỉ dùng fixture nhỏ đã commit |
+| LIST-UC08-007 | Từ chối định dạng hoặc upload media không hợp lệ | Người dùng đã đăng nhập và có số điện thoại hợp lệ                               | `invalid.txt` hoặc media gây lỗi xác định                                     | Hiển thị lỗi media và cho phép thử tải lại                                                                                    | Có thay đổi | Tài khoản chủ tin có số điện thoại hợp lệ | Component; E2E có gate khi client validation ổn định           |
+| LIST-UC08-008 | Lỗi upload, mạng, timeout hoặc hệ thống          | Người dùng đã đăng nhập, có số điện thoại hợp lệ; mọi trường và media đều hợp lệ | Route upload/request được cấu hình lỗi xác định                               | Hiển thị lỗi hoặc tùy chọn thử lại; không hiển thị thành công sai                                                             | Có thay đổi | Đã xác định endpoint ổn định để chặn      | Playwright route khi tái hiện xác định; nếu không thì manual   |
 
 ### UC-09 - Xem danh sách tin đăng của tôi
 
-| Mã kịch bản | Kịch bản | Điều kiện tiên quyết | Dữ liệu kiểm thử | Kết quả mong đợi | Phân loại | Trạng thái yêu cầu | Bằng chứng Playwright |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| LIST-UC09-001 | Xem danh sách tin của người dùng hiện tại | Người dùng đã đăng nhập | Không có | Bảng chỉ hiển thị tin thuộc người dùng hiện tại và đúng trạng thái | Chỉ đọc | Tài khoản có tin đăng thuộc sở hữu | `view-own-listings.read-only.spec.ts` |
-| LIST-UC09-002 | Danh sách tin của tôi trống | Người dùng đã đăng nhập | Không có | Hiển thị trạng thái rỗng `Không có tin đăng` | Chỉ đọc | Tài khoản kiểm thử không có tin đăng | E2E khi có alias; nếu không thì component |
-| LIST-UC09-003 | Tìm kiếm trong danh sách tin của tôi | Người dùng đã đăng nhập | Tiêu đề tin thuộc sở hữu đã cấu hình | Chỉ còn hàng khớp với tiêu đề tìm kiếm | Chỉ đọc | `LISTING_OWNED_EDITABLE_TITLE` | E2E chỉ đọc |
-| LIST-UC09-004 | Lọc danh sách tin của tôi | Người dùng đã đăng nhập | Loại mua bán/cho thuê và trạng thái UI | Các hàng hiển thị khớp bộ lọc đã chọn | Chỉ đọc | Tài khoản có dữ liệu khớp | E2E chỉ đọc hoặc component |
-| LIST-UC09-005 | Phân trang tiếp theo và quay lại | Người dùng đã đăng nhập | Danh sách lớn hơn một trang | Trang dữ liệu thay đổi và có thể quay lại trang trước | Chỉ đọc | Danh sách tin thuộc sở hữu có phân trang | E2E khi có trạng thái; nếu không thì component |
-| LIST-UC09-006 | Không có kết quả tìm kiếm trong tin của tôi | Người dùng đã đăng nhập | Từ khóa không tồn tại và không trùng dữ liệu | Hiển thị trạng thái rỗng | Chỉ đọc | Bất kỳ tài khoản đã đăng nhập | E2E chỉ đọc |
-| LIST-UC09-007 | Lỗi tải danh sách tin của tôi | Người dùng đã đăng nhập | Request danh sách được cấu hình lỗi xác định | Hiển thị lỗi hoặc tùy chọn thử lại | Chỉ đọc | Đã xác định endpoint ổn định để chặn | Route test khi tái hiện xác định; nếu không thì manual |
+| Mã kịch bản   | Kịch bản                                    | Điều kiện tiên quyết    | Dữ liệu kiểm thử                             | Kết quả mong đợi                                                   | Phân loại | Trạng thái yêu cầu                       | Bằng chứng Playwright                                  |
+| ------------- | ------------------------------------------- | ----------------------- | -------------------------------------------- | ------------------------------------------------------------------ | --------- | ---------------------------------------- | ------------------------------------------------------ |
+| LIST-UC09-001 | Xem danh sách tin của người dùng hiện tại   | Người dùng đã đăng nhập | Không có                                     | Bảng chỉ hiển thị tin thuộc người dùng hiện tại và đúng trạng thái | Chỉ đọc   | Tài khoản có tin đăng thuộc sở hữu       | `view-own-listings.read-only.spec.ts`                  |
+| LIST-UC09-002 | Danh sách tin của tôi trống                 | Người dùng đã đăng nhập | Không có                                     | Hiển thị trạng thái rỗng `Không có tin đăng`                       | Chỉ đọc   | Tài khoản kiểm thử không có tin đăng     | E2E khi có alias; nếu không thì component              |
+| LIST-UC09-003 | Tìm kiếm trong danh sách tin của tôi        | Người dùng đã đăng nhập | Tiêu đề tin thuộc sở hữu đã cấu hình         | Chỉ còn hàng khớp với tiêu đề tìm kiếm                             | Chỉ đọc   | `LISTING_OWNED_EDITABLE_TITLE`           | E2E chỉ đọc                                            |
+| LIST-UC09-004 | Lọc danh sách tin của tôi                   | Người dùng đã đăng nhập | Loại mua bán/cho thuê và trạng thái UI       | Các hàng hiển thị khớp bộ lọc đã chọn                              | Chỉ đọc   | Tài khoản có dữ liệu khớp                | E2E chỉ đọc hoặc component                             |
+| LIST-UC09-005 | Phân trang tiếp theo và quay lại            | Người dùng đã đăng nhập | Danh sách lớn hơn một trang                  | Trang dữ liệu thay đổi và có thể quay lại trang trước              | Chỉ đọc   | Danh sách tin thuộc sở hữu có phân trang | E2E khi có trạng thái; nếu không thì component         |
+| LIST-UC09-006 | Không có kết quả tìm kiếm trong tin của tôi | Người dùng đã đăng nhập | Từ khóa không tồn tại và không trùng dữ liệu | Hiển thị trạng thái rỗng                                           | Chỉ đọc   | Bất kỳ tài khoản đã đăng nhập            | E2E chỉ đọc                                            |
+| LIST-UC09-007 | Lỗi tải danh sách tin của tôi               | Người dùng đã đăng nhập | Request danh sách được cấu hình lỗi xác định | Hiển thị lỗi hoặc tùy chọn thử lại                                 | Chỉ đọc   | Đã xác định endpoint ổn định để chặn     | Route test khi tái hiện xác định; nếu không thì manual |
 
 ### UC-10 - Xem chi tiết tin đăng
 
-| Mã kịch bản | Kịch bản | Điều kiện tiên quyết | Dữ liệu kiểm thử | Kết quả mong đợi | Phân loại | Trạng thái yêu cầu | Bằng chứng Playwright |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| LIST-UC10-001 | Hiển thị đầy đủ chi tiết tin đã duyệt | Tin tồn tại và có trạng thái `Đã duyệt` | `LISTING_APPROVED_ID` | Hiển thị thông tin cơ bản, media, mô tả, liên hệ, tiện ích và tin liên quan | Chỉ đọc | Tin đã duyệt được kiểm soát | `listing-detail.read-only.spec.ts` |
-| LIST-UC10-002 | Tin đăng không tồn tại | Không có | ID số chắc chắn không tồn tại | Hiển thị thông báo không tìm thấy và không hiển thị nội dung chi tiết | Chỉ đọc | Không yêu cầu | E2E chỉ đọc |
-| LIST-UC10-003 | Tin đăng chưa được duyệt | Tin tồn tại nhưng chưa được duyệt | `LISTING_UNAPPROVED_ID` | Không hiển thị nội dung công khai | Chỉ đọc | Tin chưa duyệt được kiểm soát | E2E chỉ đọc khi có cấu hình; nếu không thì component |
-| LIST-UC10-004 | Tin đã duyệt nhưng không có media | Tin đã duyệt và không có media | `LISTING_NO_MEDIA_ID` | Hiển thị ảnh mặc định | Chỉ đọc | Tin đã duyệt không có media được kiểm soát | E2E chỉ đọc khi có cấu hình; nếu không thì component |
-| LIST-UC10-005 | Tác động phụ tăng lượt xem | Trang chi tiết tin đã duyệt được mở | Tham chiếu tin đã duyệt | Lượt xem hiển thị là giá trị hợp lệ; kịch bản vẫn được phân loại chỉ đọc | Chỉ đọc | Tin đã duyệt được kiểm soát | Bao phủ cùng 001; không dùng mutation gate |
+| Mã kịch bản   | Kịch bản                              | Điều kiện tiên quyết                    | Dữ liệu kiểm thử              | Kết quả mong đợi                                                            | Phân loại | Trạng thái yêu cầu                         | Bằng chứng Playwright                                |
+| ------------- | ------------------------------------- | --------------------------------------- | ----------------------------- | --------------------------------------------------------------------------- | --------- | ------------------------------------------ | ---------------------------------------------------- |
+| LIST-UC10-001 | Hiển thị đầy đủ chi tiết tin đã duyệt | Tin tồn tại và có trạng thái `Đã duyệt` | `LISTING_APPROVED_ID`         | Hiển thị thông tin cơ bản, media, mô tả, liên hệ, tiện ích và tin liên quan | Chỉ đọc   | Tin đã duyệt được kiểm soát                | `listing-detail.read-only.spec.ts`                   |
+| LIST-UC10-002 | Tin đăng không tồn tại                | Không có                                | ID số chắc chắn không tồn tại | Hiển thị thông báo không tìm thấy và không hiển thị nội dung chi tiết       | Chỉ đọc   | Không yêu cầu                              | E2E chỉ đọc                                          |
+| LIST-UC10-003 | Tin đăng chưa được duyệt              | Tin tồn tại nhưng chưa được duyệt       | `LISTING_UNAPPROVED_ID`       | Không hiển thị nội dung công khai                                           | Chỉ đọc   | Tin chưa duyệt được kiểm soát              | E2E chỉ đọc khi có cấu hình; nếu không thì component |
+| LIST-UC10-004 | Tin đã duyệt nhưng không có media     | Tin đã duyệt và không có media          | `LISTING_NO_MEDIA_ID`         | Hiển thị ảnh mặc định                                                       | Chỉ đọc   | Tin đã duyệt không có media được kiểm soát | E2E chỉ đọc khi có cấu hình; nếu không thì component |
+| LIST-UC10-005 | Tác động phụ tăng lượt xem            | Trang chi tiết tin đã duyệt được mở     | Tham chiếu tin đã duyệt       | Lượt xem hiển thị là giá trị hợp lệ; kịch bản vẫn được phân loại chỉ đọc    | Chỉ đọc   | Tin đã duyệt được kiểm soát                | Bao phủ cùng 001; không dùng mutation gate           |
 
 ### UC-11 - Chỉnh sửa tin đăng
 
-| Mã kịch bản | Kịch bản | Điều kiện tiên quyết | Dữ liệu kiểm thử | Kết quả mong đợi | Phân loại | Trạng thái yêu cầu | Bằng chứng Playwright |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| LIST-UC11-EDIT-001 | Chỉnh sửa thông tin tin thuộc sở hữu | Chủ tin đã đăng nhập và tin tồn tại | Tiêu đề, mô tả mới có hậu tố duy nhất | Thay đổi được lưu, hiển thị thành công và trạng thái chuyển thành `Chờ duyệt` | Có thay đổi | `LISTING_OWNED_EDITABLE_ID` và `LISTING_OWNED_EDITABLE_TITLE` | `edit-listing.mutating.spec.ts` |
-| LIST-UC11-EDIT-002 | Thêm và xóa media | Chủ tin đã đăng nhập; tin có thể sửa và đã có media | Ảnh tổng hợp mới và tên media hiện có | Danh sách media được cập nhật và trạng thái chuyển thành `Chờ duyệt` | Có thay đổi | Tin thuộc sở hữu có thể sửa và có media | E2E có safety gate hoặc component |
-| LIST-UC11-EDIT-003 | Người không phải chủ tin chỉnh sửa | Người dùng không sở hữu tin đã đăng nhập | `LISTING_OTHER_OWNER_ID` | Hiển thị `Không có quyền` và không lưu thay đổi | Có thay đổi | Tin của người khác được kiểm soát | E2E có gate khi có cấu hình; nếu không thì component |
-| LIST-UC11-EDIT-004 | Dữ liệu chỉnh sửa không hợp lệ | Chủ tin đã đăng nhập | Giá trị ngoài biên hoặc sai định dạng | Hiển thị lỗi theo trường và giữ nguyên dữ liệu cũ | Có thay đổi | Tin thuộc sở hữu có thể sửa | Component và E2E có safety gate |
-| LIST-UC11-EDIT-005 | Upload media khi chỉnh sửa thất bại | Chủ tin đã đăng nhập | Media không hợp lệ hoặc request upload lỗi xác định | Hiển thị lỗi upload và cho phép thử lại | Có thay đổi | Tin thuộc sở hữu có thể sửa | Component hoặc route test khi tái hiện xác định |
+| Mã kịch bản        | Kịch bản                             | Điều kiện tiên quyết                                | Dữ liệu kiểm thử                                    | Kết quả mong đợi                                                              | Phân loại   | Trạng thái yêu cầu                                            | Bằng chứng Playwright                                |
+| ------------------ | ------------------------------------ | --------------------------------------------------- | --------------------------------------------------- | ----------------------------------------------------------------------------- | ----------- | ------------------------------------------------------------- | ---------------------------------------------------- |
+| LIST-UC11-EDIT-001 | Chỉnh sửa thông tin tin thuộc sở hữu | Chủ tin đã đăng nhập và tin tồn tại                 | Tiêu đề, mô tả mới có hậu tố duy nhất               | Thay đổi được lưu, hiển thị thành công và trạng thái chuyển thành `Chờ duyệt` | Có thay đổi | `LISTING_OWNED_EDITABLE_ID` và `LISTING_OWNED_EDITABLE_TITLE` | `edit-listing.mutating.spec.ts`                      |
+| LIST-UC11-EDIT-002 | Thêm và xóa media                    | Chủ tin đã đăng nhập; tin có thể sửa và đã có media | Ảnh tổng hợp mới và tên media hiện có               | Danh sách media được cập nhật và trạng thái chuyển thành `Chờ duyệt`          | Có thay đổi | Tin thuộc sở hữu có thể sửa và có media                       | E2E có safety gate hoặc component                    |
+| LIST-UC11-EDIT-003 | Người không phải chủ tin chỉnh sửa   | Người dùng không sở hữu tin đã đăng nhập            | `LISTING_OTHER_OWNER_ID`                            | Hiển thị `Không có quyền` và không lưu thay đổi                               | Có thay đổi | Tin của người khác được kiểm soát                             | E2E có gate khi có cấu hình; nếu không thì component |
+| LIST-UC11-EDIT-004 | Dữ liệu chỉnh sửa không hợp lệ       | Chủ tin đã đăng nhập                                | Giá trị ngoài biên hoặc sai định dạng               | Hiển thị lỗi theo trường và giữ nguyên dữ liệu cũ                             | Có thay đổi | Tin thuộc sở hữu có thể sửa                                   | Component và E2E có safety gate                      |
+| LIST-UC11-EDIT-005 | Upload media khi chỉnh sửa thất bại  | Chủ tin đã đăng nhập                                | Media không hợp lệ hoặc request upload lỗi xác định | Hiển thị lỗi upload và cho phép thử lại                                       | Có thay đổi | Tin thuộc sở hữu có thể sửa                                   | Component hoặc route test khi tái hiện xác định      |
 
 ### UC-11 trong tài liệu / UC-11-WITHDRAW nội bộ - Gỡ tin đăng
 
-| Mã kịch bản | Kịch bản | Điều kiện tiên quyết | Dữ liệu kiểm thử | Kết quả mong đợi | Phân loại | Trạng thái yêu cầu | Bằng chứng Playwright |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| LIST-UC11-WITHDRAW-001 | Xác nhận gỡ tin | Chủ tin đã đăng nhập; tin có trạng thái `Đang đăng` | Tham chiếu tin chỉ dùng cho thao tác gỡ | Hiển thị xác nhận; trạng thái thành `Đã gỡ`; danh sách được tải lại; tin biến mất khỏi công khai nhưng bản ghi không bị xóa vật lý | Có thay đổi | `LISTING_OWNED_PUBLISHED_WITHDRAW_*` có thể seed lại | `withdraw-listing.mutating.spec.ts` |
-| LIST-UC11-WITHDRAW-002 | Hủy thao tác gỡ tin | Chủ tin đã đăng nhập; tin tồn tại và có trạng thái `Đang đăng` | Tham chiếu tin chỉ dùng cho thao tác hủy | Đóng hộp thoại, giữ nguyên trạng thái và khả năng hiển thị | Có thay đổi | `LISTING_OWNED_PUBLISHED_CANCEL_*` | E2E có safety gate |
-| LIST-UC11-WITHDRAW-003 | Từ chối gỡ tin có trạng thái không hợp lệ | Chủ tin đã đăng nhập; trạng thái khác `Đang đăng` | Tin có thể sửa hoặc đang chờ duyệt được kiểm soát | Hiển thị `Không cho phép gỡ` và không đổi trạng thái | Có thay đổi | Tin thuộc sở hữu nhưng không ở trạng thái công khai | E2E có gate hoặc component |
-| LIST-UC11-WITHDRAW-004 | Từ chối người không phải chủ tin | Người dùng không sở hữu tin đã đăng nhập | Tham chiếu tin của người khác | Hiển thị lỗi quyền sở hữu và không đổi trạng thái | Có thay đổi | Tin của người khác được kiểm soát | E2E có gate khi có cấu hình; nếu không thì component |
-| LIST-UC11-WITHDRAW-005 | Tin cần gỡ không tồn tại | Người dùng đã đăng nhập | Tiêu đề chắc chắn không tồn tại | Không hiển thị hoặc không thực hiện thao tác gỡ | Có thay đổi | Không yêu cầu | Component; không dùng E2E để tránh chọn dữ liệu tùy ý |
-| LIST-UC11-WITHDRAW-006 | Request gỡ tin thất bại | Tin hợp lệ thuộc chủ hiện ở trạng thái `Đang đăng` | Request được cấu hình lỗi xác định | Hiển thị thất bại và tin vẫn ở trạng thái `Đang đăng` | Có thay đổi | Đã xác định endpoint ổn định để chặn | Route test khi tái hiện xác định; nếu không thì manual |
+| Mã kịch bản            | Kịch bản                                  | Điều kiện tiên quyết                                           | Dữ liệu kiểm thử                                  | Kết quả mong đợi                                                                                                                   | Phân loại   | Trạng thái yêu cầu                                   | Bằng chứng Playwright                                  |
+| ---------------------- | ----------------------------------------- | -------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------- | ---------------------------------------------------- | ------------------------------------------------------ |
+| LIST-UC11-WITHDRAW-001 | Xác nhận gỡ tin                           | Chủ tin đã đăng nhập; tin có trạng thái `Đang đăng`            | Tham chiếu tin chỉ dùng cho thao tác gỡ           | Hiển thị xác nhận; trạng thái thành `Đã gỡ`; danh sách được tải lại; tin biến mất khỏi công khai nhưng bản ghi không bị xóa vật lý | Có thay đổi | `LISTING_OWNED_PUBLISHED_WITHDRAW_*` có thể seed lại | `withdraw-listing.mutating.spec.ts`                    |
+| LIST-UC11-WITHDRAW-002 | Hủy thao tác gỡ tin                       | Chủ tin đã đăng nhập; tin tồn tại và có trạng thái `Đang đăng` | Tham chiếu tin chỉ dùng cho thao tác hủy          | Đóng hộp thoại, giữ nguyên trạng thái và khả năng hiển thị                                                                         | Có thay đổi | `LISTING_OWNED_PUBLISHED_CANCEL_*`                   | E2E có safety gate                                     |
+| LIST-UC11-WITHDRAW-003 | Từ chối gỡ tin có trạng thái không hợp lệ | Chủ tin đã đăng nhập; trạng thái khác `Đang đăng`              | Tin có thể sửa hoặc đang chờ duyệt được kiểm soát | Hiển thị `Không cho phép gỡ` và không đổi trạng thái                                                                               | Có thay đổi | Tin thuộc sở hữu nhưng không ở trạng thái công khai  | E2E có gate hoặc component                             |
+| LIST-UC11-WITHDRAW-004 | Từ chối người không phải chủ tin          | Người dùng không sở hữu tin đã đăng nhập                       | Tham chiếu tin của người khác                     | Hiển thị lỗi quyền sở hữu và không đổi trạng thái                                                                                  | Có thay đổi | Tin của người khác được kiểm soát                    | E2E có gate khi có cấu hình; nếu không thì component   |
+| LIST-UC11-WITHDRAW-005 | Tin cần gỡ không tồn tại                  | Người dùng đã đăng nhập                                        | Tiêu đề chắc chắn không tồn tại                   | Không hiển thị hoặc không thực hiện thao tác gỡ                                                                                    | Có thay đổi | Không yêu cầu                                        | Component; không dùng E2E để tránh chọn dữ liệu tùy ý  |
+| LIST-UC11-WITHDRAW-006 | Request gỡ tin thất bại                   | Tin hợp lệ thuộc chủ hiện ở trạng thái `Đang đăng`             | Request được cấu hình lỗi xác định                | Hiển thị thất bại và tin vẫn ở trạng thái `Đang đăng`                                                                              | Có thay đổi | Đã xác định endpoint ổn định để chặn                 | Route test khi tái hiện xác định; nếu không thì manual |
 
 ### UC-12 - Yêu thích tin đăng
 
-| Mã kịch bản | Kịch bản | Điều kiện tiên quyết | Dữ liệu kiểm thử | Kết quả mong đợi | Phân loại | Trạng thái yêu cầu | Bằng chứng Playwright |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| LIST-UC12-001 | Thêm rồi bỏ yêu thích | Người dùng đã đăng nhập; tin công khai tồn tại | Tham chiếu tin đã duyệt | Lần nhấn đầu chọn biểu tượng tim và báo thành công; lần nhấn tiếp theo bỏ chọn và khôi phục trạng thái ban đầu | Có thay đổi | Tin đã duyệt được kiểm soát | `favorite-listing.mutating.spec.ts` |
-| LIST-UC12-002 | Kiểm tra danh sách yêu thích | Người dùng đã đăng nhập; tin được thêm yêu thích trong cùng test | Tham chiếu tin đã duyệt | Trang yêu thích chứa tin sau khi thêm và không còn tin sau khi bỏ | Có thay đổi | Tin đã duyệt được kiểm soát | Cùng test độc lập có safety gate với 001 |
-| LIST-UC12-003 | Khách chưa đăng nhập nhấn yêu thích | Khách chưa đăng nhập; tin tồn tại | Tham chiếu tin đã duyệt | Hiển thị modal hoặc chuyển đến đăng nhập; không thêm yêu thích | Có thay đổi | Tin đã duyệt được kiểm soát | E2E có gate hoặc component |
-| LIST-UC12-004 | Yêu thích tin không tồn tại | Người dùng đã đăng nhập | ID chắc chắn không tồn tại | Hiển thị không tìm thấy và không thay đổi yêu thích | Có thay đổi | Không yêu cầu | Component hoặc hành vi route chỉ đọc |
-| LIST-UC12-005 | Request yêu thích thất bại và thử lại | Người dùng đã đăng nhập | Request yêu thích được cấu hình lỗi xác định | Hiển thị lỗi, cho phép thử lại và giữ biểu tượng nhất quán | Có thay đổi | Đã xác định endpoint ổn định để chặn | Route test khi tái hiện xác định; nếu không thì manual |
+| Mã kịch bản   | Kịch bản                              | Điều kiện tiên quyết                                             | Dữ liệu kiểm thử                             | Kết quả mong đợi                                                                                               | Phân loại   | Trạng thái yêu cầu                   | Bằng chứng Playwright                                  |
+| ------------- | ------------------------------------- | ---------------------------------------------------------------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------- | ------------------------------------ | ------------------------------------------------------ |
+| LIST-UC12-001 | Thêm rồi bỏ yêu thích                 | Người dùng đã đăng nhập; tin công khai tồn tại                   | Tham chiếu tin đã duyệt                      | Lần nhấn đầu chọn biểu tượng tim và báo thành công; lần nhấn tiếp theo bỏ chọn và khôi phục trạng thái ban đầu | Có thay đổi | Tin đã duyệt được kiểm soát          | `favorite-listing.mutating.spec.ts`                    |
+| LIST-UC12-002 | Kiểm tra danh sách yêu thích          | Người dùng đã đăng nhập; tin được thêm yêu thích trong cùng test | Tham chiếu tin đã duyệt                      | Trang yêu thích chứa tin sau khi thêm và không còn tin sau khi bỏ                                              | Có thay đổi | Tin đã duyệt được kiểm soát          | Cùng test độc lập có safety gate với 001               |
+| LIST-UC12-003 | Khách chưa đăng nhập nhấn yêu thích   | Khách chưa đăng nhập; tin tồn tại                                | Tham chiếu tin đã duyệt                      | Hiển thị modal hoặc chuyển đến đăng nhập; không thêm yêu thích                                                 | Có thay đổi | Tin đã duyệt được kiểm soát          | E2E có gate hoặc component                             |
+| LIST-UC12-004 | Yêu thích tin không tồn tại           | Người dùng đã đăng nhập                                          | ID chắc chắn không tồn tại                   | Hiển thị không tìm thấy và không thay đổi yêu thích                                                            | Có thay đổi | Không yêu cầu                        | Component hoặc hành vi route chỉ đọc                   |
+| LIST-UC12-005 | Request yêu thích thất bại và thử lại | Người dùng đã đăng nhập                                          | Request yêu thích được cấu hình lỗi xác định | Hiển thị lỗi, cho phép thử lại và giữ biểu tượng nhất quán                                                     | Có thay đổi | Đã xác định endpoint ổn định để chặn | Route test khi tái hiện xác định; nếu không thì manual |
 
 ### UC-16 - Tìm kiếm tin đăng
 
-| Mã kịch bản | Kịch bản | Điều kiện tiên quyết | Dữ liệu kiểm thử | Kết quả mong đợi | Phân loại | Trạng thái yêu cầu | Bằng chứng Playwright |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| LIST-UC16-001 | Tìm kiếm bằng từ khóa công khai hợp lệ | Khách chưa đăng nhập; có dữ liệu đủ điều kiện hiển thị | Một phần tiêu đề tin đã duyệt được kiểm soát | Kết quả chứa tin hợp lệ khớp từ khóa | Chỉ đọc | Tin đã duyệt được kiểm soát | `search-listing.read-only.spec.ts` |
-| LIST-UC16-002 | Chỉ tìm kiếm bằng từ khóa | Khách chưa đăng nhập | Từ khóa và mọi bộ lọc ở mặc định | Kết quả được xác định theo từ khóa mà không áp dụng bộ lọc bổ sung | Chỉ đọc | Có dữ liệu công khai khớp | E2E chỉ đọc |
-| LIST-UC16-003 | Tìm kiếm không có kết quả | Khách chưa đăng nhập | Từ khóa duy nhất chắc chắn không tồn tại | Hiển thị trạng thái không có kết quả | Chỉ đọc | Không yêu cầu | E2E chỉ đọc |
-| LIST-UC16-004 | Từ khóa vượt độ dài tối đa được cấu hình | Khách chưa đăng nhập | Độ dài tối đa theo nguồn cấu hình chính thức cộng một ký tự | Hiển thị validation và không chấp nhận request tìm kiếm | Chỉ đọc | Giới hạn phải được cung cấp từ nguồn cấu hình chính thức của ứng dụng | Bằng chứng manual: input hiện tại không có `maxlength`, `minlength` hoặc `pattern`; không tự đặt con số |
-| LIST-UC16-005 | Sắp xếp kết quả | Khách chưa đăng nhập | Từng tùy chọn sắp xếp hiện có trên UI | Danh sách hiển thị đúng thứ tự đã chọn | Chỉ đọc | Có nhiều tin công khai | Component; E2E cho một thứ tự có thể xác định |
-| LIST-UC16-006 | Chuyển trang tiếp theo và quay lại | Khách chưa đăng nhập | Số kết quả lớn hơn kích thước một trang | Trang tiếp theo đổi dữ liệu; quay lại khôi phục trang trước | Chỉ đọc | Danh sách công khai có phân trang | E2E khi có trạng thái; nếu không thì component |
-| LIST-UC16-007 | Loại bỏ tin không đủ điều kiện hiển thị | Khách chưa đăng nhập | Tham chiếu tin đã duyệt và chưa duyệt được kiểm soát | Chỉ tin đủ điều kiện duyệt/công khai xuất hiện | Chỉ đọc | Có dữ liệu đã duyệt và chưa duyệt | E2E khi có cấu hình; nếu không thì component |
-| LIST-UC16-008 | Lỗi tải dữ liệu hoặc lỗi mạng khi tìm kiếm | Khách chưa đăng nhập | Request tìm kiếm được cấu hình lỗi xác định | Hiển thị lỗi hoặc tùy chọn thử lại | Chỉ đọc | Đã xác định endpoint ổn định để chặn | Route test khi tái hiện xác định; nếu không thì manual |
+| Mã kịch bản   | Kịch bản                                   | Điều kiện tiên quyết                                   | Dữ liệu kiểm thử                                            | Kết quả mong đợi                                                   | Phân loại | Trạng thái yêu cầu                                                    | Bằng chứng Playwright                                                                                   |
+| ------------- | ------------------------------------------ | ------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------ | --------- | --------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| LIST-UC16-001 | Tìm kiếm bằng từ khóa công khai hợp lệ     | Khách chưa đăng nhập; có dữ liệu đủ điều kiện hiển thị | Một phần tiêu đề tin đã duyệt được kiểm soát                | Kết quả chứa tin hợp lệ khớp từ khóa                               | Chỉ đọc   | Tin đã duyệt được kiểm soát                                           | `search-listing.read-only.spec.ts`                                                                      |
+| LIST-UC16-002 | Chỉ tìm kiếm bằng từ khóa                  | Khách chưa đăng nhập                                   | Từ khóa và mọi bộ lọc ở mặc định                            | Kết quả được xác định theo từ khóa mà không áp dụng bộ lọc bổ sung | Chỉ đọc   | Có dữ liệu công khai khớp                                             | E2E chỉ đọc                                                                                             |
+| LIST-UC16-003 | Tìm kiếm không có kết quả                  | Khách chưa đăng nhập                                   | Từ khóa duy nhất chắc chắn không tồn tại                    | Hiển thị trạng thái không có kết quả                               | Chỉ đọc   | Không yêu cầu                                                         | E2E chỉ đọc                                                                                             |
+| LIST-UC16-004 | Từ khóa vượt độ dài tối đa được cấu hình   | Khách chưa đăng nhập                                   | Độ dài tối đa theo nguồn cấu hình chính thức cộng một ký tự | Hiển thị validation và không chấp nhận request tìm kiếm            | Chỉ đọc   | Giới hạn phải được cung cấp từ nguồn cấu hình chính thức của ứng dụng | Bằng chứng manual: input hiện tại không có `maxlength`, `minlength` hoặc `pattern`; không tự đặt con số |
+| LIST-UC16-005 | Sắp xếp kết quả                            | Khách chưa đăng nhập                                   | Từng tùy chọn sắp xếp hiện có trên UI                       | Danh sách hiển thị đúng thứ tự đã chọn                             | Chỉ đọc   | Có nhiều tin công khai                                                | Component; E2E cho một thứ tự có thể xác định                                                           |
+| LIST-UC16-006 | Chuyển trang tiếp theo và quay lại         | Khách chưa đăng nhập                                   | Số kết quả lớn hơn kích thước một trang                     | Trang tiếp theo đổi dữ liệu; quay lại khôi phục trang trước        | Chỉ đọc   | Danh sách công khai có phân trang                                     | E2E khi có trạng thái; nếu không thì component                                                          |
+| LIST-UC16-007 | Loại bỏ tin không đủ điều kiện hiển thị    | Khách chưa đăng nhập                                   | Tham chiếu tin đã duyệt và chưa duyệt được kiểm soát        | Chỉ tin đủ điều kiện duyệt/công khai xuất hiện                     | Chỉ đọc   | Có dữ liệu đã duyệt và chưa duyệt                                     | E2E khi có cấu hình; nếu không thì component                                                            |
+| LIST-UC16-008 | Lỗi tải dữ liệu hoặc lỗi mạng khi tìm kiếm | Khách chưa đăng nhập                                   | Request tìm kiếm được cấu hình lỗi xác định                 | Hiển thị lỗi hoặc tùy chọn thử lại                                 | Chỉ đọc   | Đã xác định endpoint ổn định để chặn                                  | Route test khi tái hiện xác định; nếu không thì manual                                                  |
 
 ### UC-17 - Lọc tin đăng
 
-| Mã kịch bản | Kịch bản | Điều kiện tiên quyết | Dữ liệu kiểm thử | Kết quả mong đợi | Phân loại | Trạng thái yêu cầu | Bằng chứng Playwright |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| LIST-UC17-001 | Lọc người đăng là `Chủ nhà` | Danh sách công khai có tin do chủ nhà đăng | `poster: 'owner'` | Mọi kết quả đều do chủ nhà đăng | Chỉ đọc | Có tin chủ nhà công khai | `filter-listing.read-only.spec.ts` |
-| LIST-UC17-002 | Lọc người đăng là `Môi giới` | Danh sách công khai có tin do môi giới đăng | `poster: 'broker'` | Mọi kết quả đều do môi giới đăng | Chỉ đọc | Có tin môi giới công khai | E2E chỉ đọc |
-| LIST-UC17-003 | Lọc theo khoảng giá có sẵn | Có tin công khai với giá xác định | Khoảng giá có sẵn trên UI | Mọi giá hiển thị nằm trong khoảng | Chỉ đọc | Có tin công khai với giá xác định | E2E chỉ đọc hoặc component |
-| LIST-UC17-004 | Lọc theo khoảng giá tùy chỉnh Từ/Đến | Danh sách công khai có giá dạng số | Giá trị `from` và `to` dương | Mọi kết quả nằm trong khoảng giá tùy chỉnh | Chỉ đọc | Có tin công khai với giá xác định | E2E chỉ đọc hoặc component |
-| LIST-UC17-005 | Lọc theo khoảng diện tích có sẵn | Có dữ liệu diện tích công khai | Khoảng diện tích có sẵn trên UI | Mọi diện tích hiển thị nằm trong khoảng | Chỉ đọc | Có tin công khai | E2E chỉ đọc hoặc component |
-| LIST-UC17-006 | Lọc theo diện tích tùy chỉnh Từ/Đến | Danh sách công khai có diện tích dạng số | Giá trị `from` và `to` dương | Mọi diện tích nằm trong khoảng tùy chỉnh | Chỉ đọc | Có tin công khai | E2E chỉ đọc hoặc component |
-| LIST-UC17-007 | Kết hợp các bộ lọc được hỗ trợ | Có dữ liệu công khai khớp | Người đăng, khoảng giá và diện tích | Mọi kết quả thỏa mãn đồng thời tất cả điều kiện | Chỉ đọc | Danh sách khớp được kiểm soát | E2E chỉ đọc hoặc component |
-| LIST-UC17-008 | Hiển thị đúng số lượng kết quả | Có ít nhất một bộ lọc đang hoạt động | Các điều kiện đã chọn | Số lượng hiển thị bằng số bản tóm tắt tin trả về | Chỉ đọc | Bất kỳ danh sách ổn định | Bao phủ cùng 007 |
-| LIST-UC17-009 | Đặt lại bộ lọc | Bộ lọc đang ở giá trị khác mặc định | Các điều kiện không mặc định | Khôi phục mặc định cùng danh sách và số lượng ban đầu | Chỉ đọc | Bất kỳ danh sách ổn định | E2E chỉ đọc hoặc component |
-| LIST-UC17-010 | Giá Từ lớn hơn giá Đến | Trang danh sách công khai đã mở | `{from: 10, to: 2}` | Hiển thị thông báo validation khoảng giá | Chỉ đọc | Không yêu cầu | Component và E2E chỉ đọc khi ổn định |
-| LIST-UC17-011 | Diện tích Từ lớn hơn diện tích Đến | Trang danh sách công khai đã mở | `{from: 100, to: 30}` | Hiển thị thông báo validation khoảng diện tích | Chỉ đọc | Không yêu cầu | Component và E2E chỉ đọc khi ổn định |
-| LIST-UC17-012 | Giá trị khoảng nhỏ hơn hoặc bằng 0 | Trang danh sách công khai đã mở | Giá trị `0` và số âm | UI chuẩn hóa giá trị thành `0` | Chỉ đọc | Không yêu cầu | Component và E2E chỉ đọc |
-| LIST-UC17-013 | Không có kết quả phù hợp bộ lọc | Trang danh sách công khai đã mở | Tổ hợp khoảng chắc chắn không có kết quả | Hiển thị trạng thái rỗng và số lượng bằng 0 | Chỉ đọc | Không yêu cầu | E2E chỉ đọc |
-| LIST-UC17-014 | Lỗi tải dữ liệu khi lọc | Trang danh sách công khai đã mở | Request lọc được cấu hình lỗi xác định | Hiển thị lỗi hoặc tùy chọn thử lại | Chỉ đọc | Đã xác định endpoint ổn định để chặn | Route test khi tái hiện xác định; nếu không thì manual |
+| Mã kịch bản   | Kịch bản                             | Điều kiện tiên quyết                        | Dữ liệu kiểm thử                         | Kết quả mong đợi                                      | Phân loại | Trạng thái yêu cầu                   | Bằng chứng Playwright                                  |
+| ------------- | ------------------------------------ | ------------------------------------------- | ---------------------------------------- | ----------------------------------------------------- | --------- | ------------------------------------ | ------------------------------------------------------ |
+| LIST-UC17-001 | Lọc người đăng là `Chủ nhà`          | Danh sách công khai có tin do chủ nhà đăng  | `poster: 'owner'`                        | Mọi kết quả đều do chủ nhà đăng                       | Chỉ đọc   | Có tin chủ nhà công khai             | `filter-listing.read-only.spec.ts`                     |
+| LIST-UC17-002 | Lọc người đăng là `Môi giới`         | Danh sách công khai có tin do môi giới đăng | `poster: 'broker'`                       | Mọi kết quả đều do môi giới đăng                      | Chỉ đọc   | Có tin môi giới công khai            | E2E chỉ đọc                                            |
+| LIST-UC17-003 | Lọc theo khoảng giá có sẵn           | Có tin công khai với giá xác định           | Khoảng giá có sẵn trên UI                | Mọi giá hiển thị nằm trong khoảng                     | Chỉ đọc   | Có tin công khai với giá xác định    | E2E chỉ đọc hoặc component                             |
+| LIST-UC17-004 | Lọc theo khoảng giá tùy chỉnh Từ/Đến | Danh sách công khai có giá dạng số          | Giá trị `from` và `to` dương             | Mọi kết quả nằm trong khoảng giá tùy chỉnh            | Chỉ đọc   | Có tin công khai với giá xác định    | E2E chỉ đọc hoặc component                             |
+| LIST-UC17-005 | Lọc theo khoảng diện tích có sẵn     | Có dữ liệu diện tích công khai              | Khoảng diện tích có sẵn trên UI          | Mọi diện tích hiển thị nằm trong khoảng               | Chỉ đọc   | Có tin công khai                     | E2E chỉ đọc hoặc component                             |
+| LIST-UC17-006 | Lọc theo diện tích tùy chỉnh Từ/Đến  | Danh sách công khai có diện tích dạng số    | Giá trị `from` và `to` dương             | Mọi diện tích nằm trong khoảng tùy chỉnh              | Chỉ đọc   | Có tin công khai                     | E2E chỉ đọc hoặc component                             |
+| LIST-UC17-007 | Kết hợp các bộ lọc được hỗ trợ       | Có dữ liệu công khai khớp                   | Người đăng, khoảng giá và diện tích      | Mọi kết quả thỏa mãn đồng thời tất cả điều kiện       | Chỉ đọc   | Danh sách khớp được kiểm soát        | E2E chỉ đọc hoặc component                             |
+| LIST-UC17-008 | Hiển thị đúng số lượng kết quả       | Có ít nhất một bộ lọc đang hoạt động        | Các điều kiện đã chọn                    | Số lượng hiển thị bằng số bản tóm tắt tin trả về      | Chỉ đọc   | Bất kỳ danh sách ổn định             | Bao phủ cùng 007                                       |
+| LIST-UC17-009 | Đặt lại bộ lọc                       | Bộ lọc đang ở giá trị khác mặc định         | Các điều kiện không mặc định             | Khôi phục mặc định cùng danh sách và số lượng ban đầu | Chỉ đọc   | Bất kỳ danh sách ổn định             | E2E chỉ đọc hoặc component                             |
+| LIST-UC17-010 | Giá Từ lớn hơn giá Đến               | Trang danh sách công khai đã mở             | `{from: 10, to: 2}`                      | Hiển thị thông báo validation khoảng giá              | Chỉ đọc   | Không yêu cầu                        | Component và E2E chỉ đọc khi ổn định                   |
+| LIST-UC17-011 | Diện tích Từ lớn hơn diện tích Đến   | Trang danh sách công khai đã mở             | `{from: 100, to: 30}`                    | Hiển thị thông báo validation khoảng diện tích        | Chỉ đọc   | Không yêu cầu                        | Component và E2E chỉ đọc khi ổn định                   |
+| LIST-UC17-012 | Giá trị khoảng nhỏ hơn hoặc bằng 0   | Trang danh sách công khai đã mở             | Giá trị `0` và số âm                     | UI chuẩn hóa giá trị thành `0`                        | Chỉ đọc   | Không yêu cầu                        | Component và E2E chỉ đọc                               |
+| LIST-UC17-013 | Không có kết quả phù hợp bộ lọc      | Trang danh sách công khai đã mở             | Tổ hợp khoảng chắc chắn không có kết quả | Hiển thị trạng thái rỗng và số lượng bằng 0           | Chỉ đọc   | Không yêu cầu                        | E2E chỉ đọc                                            |
+| LIST-UC17-014 | Lỗi tải dữ liệu khi lọc              | Trang danh sách công khai đã mở             | Request lọc được cấu hình lỗi xác định   | Hiển thị lỗi hoặc tùy chọn thử lại                    | Chỉ đọc   | Đã xác định endpoint ổn định để chặn | Route test khi tái hiện xác định; nếu không thì manual |
 
 ---
 
 ## Recommended Implementation Order
 
-| Order | Deliverable | Why first/next |
-| --- | --- | --- |
-| 1 | Mutation environment contract and auto-skip fixture | Makes every later mutation safe before its test file exists |
-| 2 | Listing types, controlled references, factories, and media helpers | Establishes exact interfaces consumed by all Pages and Workflows |
-| 3 | Scenario metadata and traceability validation | Locks IDs/classifications before executable coverage |
-| 4 | Shared form plus Create/Edit Page Objects | Builds UC-08/UC-11 shared behavior once |
-| 5 | Listing card plus public list/search/filter Page Object | Builds UC-16/UC-17 and reusable card behavior |
-| 6 | Detail Page Object | Completes UC-10 observations and favorite entry point |
-| 7 | My Listings Page Object | Completes UC-09 and UC-11-WITHDRAW controls |
-| 8 | Favorites Page Object | Completes UC-12 list verification |
-| 9 | Listing workflow and fixture composition | Coordinates Pages only after their interfaces are stable |
-| 10 | Read-only E2E specs | Safe live evidence can run by default |
-| 11 | Mutating E2E specs | Files exist and list as skipped; no production mutation is run |
-| 12 | Documentation, traceability, and full safe verification | Final consistency and release evidence |
+| Order | Deliverable                                                        | Why first/next                                                   |
+| ----- | ------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| 1     | Mutation environment contract and auto-skip fixture                | Makes every later mutation safe before its test file exists      |
+| 2     | Listing types, controlled references, factories, and media helpers | Establishes exact interfaces consumed by all Pages and Workflows |
+| 3     | Scenario metadata and traceability validation                      | Locks IDs/classifications before executable coverage             |
+| 4     | Shared form plus Create/Edit Page Objects                          | Builds UC-08/UC-11 shared behavior once                          |
+| 5     | Listing card plus public list/search/filter Page Object            | Builds UC-16/UC-17 and reusable card behavior                    |
+| 6     | Detail Page Object                                                 | Completes UC-10 observations and favorite entry point            |
+| 7     | My Listings Page Object                                            | Completes UC-09 and UC-11-WITHDRAW controls                      |
+| 8     | Favorites Page Object                                              | Completes UC-12 list verification                                |
+| 9     | Listing workflow and fixture composition                           | Coordinates Pages only after their interfaces are stable         |
+| 10    | Read-only E2E specs                                                | Safe live evidence can run by default                            |
+| 11    | Mutating E2E specs                                                 | Files exist and list as skipped; no production mutation is run   |
+| 12    | Documentation, traceability, and full safe verification            | Final consistency and release evidence                           |
 
 ---
 
 ### Task 1: Centralized Mutation Safety Gate
 
 **Files:**
+
 - Modify: `.env.example`
 - Modify: `types/environment.types.ts`
 - Modify: `config/environment.schema.ts`
@@ -246,6 +247,7 @@ LISTING_OTHER_OWNER_TITLE=
 - Create: `tests/component/fixtures/mutating.fixture.spec.ts`
 
 **Interfaces:**
+
 - Produces: `EnvironmentConfig.allowMutatingE2E: boolean`.
 - Produces: `mutatingTest` and `expect` from `fixtures/mutating.fixture.ts`.
 - Rule: only the exact string `true` enables mutations; absence and `false` disable them.
@@ -332,6 +334,7 @@ git commit -m "test: add listings mutation safety gate"
 ### Task 2: Listing Contracts, Controlled State, and Test Data
 
 **Files:**
+
 - Create: `constants/listings.ts`
 - Modify: `types/listing.types.ts`
 - Modify: `test-data/static/listing.json`
@@ -345,6 +348,7 @@ git commit -m "test: add listings mutation safety gate"
 - Create: `test-data/files/listing-files/invalid.txt`
 
 **Interfaces:**
+
 - Produces: `ListingData`, `ListingMedia`, `ListingLocation`, `ListingContact`, `ListingStatus`,
   `ListingReference`, `ListingSearchCriteria`, `ListingFilterCriteria`, `ListingSummary`, and
   `ListingDetailSnapshot`.
@@ -367,9 +371,7 @@ test('tạo dữ liệu media và vị trí độc lập giữa các tin đăng'
 });
 
 test('từ chối giá trị số bắt buộc nhỏ hơn hoặc bằng không', () => {
-  expect(() => ListingDataFactory.create({ area: 0 })).toThrow(
-    'Listing area must be positive',
-  );
+  expect(() => ListingDataFactory.create({ area: 0 })).toThrow('Listing area must be positive');
 });
 
 test('tạo dữ liệu văn bản đúng biên và vượt biên', () => {
@@ -549,11 +551,13 @@ git commit -m "test: add typed listings test data"
 ### Task 3: Listing Scenario Metadata and Traceability Contract
 
 **Files:**
+
 - Modify: `types/test-case.types.ts`
 - Create: `test-cases/listings/listing.test-cases.ts`
 - Create: `tests/unit/test-cases/listing.test-cases.spec.ts`
 
 **Interfaces:**
+
 - Produces: `ListingRequirementId`, `TestClassification`, `ListingTestCaseDefinition`.
 - Produces: `listingTestCases: readonly ListingTestCaseDefinition[]` containing every automated or
   manual scenario in the matrix above.
@@ -566,8 +570,11 @@ git commit -m "test: add typed listings test data"
 test('bảo đảm mã kịch bản tin đăng duy nhất và truy vết được', () => {
   const ids = listingTestCases.map(({ id }) => id);
   expect(new Set(ids).size).toBe(ids.length);
-  expect(listingTestCases.every(({ requirementId, playwrightTest }) =>
-    requirementId.length > 0 && playwrightTest.length > 0)).toBe(true);
+  expect(
+    listingTestCases.every(
+      ({ requirementId, playwrightTest }) => requirementId.length > 0 && playwrightTest.length > 0,
+    ),
+  ).toBe(true);
 });
 
 test('phân loại mọi kịch bản thay đổi trạng thái là mutating', () => {
@@ -595,14 +602,7 @@ Expected: FAIL because the Listings metadata contract and cases do not exist.
 ```ts
 export interface ListingTestCaseDefinition extends TestCaseDefinition {
   readonly requirementId:
-    | 'UC-08'
-    | 'UC-09'
-    | 'UC-10'
-    | 'UC-11-EDIT'
-    | 'UC-11-WITHDRAW'
-    | 'UC-12'
-    | 'UC-16'
-    | 'UC-17';
+    'UC-08' | 'UC-09' | 'UC-10' | 'UC-11-EDIT' | 'UC-11-WITHDRAW' | 'UC-12' | 'UC-16' | 'UC-17';
   readonly scenario: string;
   readonly classification: 'read-only' | 'mutating';
   readonly testData: string;
@@ -647,6 +647,7 @@ git commit -m "test: define listings scenario traceability"
 ### Task 4: Shared Listing Form and Create/Edit Page Objects
 
 **Files:**
+
 - Modify: `constants/routes.ts`
 - Modify: `pages/components/ListingFormComponent.ts`
 - Modify: `pages/listings/CreateListingPage.ts`
@@ -654,6 +655,7 @@ git commit -m "test: define listings scenario traceability"
 - Create: `tests/component/pages/ListingFormComponent.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `ListingData`, `ListingMedia`, `FileUploadHelper`, `ROUTES.postListing`.
 - Produces: `ListingFormComponent.fill(data: ListingData)`,
   `.uploadMedia(media: ListingMedia)`, `.removeMedia(fileName: string)`, `.submit()`,
@@ -729,11 +731,13 @@ git commit -m "feat: model listings create and edit forms"
 ### Task 5: Listing Cards, Public Search, Sorting, Pagination, and Filters
 
 **Files:**
+
 - Create: `pages/components/ListingCardComponent.ts`
 - Modify: `pages/listings/ListingListPage.ts`
 - Create: `tests/component/pages/ListingListPage.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `ListingSearchCriteria`, `ListingFilterCriteria`, `ListingSummary`, `TransactionType`.
 - Produces: `ListingCardComponent.summary`, `.open`, `.toggleFavorite`, `.isFavorited`.
 - Produces: `ListingListPage.search`, `.applyFilters`, `.resetFilters`, `.sort`, `.nextPage`,
@@ -806,10 +810,12 @@ git commit -m "feat: add listing search and filters"
 ### Task 6: Public Listing Detail
 
 **Files:**
+
 - Modify: `pages/listings/ListingDetailPage.ts`
 - Create: `tests/component/pages/ListingDetailPage.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `ListingDetailSnapshot`, `ListingReference`, `ListingCardComponent`.
 - Produces: `ListingDetailPage.snapshot`, `.isContentVisible`, `.hasDefaultImage`,
   `.relatedTitles`, `.notFoundMessage`, `.favoriteState`, `.toggleFavorite`.
@@ -879,10 +885,12 @@ git commit -m "feat: model listing detail states"
 ### Task 7: Own Listings and Withdrawal
 
 **Files:**
+
 - Modify: `pages/listings/MyListingsPage.ts`
 - Create: `tests/component/pages/MyListingsPage.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `ListingSummary`, `ListingStatus`, `EditListingPage`.
 - Produces: `MyListingsPage.summaries`, `.search`, `.filter`, `.nextPage`, `.previousPage`,
   `.emptyMessage`, `.openEdit`, `.requestWithdraw`, `.confirmWithdraw`, `.cancelWithdraw`,
@@ -953,10 +961,12 @@ git commit -m "feat: add owned listing withdrawal flows"
 ### Task 8: Favorites Page and Favorite State
 
 **Files:**
+
 - Create: `pages/listings/FavoritesPage.ts`
 - Create: `tests/component/pages/FavoritesPage.spec.ts`
 
 **Interfaces:**
+
 - Consumes: `ListingCardComponent`, `ListingReference`, `ROUTES.favorites`.
 - Produces: `FavoritesPage.open`, `.contains`, `.summaryByTitle`, `.toggleByTitle`, `.feedback`.
 
@@ -1010,6 +1020,7 @@ git commit -m "feat: add listing favorites page"
 ### Task 9: Listing Workflow, Controlled-State Fixture, and Composition
 
 **Files:**
+
 - Create: `fixtures/listing-state.fixture.ts`
 - Modify: `fixtures/page.fixture.ts`
 - Modify: `fixtures/workflow.fixture.ts`
@@ -1018,6 +1029,7 @@ git commit -m "feat: add listing favorites page"
 - Modify: `tests/component/fixtures/test.fixture.spec.ts`
 
 **Interfaces:**
+
 - Produces: fixture `controlledListing(alias): ListingReference` that skips precisely when missing.
 - Produces: `ListingWorkflow` methods shown below.
 - Consumes: all six Listings Pages and their typed snapshots.
@@ -1084,12 +1096,14 @@ git commit -m "feat: compose listings workflows and fixtures"
 ### Task 10: Read-Only E2E Coverage
 
 **Files:**
+
 - Create: `tests/listings/view-own-listings.read-only.spec.ts`
 - Create: `tests/listings/listing-detail.read-only.spec.ts`
 - Create: `tests/listings/search-listing.read-only.spec.ts`
 - Create: `tests/listings/filter-listing.read-only.spec.ts`
 
 **Interfaces:**
+
 - Consumes: ordinary `test`, `expect`, `listingWorkflow`, `controlledListing`, scenario metadata.
 - Produces: executable read-only evidence for stable UC-09, UC-10, UC-16, and UC-17 rows.
 
@@ -1157,12 +1171,14 @@ git commit -m "test: add read-only listings coverage"
 ### Task 11: Mutating E2E Files and Default-Skip Proof
 
 **Files:**
+
 - Create: `tests/listings/create-listing.mutating.spec.ts`
 - Create: `tests/listings/edit-listing.mutating.spec.ts`
 - Create: `tests/listings/withdraw-listing.mutating.spec.ts`
 - Create: `tests/listings/favorite-listing.mutating.spec.ts`
 
 **Interfaces:**
+
 - Consumes: only `mutatingTest as test`, `expect`, `listingWorkflow`, `controlledListing`, factory
   data, and scenario metadata.
 - Produces: independent gated UC-08, UC-11 edit, UC-11-WITHDRAW, and UC-12 scenarios.
@@ -1223,11 +1239,13 @@ git commit -m "test: add gated listings mutation coverage"
 ### Task 12: Documentation, Traceability, and Safe Verification
 
 **Files:**
+
 - Modify: `README.md`
 - Modify: `docs/traceability/requirements-to-tests.md`
 - Modify: `tests/unit/test-cases/listing.test-cases.spec.ts`
 
 **Interfaces:**
+
 - Produces: complete Requirement -> Scenario -> Test Case -> Playwright Test mapping.
 - Produces: documented default/read-only and opt-in/mutating commands.
 
@@ -1283,7 +1301,7 @@ the delivery response and explicitly state that no mutating E2E test ran against
 ## Plan Self-Review Checklist
 
 - [x] Every UC-08, UC-09, UC-10, UC-11 edit, source UC-11 withdrawal, UC-12, UC-16, and UC-17
-  requirement maps to at least one scenario row.
+      requirement maps to at least one scenario row.
 - [x] Every scenario has preconditions, data, expected result, classification, state, and evidence.
 - [x] Every mutating spec imports only the centralized safety fixture.
 - [x] All type and method names used by later tasks are defined by earlier tasks.

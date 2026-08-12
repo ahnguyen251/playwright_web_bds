@@ -59,7 +59,7 @@ test('orchestrates password recovery through OTP and returns to Login', async ()
     },
   };
   const otpProvider = {
-    waitForOtp: (query: OtpQuery) => {
+    getOtp: (query: OtpQuery) => {
       lastQuery = query;
       calls.push('wait for password recovery OTP');
       return Promise.resolve('654321');
@@ -71,22 +71,14 @@ test('orchestrates password recovery through OTP and returns to Login', async ()
       return requestTime;
     },
   };
-  const workflow = new PasswordRecoveryWorkflow(
-    loginPage,
-    forgotPasswordPage,
-    otpProvider,
-    { timeoutMs: 60_000, pollIntervalMs: 2_000 },
-    clock,
-  );
+  const workflow = new PasswordRecoveryWorkflow(loginPage, forgotPasswordPage, otpProvider, clock);
 
   await workflow.resetPassword(passwordReset);
 
   expect(lastQuery).toEqual({
-    recipient: passwordReset.email,
+    email: passwordReset.email,
     purpose: 'passwordRecovery',
     requestedAfter: requestTime,
-    timeoutMs: 60_000,
-    pollIntervalMs: 2_000,
   });
   expect(calls).toEqual([
     'open home',

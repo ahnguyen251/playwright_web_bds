@@ -105,11 +105,13 @@ test('keeps Gmail integration disabled when optional values are absent', () => {
 });
 
 test('requires complete Gmail OAuth configuration when OTP E2E is enabled', () => {
+  const syntheticGmailMailbox = ['automation', 'gmail.com'].join('@');
+
   expect(() =>
     loadEnvironmentConfig({
       ...validEnvironment,
       RUN_OTP_E2E: 'true',
-      OTP_MAILBOX_ADDRESS: 'automation@gmail.com',
+      OTP_MAILBOX_ADDRESS: syntheticGmailMailbox,
     }),
   ).toThrow(/GMAIL_CLIENT_ID|GMAIL_CLIENT_SECRET|GMAIL_REFRESH_TOKEN/);
 });
@@ -125,11 +127,13 @@ import { expect, test } from '@playwright/test';
 import { AuthenticationDataFactory } from '../../../test-data/factories/AuthenticationDataFactory';
 
 test('creates a correlated Gmail alias without mutating the base address', () => {
-  const data = AuthenticationDataFactory.createRegistration('automation@gmail.com', {
+  const syntheticGmailMailbox = ['automation', 'gmail.com'].join('@');
+  const expectedAlias = ['automation+auth-auth001', 'gmail.com'].join('@');
+  const data = AuthenticationDataFactory.createRegistration(syntheticGmailMailbox, {
     uniqueId: 'AUTH001',
   });
 
-  expect(data.email).toBe('automation+auth-auth001@gmail.com');
+  expect(data.email).toBe(expectedAlias);
   expect(data.password).toBe(data.passwordConfirmation);
 });
 
@@ -280,7 +284,7 @@ test('extracts one six-digit registration OTP', () => {
     {
       id: 'message-1',
       internalDate: new Date('2026-08-05T00:00:01Z'),
-      recipient: 'automation+auth-1@gmail.com',
+      recipient: 'automation+auth-1@example.test',
       subject: 'Xác thực tài khoản Propify',
       body: 'Mã OTP của bạn là 123456.',
     },
@@ -296,7 +300,7 @@ test('rejects a message containing multiple candidate codes', () => {
       {
         id: 'message-2',
         internalDate: new Date(),
-        recipient: 'automation@gmail.com',
+        recipient: 'automation@example.test',
         subject: 'Propify',
         body: 'Codes 123456 and 654321',
       },
@@ -316,7 +320,7 @@ test('ignores old and wrong-recipient messages before returning the newest match
     message({ id: 'old', recipient: alias, internalDate: beforeRequest, body: '111111' }),
     message({
       id: 'wrong',
-      recipient: 'other@gmail.com',
+      recipient: 'other@example.test',
       internalDate: afterRequest,
       body: '222222',
     }),
@@ -554,7 +558,7 @@ Use exact deployed strings:
 
 ```ts
 expect(await forgotPasswordPage.currentStage()).toBe('email');
-await forgotPasswordPage.requestReset('automation@gmail.com');
+await forgotPasswordPage.requestReset('automation@example.test');
 expect(await page.evaluate(() => document.body.dataset.requested)).toBe('true');
 ```
 
@@ -614,7 +618,7 @@ const profile = await profilePage.profile().read();
 
 expect(profile).toEqual({
   fullName: 'Nguyễn Kiểm Thử',
-  email: 'automation@gmail.com',
+  email: 'automation@example.test',
   phone: '0970000000',
 });
 expect(await profilePage.profile().isEmailDisabled()).toBe(true);
@@ -982,8 +986,8 @@ RUN_MUTATING_E2E=false
 GMAIL_CLIENT_ID=replace-with-google-oauth-client-id
 GMAIL_CLIENT_SECRET=replace-with-local-secret
 GMAIL_REFRESH_TOKEN=replace-with-local-refresh-token
-OTP_MAILBOX_ADDRESS=automation-mailbox@gmail.com
-MUTATING_USER_EMAIL=automation-mailbox+propify-mutating@gmail.com
+OTP_MAILBOX_ADDRESS=replace-with-dedicated-gmail-mailbox
+MUTATING_USER_EMAIL=replace-with-dedicated-mutating-account-gmail-address
 MUTATING_USER_BASELINE_PASSWORD=replace-with-local-baseline-secret
 MUTATING_USER_BASELINE_NAME=Propify Automation User
 OTP_POLL_INTERVAL_MS=2000

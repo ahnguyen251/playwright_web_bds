@@ -1,103 +1,100 @@
-import { OtpMessageParser } from './OtpMessageParser';
+import type { GmailOtpConfig, OtpProvider, OtpQuery } from '../../types/otp.types';
+import type { GmailClient } from './GmailApiClient';
+import { GmailMessageParser, type ParsedGmailMessage } from './GmailMessageParser';
 
-import type { GmailMessage, GmailMessageClient } from './GmailApiClient';
-import type { OtpMailCorrelation, OtpProvider, OtpQuery } from '../../types/otp.types';
-
-export interface Clock {
-  now(): Date;
-  delay(milliseconds: number): Promise<void>;
+export interface PollingClock {
+  now(): number;
+  sleep(milliseconds: number): Promise<void>;
 }
 
-const systemClock: Clock = {
-  now: () => new Date(),
-  delay: async (milliseconds: number) =>
-    new Promise((resolve) => setTimeout(resolve, milliseconds)),
+const systemClock: PollingClock = {
+  now: () => Date.now(),
+  sleep: (milliseconds) =>
+    new Promise((resolve) => {
+      setTimeout(resolve, milliseconds);
+    }),
 };
 
-const newestFirst = (first: GmailMessage, second: GmailMessage): number =>
-  second.internalDate.getTime() - first.internalDate.getTime();
+const maskEmail = (email: string): string => {
+  const separatorIndex = email.lastIndexOf('@');
+  if (separatorIndex <= 0 || separatorIndex === email.length - 1) return '***';
+  return `${email.charAt(0)}***${email.slice(separatorIndex)}`;
+};
+
+const quoteSearchValue = (value: string): string => `"${value.replace(/["\\]/g, '\\$&')}"`;
+
+const normalizeAddress = (value: string): string => value.trim().toLowerCase();
+
+const extractAddresses = (header: string | undefined): string[] => {
+  if (header === undefined) return [];
+
+  return header
+    .split(',')
+    .map((part) => /<([^<>]+)>/.exec(part)?.[1] ?? part)
+    .map(normalizeAddress)
+    .filter((address) => /^[^\s@<>]+@[^\s@<>]+$/.test(address));
+};
+
+const hasExactAddress = (header: string | undefined, expected: string): boolean =>
+  extractAddresses(header).includes(normalizeAddress(expected));
 
 export class GmailOtpProvider implements OtpProvider {
   public constructor(
-    private readonly client: GmailMessageClient,
-    private readonly correlation: OtpMailCorrelation,
-    private readonly clock: Clock = systemClock,
+    private readonly client: GmailClient,
+    private readonly config: GmailOtpConfig,
+    private readonly clock: PollingClock = systemClock,
   ) {}
 
-  public async waitForOtp(query: OtpQuery): Promise<string> {
-    const startedAt = this.clock.now();
-    const gmailQuery = [
-      `to:${query.recipient}`,
-      `from:${this.correlation.sender}`,
-      `subject:"${this.escapeQueryPhrase(this.correlation.subject)}"`,
-      `after:${String(Math.floor(query.requestedAfter.getTime() / 1_000))}`,
-    ].join(' ');
+  public async getOtp(query: OtpQuery): Promise<string> {
+    const deadline = this.clock.now() + this.config.timeoutMs;
 
-    for (;;) {
-      const messages = await this.searchBeforeDeadline(
-        gmailQuery,
-        Math.max(0, query.timeoutMs - (this.clock.now().getTime() - startedAt.getTime())),
+    while (this.clock.now() < deadline) {
+      const messages = await this.loadCandidates(query);
+      const matching = messages
+        .filter((candidate) => candidate.internalDate > query.requestedAfter.getTime())
+        .filter((candidate) => this.matchesCorrelation(candidate, query))
+        .sort((left, right) => right.internalDate - left.internalDate);
+
+      const newest = matching[0];
+      if (newest !== undefined) {
+        const otp = GmailMessageParser.extractOtp(newest.body, this.config.otpPattern);
+        if (otp === undefined) {
+          throw new Error('Matching OTP email found but OTP contract did not match.');
+        }
+        return otp;
+      }
+
+      await this.clock.sleep(
+        Math.min(this.config.pollIntervalMs, Math.max(0, deadline - this.clock.now())),
       );
-      if (messages === undefined) {
-        this.throwTimeout(query, startedAt);
-      }
-
-      const otp = this.extractNewestOtp(messages, query);
-      if (otp !== undefined) {
-        return otp;
-      }
-
-      const elapsedMilliseconds = this.elapsedMilliseconds(startedAt);
-      if (elapsedMilliseconds >= query.timeoutMs) {
-        this.throwTimeout(query, startedAt);
-      }
-
-      await this.clock.delay(Math.min(query.pollIntervalMs, query.timeoutMs - elapsedMilliseconds));
-    }
-  }
-
-  private extractNewestOtp(messages: readonly GmailMessage[], query: OtpQuery): string | undefined {
-    const matchingMessages = messages
-      .filter(
-        (message) =>
-          message.recipient === query.recipient &&
-          message.sender.trim().toLowerCase() === this.correlation.sender.trim().toLowerCase() &&
-          message.subject === this.correlation.subject &&
-          message.internalDate.getTime() > query.requestedAfter.getTime(),
-      )
-      .sort(newestFirst);
-
-    for (const message of matchingMessages) {
-      const otp = OtpMessageParser.extract(message, query.purpose, this.correlation);
-      if (otp !== undefined) {
-        return otp;
-      }
     }
 
-    return undefined;
+    throw new Error(`OTP email was not received before timeout for ${maskEmail(query.email)}.`);
   }
 
-  private async searchBeforeDeadline(
-    query: string,
-    remainingMilliseconds: number,
-  ): Promise<readonly GmailMessage[] | undefined> {
-    return Promise.race([
-      this.client.search(query),
-      this.clock.delay(remainingMilliseconds).then(() => undefined),
-    ]);
-  }
-
-  private elapsedMilliseconds(startedAt: Date): number {
-    return this.clock.now().getTime() - startedAt.getTime();
-  }
-
-  private escapeQueryPhrase(value: string): string {
-    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-  }
-
-  private throwTimeout(query: OtpQuery, startedAt: Date): never {
-    throw new Error(
-      `OTP not received for ${query.purpose} recipient ${query.recipient} after ${String(this.elapsedMilliseconds(startedAt))}ms`,
+  private async loadCandidates(query: OtpQuery): Promise<ParsedGmailMessage[]> {
+    const ids = await this.client.listMessageIds(this.buildSearchQuery(query));
+    return Promise.all(
+      ids.map(async (id) => GmailMessageParser.parse(await this.client.getMessage(id))),
     );
+  }
+
+  private buildSearchQuery(query: OtpQuery): string {
+    const requestDate = query.requestedAfter.toISOString().slice(0, 10).replaceAll('-', '/');
+    return [
+      'in:sent',
+      `after:${requestDate}`,
+      `to:${quoteSearchValue(query.email.trim())}`,
+      `subject:${quoteSearchValue(this.config.subject.trim())}`,
+      ...(this.config.sender === undefined
+        ? []
+        : [`from:${quoteSearchValue(this.config.sender.trim())}`]),
+    ].join(' ');
+  }
+
+  private matchesCorrelation(message: ParsedGmailMessage, query: OtpQuery): boolean {
+    if (!hasExactAddress(message.to, query.email)) return false;
+    if (message.subject?.trim() !== this.config.subject.trim()) return false;
+    return this.config.sender === undefined || hasExactAddress(message.from, this.config.sender);
   }
 }

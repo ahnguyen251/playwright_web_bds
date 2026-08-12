@@ -17,12 +17,17 @@ export class FileUploadHelper {
   }
 
   public static async upload(locator: Locator, relativePath: string): Promise<void> {
-    const absolutePath = FileUploadHelper.resolveFixturePath(relativePath);
-    await access(absolutePath);
-    await locator.setInputFiles(absolutePath);
+    await FileUploadHelper.uploadMany(locator, [relativePath]);
   }
 
-  public static async uploadMany(locator: Locator, relativePaths: readonly string[]): Promise<void> {
+  public static async uploadMany(
+    locator: Locator,
+    relativePaths: readonly string[],
+  ): Promise<void> {
+    if (relativePaths.length === 0) {
+      return;
+    }
+
     const absolutePaths = relativePaths.map((relativePath) =>
       FileUploadHelper.resolveFixturePath(relativePath),
     );

@@ -1,6 +1,6 @@
 import type { ForgotPasswordPage } from '../../pages/authentication/ForgotPasswordPage';
 import type { LoginPage } from '../../pages/authentication/LoginPage';
-import type { OtpProvider, OtpQuery } from '../../types/otp.types';
+import type { OtpProvider } from '../../types/otp.types';
 import type { PasswordResetData } from '../../types/user.types';
 
 type PasswordRecoveryEntryPort = Pick<LoginPage, 'openHome' | 'open'> & {
@@ -15,14 +15,11 @@ type ForgotPasswordPagePort = Pick<
   | 'submitNewPassword'
   | 'backToLogin'
 >;
-type OtpQueryPolicy = Pick<OtpQuery, 'timeoutMs' | 'pollIntervalMs'>;
-
 export class PasswordRecoveryWorkflow {
   public constructor(
     private readonly loginPage: PasswordRecoveryEntryPort,
     private readonly forgotPasswordPage: ForgotPasswordPagePort,
     private readonly otpProvider: OtpProvider,
-    private readonly otpQueryPolicy: OtpQueryPolicy,
     private readonly clock: { readonly now: () => Date },
   ) {}
 
@@ -33,11 +30,10 @@ export class PasswordRecoveryWorkflow {
 
     const requestedAfter = this.clock.now();
     await this.forgotPasswordPage.requestReset(data.email);
-    const code = await this.otpProvider.waitForOtp({
-      recipient: data.email,
+    const code = await this.otpProvider.getOtp({
+      email: data.email,
       purpose: 'passwordRecovery',
       requestedAfter,
-      ...this.otpQueryPolicy,
     });
 
     await this.forgotPasswordPage.enterOtp(code);

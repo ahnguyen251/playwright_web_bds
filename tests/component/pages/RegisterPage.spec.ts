@@ -1,225 +1,230 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 import { RegisterPage } from '../../../pages/authentication/RegisterPage';
-import {
-  expiredRegistrationOtpFeedbackTestCase,
-  incorrectRegistrationOtpFeedbackTestCase,
-  registrationOtpEntryContractTestCase,
-} from '../../../test-cases/authentication/registration.test-cases';
+import { HeaderComponent } from '../../../pages/components/HeaderComponent';
 
-const readValidationPromptly = async (readMessages: () => Promise<string[]>): Promise<string[]> => {
-  let timeout: NodeJS.Timeout | undefined;
-
-  try {
-    return await Promise.race([
-      readMessages(),
-      new Promise<never>((_resolve, reject) => {
-        timeout = setTimeout(() => {
-          reject(new Error('Validation messages did not settle promptly.'));
-        }, 500);
-      }),
-    ]);
-  } finally {
-    if (timeout !== undefined) {
-      clearTimeout(timeout);
-    }
-  }
-};
-
-async function mountRegistrationOtp(page: Page, inputCount = 6): Promise<void> {
-  const inputs = Array.from(
-    { length: inputCount },
-    () => '<input type="text" inputmode="numeric" maxlength="1" />',
-  ).join('');
-
-  await page.setContent(`
-    <section>
-      <h1>Xác thực email</h1>
-      ${inputs}
-      <p role="alert">Mã OTP không hợp lệ</p>
-      <p>Mã OTP đã hết hạn</p>
-      <button>Xác nhận OTP</button>
-      <button>Gửi lại</button>
-    </section>
-    <script type="text/javascript">
-      document.querySelector('button').onclick = () => {
-        document.body.dataset.verified = 'true';
-      };
-      document.querySelector('button:last-of-type').onclick = () => {
-        document.body.dataset.resent = 'true';
-      };
-    </script>
-  `);
-}
-
-test('exposes only visible registration validation and submit readiness without submitting', async ({
+test('preserves validation feedback without submitting invalid registration data', async ({
   page,
 }) => {
   await page.setContent(`
-    <div class="fixed inset-0">
-      <button>Đóng</button>
-      <button>Đăng nhập với Google</button>
-      <button>Đăng ký ngay</button>
-      <button>Đăng nhập</button>
-      <section hidden>
-        <h1>Tạo tài khoản</h1>
-        <input placeholder="Họ và tên" />
-        <input placeholder="Email của bạn" />
-        <input placeholder="Mật khẩu" type="password" />
-        <input placeholder="Nhập lại mật khẩu" type="password" />
-        <button disabled>Tạo tài khoản</button>
-      </section>
-    </div>
-    <script type="text/javascript">
-      const modal = document.querySelector('.fixed');
-      const registrationView = modal.querySelector('section');
-      const buttons = Array.from(modal.querySelectorAll(':scope > button'));
-      buttons.find((button) => button.textContent === 'Đăng ký ngay').onclick = () => {
-        registrationView.hidden = false;
+    <button>Đăng nhập</button>
+    <button>Đăng ký ngay</button>
+    <section>
+      <input placeholder="Họ và tên" />
+      <input placeholder="Email của bạn" />
+      <input placeholder="Mật khẩu" type="password" />
+      <input placeholder="Nhập lại mật khẩu" type="password" />
+      <p>Mật khẩu phải có ít nhất 8 ký tự</p>
+      <p>Mật khẩu xác nhận không khớp</p>
+      <button disabled>Tạo tài khoản</button>
+    </section>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  await registerPage.fillRegistration({
+    fullName: 'Registration Automation',
+    email: 'registration@example.test',
+    password: 'short',
+    passwordConfirmation: 'different',
+  });
+  await registerPage.blurAllFields();
+
+  expect(await registerPage.visibleValidationMessages()).toEqual([
+    'Mật khẩu phải có ít nhất 8 ký tự',
+    'Mật khẩu xác nhận không khớp',
+  ]);
+  expect(await registerPage.isSubmitEnabled()).toBe(false);
+});
+
+test('opens, fills, and submits the deployed registration form contract', async ({ page }) => {
+  await page.setContent(`
+    <nav><a href="/" aria-label="Propify">Propify</a><button id="open-login">Đăng nhập</button></nav>
+    <section id="login-form" hidden>
+      <button id="open-registration">Đăng ký ngay</button>
+    </section>
+    <section id="registration-form" hidden>
+      <h1>Tạo tài khoản</h1>
+      <input id="full-name" placeholder="Họ và tên" />
+      <input id="email" placeholder="Email của bạn" />
+      <input id="password" placeholder="Mật khẩu" type="password" />
+      <input id="password-confirmation" placeholder="Nhập lại mật khẩu" type="password" />
+      <button id="submit-registration">Tạo tài khoản</button>
+    </section>
+    <script>
+      document.querySelector('#open-login').onclick = () => {
+        document.querySelector('#login-form').hidden = false;
       };
-      const [fullName, email, password, confirmation] = registrationView.querySelectorAll('input');
-      const submitButton = registrationView.querySelector('button');
-      const validationMessages = {
-        email: 'Vui lòng nhập email hợp lệ',
-        password: 'Mật khẩu phải có ít nhất 8 ký tự',
-        confirmation: 'Mật khẩu xác nhận không khớp',
+      document.querySelector('#open-registration').onclick = () => {
+        document.querySelector('#registration-form').hidden = false;
       };
-      const renderValidation = (key, isVisible) => {
-        const selector = '[data-validation="' + key + '"]';
-        const mountedMessage = registrationView.querySelector(selector);
-        if (!isVisible) {
-          mountedMessage?.remove();
-          return;
-        }
-        if (mountedMessage) {
-          return;
-        }
-        const message = document.createElement('p');
-        message.dataset.validation = key;
-        message.textContent = validationMessages[key];
-        submitButton.before(message);
+      document.querySelector('#submit-registration').onclick = () => {
+        document.body.dataset.submitted = 'true';
       };
-      const updateState = () => {
-        const emailValid = /\\S+@\\S+\\.\\S+/.test(email.value);
-        const passwordValid = password.value.length >= 8;
-        const confirmationMatches = password.value === confirmation.value;
-        renderValidation('email', !emailValid);
-        renderValidation('password', !passwordValid);
-        renderValidation('confirmation', !confirmationMatches);
-        submitButton.disabled = !fullName.value.trim() || !emailValid || !passwordValid || !confirmationMatches;
-      };
-      submitButton.onclick = () => { document.body.dataset.submitted = 'true'; };
-      registrationView.querySelectorAll('input').forEach((input) => {
-        input.oninput = updateState;
-        input.onblur = updateState;
-      });
     </script>
   `);
   const registerPage = new RegisterPage(page);
 
   await registerPage.open();
   await registerPage.fillRegistration({
-    fullName: 'Nguyễn Kiểm Thử',
-    email: 'tester@example.test',
-    password: 'Abcdef1',
-    passwordConfirmation: 'different',
+    fullName: 'Registration Automation',
+    email: 'registration+run@example.test',
+    password: 'StrongPassword1',
+    passwordConfirmation: 'StrongPassword1',
   });
-  await registerPage.blurAllFields();
+  await registerPage.submit();
 
-  expect(await readValidationPromptly(() => registerPage.visibleValidationMessages())).toEqual([
-    'Mật khẩu phải có ít nhất 8 ký tự',
-    'Mật khẩu xác nhận không khớp',
-  ]);
-  expect(await registerPage.isSubmitEnabled()).toBe(false);
+  await expect
+    .poll(() =>
+      page.evaluate(() => {
+        const inputValue = (id: string): string => {
+          const input = document.querySelector<HTMLInputElement>(id);
+          if (input === null) throw new Error(`Expected input not found: ${id}`);
+          return input.value;
+        };
 
-  await registerPage.fillRegistration({
-    fullName: 'Nguyễn Kiểm Thử',
-    email: 'tester@example.test',
-    password: 'Abcdef12',
-    passwordConfirmation: 'different',
-  });
-
-  expect(await readValidationPromptly(() => registerPage.visibleValidationMessages())).toEqual([
-    'Mật khẩu xác nhận không khớp',
-  ]);
-  expect(await readValidationPromptly(() => registerPage.validationMessages())).toEqual([
-    'Mật khẩu xác nhận không khớp',
-  ]);
-  expect(await registerPage.isSubmitEnabled()).toBe(false);
-
-  await registerPage.fillRegistration({
-    fullName: 'Nguyễn Kiểm Thử',
-    email: 'tester@example.test',
-    password: 'Abcdef12',
-    passwordConfirmation: 'Abcdef12',
-  });
-
-  expect(await readValidationPromptly(() => registerPage.visibleValidationMessages())).toEqual([]);
-  expect(await readValidationPromptly(() => registerPage.validationMessages())).toEqual([]);
-  expect(await registerPage.isSubmitEnabled()).toBe(true);
-  expect(await page.evaluate(() => document.body.dataset.submitted)).toBeUndefined();
-  expect(registerPage).not.toHaveProperty('fillPhone');
+        return {
+          fullName: inputValue('#full-name'),
+          email: inputValue('#email'),
+          password: inputValue('#password'),
+          passwordConfirmation: inputValue('#password-confirmation'),
+          submitted: document.body.dataset.submitted,
+        };
+      }),
+    )
+    .toEqual({
+      fullName: 'Registration Automation',
+      email: 'registration+run@example.test',
+      password: 'StrongPassword1',
+      passwordConfirmation: 'StrongPassword1',
+      submitted: 'true',
+    });
 });
 
-test(`${registrationOtpEntryContractTestCase.id} ${registrationOtpEntryContractTestCase.title}`, async ({
+test('exposes web-first OTP and success checkpoints and completes registration', async ({
   page,
 }) => {
-  await mountRegistrationOtp(page);
+  await page.setContent(`
+    <nav><a href="/" aria-label="Propify">Propify</a><button id="open-login">Đăng nhập</button></nav>
+    <section id="login-form" hidden>
+      <button id="open-registration">Đăng ký ngay</button>
+    </section>
+    <section id="registration-form" hidden>
+      <input placeholder="Họ và tên" />
+      <input placeholder="Email của bạn" />
+      <input placeholder="Mật khẩu" type="password" />
+      <input placeholder="Nhập lại mật khẩu" type="password" />
+      <button id="submit-registration">Tạo tài khoản</button>
+    </section>
+    <section id="otp-state" hidden><h1>Xác thực email</h1></section>
+    <section id="success-state" hidden>
+      <h1>Đăng ký thành công!</h1>
+      <button id="complete-registration">Khám phá ngay</button>
+    </section>
+    <script>
+      document.querySelector('#open-login').onclick = () => {
+        document.querySelector('#login-form').hidden = false;
+      };
+      document.querySelector('#open-registration').onclick = () => {
+        document.querySelector('#registration-form').hidden = false;
+      };
+      document.querySelector('#submit-registration').onclick = () => {
+        document.querySelector('#registration-form').hidden = true;
+        document.querySelector('#otp-state').hidden = false;
+      };
+      document.querySelector('#complete-registration').onclick = () => {
+        document.body.dataset.completed = 'true';
+      };
+    </script>
+  `);
   const registerPage = new RegisterPage(page);
 
-  await registerPage.enterOtp(registrationOtpEntryContractTestCase.code ?? '123456');
+  await registerPage.open();
+  await registerPage.submit();
+  await registerPage.waitForOtpScreen();
+  await expect(registerPage.otpHeading).toBeVisible();
 
-  expect(
-    await page
-      .locator('input[type="text"][inputmode="numeric"][maxlength="1"]')
-      .evaluateAll((inputs) => inputs.map((input) => (input as HTMLInputElement).value)),
-  ).toEqual(registrationOtpEntryContractTestCase.expectedValues);
+  await page.evaluate(() => {
+    const otpState = document.querySelector<HTMLElement>('#otp-state');
+    const successState = document.querySelector<HTMLElement>('#success-state');
+    if (otpState === null || successState === null) throw new Error('Expected states not found.');
+    otpState.hidden = true;
+    successState.hidden = false;
+  });
 
-  await registerPage.submitOtp();
-  await registerPage.resendOtp();
-
-  expect(await page.evaluate(() => document.body.dataset.verified)).toBe('true');
-  expect(await page.evaluate(() => document.body.dataset.resent)).toBe('true');
+  await registerPage.waitForRegistrationSuccess();
+  await expect(registerPage.registrationSuccessHeading).toBeVisible();
+  await registerPage.completeRegistration();
+  await expect.poll(() => page.evaluate(() => document.body.dataset.completed)).toBe('true');
 });
 
-test('rejects empty, short, long, or non-numeric OTPs without changing any input', async ({
+test('locates the authenticated registration email by exact visible text', async ({ page }) => {
+  await page.setContent(`
+    <div>registration+run@example.test</div>
+    <div>registration+run@example.test.backup</div>
+  `);
+  const header = new HeaderComponent(page);
+
+  await header.waitForAccountEmail('registration+run@example.test');
+  await expect(header.accountEmail('registration+run@example.test')).toBeVisible();
+});
+
+test('enters and submits OTP through six unique accessible textbox names', async ({ page }) => {
+  await page.setContent(`
+    <h1>Xác thực email</h1>
+    <input aria-label="Mã OTP 1" maxlength="1" oninput="document.body.dataset.otp1 = this.value" />
+    <input aria-label="Mã OTP 2" maxlength="1" oninput="document.body.dataset.otp2 = this.value" />
+    <input aria-label="Mã OTP 3" maxlength="1" oninput="document.body.dataset.otp3 = this.value" />
+    <input aria-label="Mã OTP 4" maxlength="1" oninput="document.body.dataset.otp4 = this.value" />
+    <input aria-label="Mã OTP 5" maxlength="1" oninput="document.body.dataset.otp5 = this.value" />
+    <input aria-label="Mã OTP 6" maxlength="1" oninput="document.body.dataset.otp6 = this.value" />
+    <button onclick="document.body.dataset.verified = 'true'">Xác nhận</button>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  await registerPage.enterOtp('123456');
+
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        otp1: document.body.dataset.otp1,
+        otp2: document.body.dataset.otp2,
+        otp3: document.body.dataset.otp3,
+        otp4: document.body.dataset.otp4,
+        otp5: document.body.dataset.otp5,
+        otp6: document.body.dataset.otp6,
+      })),
+    )
+    .toEqual({ otp1: '1', otp2: '2', otp3: '3', otp4: '4', otp5: '5', otp6: '6' });
+  await expect.poll(() => page.evaluate(() => document.body.dataset.verified)).toBe('true');
+});
+
+test('blocks valid OTP entry until six unique accessible input names are deployed', async ({
   page,
 }) => {
-  await mountRegistrationOtp(page);
-  const registerPage = new RegisterPage(page);
-  const otpInputs = page.locator('input[type="text"][inputmode="numeric"][maxlength="1"]');
-
-  for (const code of ['', '12345', '1234567', '12345x']) {
-    await expect(registerPage.enterOtp(code)).rejects.toThrow('Expected a six-digit OTP.');
-    expect(
-      await otpInputs.evaluateAll((inputs) =>
-        inputs.map((input) => (input as HTMLInputElement).value),
-      ),
-    ).toEqual(['', '', '', '', '', '']);
-  }
-});
-
-test('requires exactly six registration OTP inputs before entering a value', async ({ page }) => {
-  await mountRegistrationOtp(page, 5);
+  await page.setContent(`
+    <h1>Xác thực email</h1>
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+    <input maxlength="1" oninput="document.body.dataset.otpTouched = 'true'" />
+  `);
   const registerPage = new RegisterPage(page);
 
   await expect(registerPage.enterOtp('123456')).rejects.toThrow(
-    'Expected six OTP inputs, found 5.',
+    'OTP entry is blocked: Propify must expose six unique accessible textbox names: "Mã OTP 1" through "Mã OTP 6".',
   );
+  await expect.poll(() => page.evaluate(() => document.body.dataset.otpTouched)).toBeUndefined();
 });
 
-test(`${incorrectRegistrationOtpFeedbackTestCase.id} ${incorrectRegistrationOtpFeedbackTestCase.title}`, async ({
+test('rejects an invalid OTP format before evaluating the accessibility contract', async ({
   page,
 }) => {
-  await mountRegistrationOtp(page);
+  await page.setContent('<h1>Xác thực email</h1>');
+  const registerPage = new RegisterPage(page);
 
-  expect(await new RegisterPage(page).otpError()).toBe('Mã OTP không hợp lệ');
-});
-
-test(`${expiredRegistrationOtpFeedbackTestCase.id} ${expiredRegistrationOtpFeedbackTestCase.title}`, async ({
-  page,
-}) => {
-  await mountRegistrationOtp(page);
-
-  expect(await new RegisterPage(page).isOtpExpired()).toBe(true);
+  await expect(registerPage.enterOtp('12A456')).rejects.toThrow(
+    'OTP must contain exactly six digits.',
+  );
 });

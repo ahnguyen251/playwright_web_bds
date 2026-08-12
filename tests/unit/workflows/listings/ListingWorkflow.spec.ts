@@ -18,8 +18,8 @@ const workflowWith = (myListingsPage: Partial<MyListingsPage>): ListingWorkflow 
 
 test('does not record a pending withdrawal when the dialog did not open', async () => {
   const workflow = workflowWith({
-    open: async () => undefined,
-    requestWithdraw: async () => false,
+    open: () => Promise.resolve(),
+    requestWithdraw: () => Promise.resolve(false),
   });
 
   await expect(workflow.requestWithdrawal(reference)).rejects.toThrow(
@@ -32,10 +32,10 @@ test('does not record a pending withdrawal when the dialog did not open', async 
 
 test('records a pending withdrawal only after the dialog opens', async () => {
   const workflow = workflowWith({
-    open: async () => undefined,
-    requestWithdraw: async () => true,
-    confirmWithdraw: async () => undefined,
-    statusOf: async () => 'Đã gỡ',
+    open: () => Promise.resolve(),
+    requestWithdraw: () => Promise.resolve(true),
+    confirmWithdraw: () => Promise.resolve(),
+    statusOf: () => Promise.resolve('Đã gỡ'),
   });
 
   await workflow.requestWithdrawal(reference);

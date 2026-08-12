@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { test as base, type BrowserContext } from '@playwright/test';
 
-import { TIMEOUTS } from '../constants/timeouts';
 import { AuthenticationDataFactory } from '../test-data/factories/AuthenticationDataFactory';
 import { UserDataFactory } from '../test-data/factories/UserDataFactory';
 import type { OtpProvider, OtpQuery } from '../types/otp.types';
@@ -20,11 +19,6 @@ export interface ExecutionPolicy {
   readonly productionMutationsApproved: boolean;
 }
 
-export interface OtpQueryPolicy {
-  readonly timeoutMs: number;
-  readonly pollIntervalMs: number;
-}
-
 export interface AuthenticationFixtureData {
   readonly registration: RegistrationData;
 }
@@ -34,7 +28,7 @@ export interface MutatingUserFixture extends UserCredentials {
 }
 
 export class DisabledOtpProvider implements OtpProvider {
-  public waitForOtp(query: OtpQuery): Promise<string> {
+  public getOtp(query: OtpQuery): Promise<string> {
     void query;
     return Promise.reject(new Error(disabledOtpMessage));
   }
@@ -63,30 +57,20 @@ const readExecutionEnvironment = (source: NodeJS.ProcessEnv): TestEnvironment =>
   return value;
 };
 
-export const createExecutionPolicy = (
-  source: NodeJS.ProcessEnv = process.env,
-): ExecutionPolicy => {
+export const createExecutionPolicy = (source: NodeJS.ProcessEnv = process.env): ExecutionPolicy => {
   const environment = readExecutionEnvironment(source);
   const runOtpE2e = readExecutionFlag('RUN_OTP_E2E', source);
   const runMutatingE2e = readExecutionFlag('RUN_MUTATING_E2E', source);
-  const runProductionRegistrationE2e = readExecutionFlag(
-    'RUN_PRODUCTION_REGISTRATION_E2E',
-    source,
-  );
+  const runProductionRegistrationE2e = readExecutionFlag('RUN_PRODUCTION_REGISTRATION_E2E', source);
   const runProductionMutatingE2e = readExecutionFlag('RUN_PRODUCTION_MUTATING_E2E', source);
   const productionMutationsApproved =
-    environment !== 'production' ||
-    runProductionRegistrationE2e ||
-    runProductionMutatingE2e;
+    environment !== 'production' || runProductionRegistrationE2e || runProductionMutatingE2e;
   if (runMutatingE2e && !runOtpE2e) {
     throw new Error(
       'Invalid execution policy configuration: RUN_MUTATING_E2E requires RUN_OTP_E2E',
     );
   }
-  if (
-    runMutatingE2e &&
-    !productionMutationsApproved
-  ) {
+  if (runMutatingE2e && !productionMutationsApproved) {
     throw new Error(
       'Invalid execution policy configuration: RUN_PRODUCTION_REGISTRATION_E2E or RUN_PRODUCTION_MUTATING_E2E is required for production mutations',
     );
@@ -115,24 +99,17 @@ const createOtpProvider = async (executionPolicy: ExecutionPolicy): Promise<OtpP
     import('../helpers/otp/GmailApiClient.js'),
     import('../helpers/otp/GmailOtpProvider.js'),
   ]);
-  return new GmailOtpProvider(new GmailApiClient(configuration.gmail), {
+  const gmail = {
+    clientId: configuration.gmail.clientId,
+    clientSecret: configuration.gmail.clientSecret,
+    refreshToken: configuration.gmail.refreshToken,
     sender: configuration.gmail.otpSender,
     subject: configuration.gmail.otpSubject,
-    pattern: configuration.gmail.otpPattern,
-  });
-};
-
-const createOtpQueryPolicy = async (executionPolicy: ExecutionPolicy): Promise<OtpQueryPolicy> => {
-  if (!executionPolicy.runOtpE2e) {
-    return Object.freeze({ timeoutMs: TIMEOUTS.otp, pollIntervalMs: TIMEOUTS.otpPoll });
-  }
-
-  const { loadEnvironmentConfig } = await import('../config/environment.config.js');
-  const configuration = loadEnvironmentConfig();
-  return Object.freeze({
+    otpPattern: configuration.gmail.otpPattern,
     timeoutMs: configuration.otpTimeoutMs,
     pollIntervalMs: configuration.otpPollIntervalMs,
-  });
+  };
+  return new GmailOtpProvider(new GmailApiClient(gmail), gmail);
 };
 
 const createAuthenticationData = (): AuthenticationFixtureData => {
@@ -159,7 +136,6 @@ export interface AuthFixtures {
   readonly contextForUser: (alias: string) => Promise<BrowserContext>;
   readonly executionPolicy: ExecutionPolicy;
   readonly otpProvider: OtpProvider;
-  readonly otpQueryPolicy: OtpQueryPolicy;
   readonly authenticationData: AuthenticationFixtureData;
   readonly mutatingUser: MutatingUserFixture;
 }
@@ -201,8 +177,6 @@ export const authTest = base.extend<AuthFixtures>({
   },
   executionPolicy: async ({}, use) => use(createExecutionPolicy()),
   otpProvider: async ({ executionPolicy }, use) => use(await createOtpProvider(executionPolicy)),
-  otpQueryPolicy: async ({ executionPolicy }, use) =>
-    use(await createOtpQueryPolicy(executionPolicy)),
   authenticationData: async ({}, use) => use(createAuthenticationData()),
   mutatingUser: async ({}, use) => use(createMutatingUser()),
 });

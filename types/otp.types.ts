@@ -1,19 +1,29 @@
-export type OtpPurpose = 'registration' | 'passwordRecovery';
-
-export interface OtpMailCorrelation {
-  readonly sender: string;
-  readonly subject: string;
-  readonly pattern: string;
+export interface OtpQuery {
+  readonly email: string;
+  readonly requestedAfter: Date;
+  readonly purpose?: 'registration' | 'passwordRecovery';
 }
 
-export interface OtpQuery {
-  readonly recipient: string;
-  readonly purpose: OtpPurpose;
-  readonly requestedAfter: Date;
+export interface OtpProvider {
+  getOtp(query: OtpQuery): Promise<string>;
+}
+
+export type RegistrationCorrelation = OtpQuery;
+
+export interface GmailOtpConfig {
+  readonly clientId: string;
+  readonly clientSecret: string;
+  readonly refreshToken: string;
+  readonly otpPattern: string;
+  readonly subject: string;
+  readonly sender?: string;
   readonly timeoutMs: number;
   readonly pollIntervalMs: number;
 }
 
-export interface OtpProvider {
-  waitForOtp(query: OtpQuery): Promise<string>;
+export interface ProductionRegistrationConfig {
+  readonly fullName: string;
+  readonly emailTemplate: string;
+  readonly password: string;
+  readonly gmail: GmailOtpConfig;
 }

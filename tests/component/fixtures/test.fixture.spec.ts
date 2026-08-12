@@ -13,6 +13,7 @@ import { LoginWorkflow } from '../../../workflows/authentication/LoginWorkflow';
 import { PasswordRecoveryWorkflow } from '../../../workflows/authentication/PasswordRecoveryWorkflow';
 import { ProfileWorkflow } from '../../../workflows/authentication/ProfileWorkflow';
 import { RegistrationWorkflow } from '../../../workflows/authentication/RegistrationWorkflow';
+import type { OtpProvider, OtpQuery, RegistrationCorrelation } from '../../../types/otp.types';
 import { FavoritesPage } from '../../../pages/listings/FavoritesPage';
 import { expect, test } from '../../../fixtures/test.fixture';
 
@@ -55,12 +56,10 @@ test('disabled OTP provider reports only safe activation guidance', async () => 
   const recipient = 'private-mailbox+fixture@example.test';
 
   const result = await provider
-    .waitForOtp({
-      recipient,
+    .getOtp({
+      email: recipient,
       purpose: 'registration',
       requestedAfter: new Date('2026-08-05T00:00:00.000Z'),
-      timeoutMs: 5_000,
-      pollIntervalMs: 500,
     })
     .catch((error: unknown) => error);
 
@@ -70,6 +69,38 @@ test('disabled OTP provider reports only safe activation guidance', async () => 
   );
   expect((result as Error).message).not.toContain(recipient);
 });
+
+class RecordingOtpProvider implements OtpProvider {
+  public lastQuery?: OtpQuery;
+
+  public getOtp(query: OtpQuery): Promise<string> {
+    this.lastQuery = query;
+    return Promise.resolve('123456');
+  }
+}
+
+const registrationFixtureTest = test.extend<{ otpProvider: OtpProvider }>({
+  otpProvider: async ({ page }, use) => {
+    void page;
+    await use(new RecordingOtpProvider());
+  },
+});
+
+registrationFixtureTest(
+  'lazily composes the semantic RegistrationWorkflow with the requested OTP provider',
+  async ({ registrationWorkflow, otpProvider }) => {
+    expect(registrationWorkflow).toBeInstanceOf(RegistrationWorkflow);
+    const context: RegistrationCorrelation = Object.freeze({
+      email: 'registration+fixture@example.test',
+      requestedAfter: new Date('2026-08-11T01:02:03.000Z'),
+    });
+
+    await expect(registrationWorkflow.verifyRegistration(context)).rejects.toThrow(
+      'OTP entry is blocked: Propify must expose six unique accessible textbox names: "Mã OTP 1" through "Mã OTP 6".',
+    );
+    expect((otpProvider as RecordingOtpProvider).lastQuery).toBe(context);
+  },
+);
 
 test('composes a disabled OTP provider for safe default execution', ({
   executionPolicy,

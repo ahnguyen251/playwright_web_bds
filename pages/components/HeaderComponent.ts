@@ -1,9 +1,9 @@
 import type { Locator, Page } from '@playwright/test';
 
 export class HeaderComponent {
+  public readonly authenticatedUserControl: Locator;
   private readonly headerNavigation: Locator;
   private readonly loginButton: Locator;
-  private readonly accountButton: Locator;
   private readonly profileLink: Locator;
   private readonly logoutButton: Locator;
   private readonly createListingButton: Locator;
@@ -16,7 +16,10 @@ export class HeaderComponent {
       name: 'Đăng nhập',
       exact: true,
     });
-    this.accountButton = page.getByRole('button', { name: 'Tài khoản', exact: true });
+    this.authenticatedUserControl = page.getByRole('button', {
+      name: 'Tài khoản',
+      exact: true,
+    });
     this.profileLink = page.getByRole('link', { name: 'Thông tin tài khoản', exact: true });
     this.logoutButton = page.getByRole('button', { name: 'Đăng xuất', exact: true });
     this.createListingButton = page.getByRole('button', { name: 'Đăng tin', exact: true });
@@ -26,8 +29,16 @@ export class HeaderComponent {
     await this.loginButton.click();
   }
 
+  public accountEmail(email: string): Locator {
+    return this.page.getByText(email, { exact: true });
+  }
+
+  public async waitForAccountEmail(email: string): Promise<void> {
+    await this.accountEmail(email).waitFor({ state: 'visible' });
+  }
+
   public async openAccountMenu(): Promise<void> {
-    await this.accountButton.click();
+    await this.authenticatedUserControl.click();
   }
 
   public async navigateToProfile(): Promise<void> {
@@ -44,11 +55,11 @@ export class HeaderComponent {
     await this.createListingButton.click();
   }
 
-  public async isAuthenticated(): Promise<boolean> {
-    return this.accountButton.isVisible();
+  public async waitForAuthenticated(): Promise<void> {
+    await this.authenticatedUserControl.waitFor({ state: 'visible' });
   }
 
-  public async waitForAuthenticated(): Promise<void> {
-    await this.accountButton.waitFor({ state: 'visible' });
+  public async isAuthenticated(): Promise<boolean> {
+    return this.authenticatedUserControl.isVisible();
   }
 }

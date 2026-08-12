@@ -10,9 +10,8 @@ test.use({ storageState: { cookies: [], origins: [] } });
 test(
   `${belowMinimumRegistrationPasswordTestCase.id} ${belowMinimumRegistrationPasswordTestCase.title}`,
   { tag: [...belowMinimumRegistrationPasswordTestCase.tags] },
-  async ({ loginPage, registerPage }) => {
-    await loginPage.openHome();
-    await loginPage.open();
+  async ({ registerPage }) => {
+    await registerPage.openHome();
     await registerPage.open();
     await registerPage.fillRegistration(belowMinimumRegistrationPasswordTestCase.data);
     await registerPage.blurAllFields();
@@ -29,9 +28,8 @@ test(
 test(
   `${minimumRegistrationPasswordTestCase.id} ${minimumRegistrationPasswordTestCase.title}`,
   { tag: [...minimumRegistrationPasswordTestCase.tags] },
-  async ({ loginPage, registerPage }) => {
-    await loginPage.openHome();
-    await loginPage.open();
+  async ({ registerPage }) => {
+    await registerPage.openHome();
     await registerPage.open();
     await registerPage.fillRegistration(minimumRegistrationPasswordTestCase.data);
     await registerPage.blurAllFields();
@@ -48,9 +46,8 @@ test(
 test(
   `${registrationPasswordMismatchTestCase.id} ${registrationPasswordMismatchTestCase.title}`,
   { tag: [...registrationPasswordMismatchTestCase.tags] },
-  async ({ loginPage, registerPage }) => {
-    await loginPage.openHome();
-    await loginPage.open();
+  async ({ registerPage }) => {
+    await registerPage.openHome();
     await registerPage.open();
     await registerPage.fillRegistration(registrationPasswordMismatchTestCase.data);
     await registerPage.blurAllFields();

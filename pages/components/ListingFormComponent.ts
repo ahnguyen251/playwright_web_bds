@@ -108,6 +108,10 @@ export class ListingFormComponent {
     }
   }
 
+  public async uploadImages(relativePaths: readonly string[]): Promise<void> {
+    await FileUploadHelper.uploadMany(this.imageInput, relativePaths);
+  }
+
   public async removeMedia(fileName: string): Promise<void> {
     const mediaItem = this.page.locator('[data-media-name]').filter({ hasText: fileName }).first();
     await mediaItem.getByRole('button', { name: /Xóa|Gỡ/i }).click();

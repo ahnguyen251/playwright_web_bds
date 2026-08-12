@@ -1,40 +1,59 @@
-import type { LoginPage } from '../../pages/authentication/LoginPage';
-import type { RegisterPage } from '../../pages/authentication/RegisterPage';
-import type { OtpProvider, OtpQuery } from '../../types/otp.types';
+import type { RegistrationCorrelation, OtpProvider } from '../../types/otp.types';
 import type { RegistrationData } from '../../types/user.types';
 
-type RegistrationEntryPort = Pick<LoginPage, 'openHome' | 'open'>;
-type RegisterPagePort = Pick<
-  RegisterPage,
-  'open' | 'fillRegistration' | 'submit' | 'enterOtp' | 'submitOtp'
->;
-type OtpQueryPolicy = Pick<OtpQuery, 'timeoutMs' | 'pollIntervalMs'>;
+export interface RegistrationPageActions {
+  openHome(): Promise<void>;
+  open(): Promise<void>;
+  fillRegistration(data: RegistrationData): Promise<void>;
+  submit(): Promise<void>;
+  waitForOtpScreen(): Promise<void>;
+  enterOtp(code: string): Promise<void>;
+  waitForRegistrationSuccess(): Promise<void>;
+  completeRegistration(): Promise<void>;
+}
+
+export interface RegistrationHeaderActions {
+  openAccountMenu(): Promise<void>;
+  waitForAccountEmail(email: string): Promise<void>;
+}
 
 export class RegistrationWorkflow {
   public constructor(
-    private readonly loginPage: RegistrationEntryPort,
-    private readonly registerPage: RegisterPagePort,
+    private readonly registerPage: RegistrationPageActions,
+    private readonly header: RegistrationHeaderActions,
     private readonly otpProvider: OtpProvider,
-    private readonly otpQueryPolicy: OtpQueryPolicy,
-    private readonly clock: { readonly now: () => Date },
+    private readonly now: () => Date = () => new Date(),
   ) {}
 
+  public async register(data: RegistrationData): Promise<void> {
+    const context = await this.submitRegistration(data);
+    await this.verifyRegistration(context);
+  }
+
   public async registerAndVerify(data: RegistrationData): Promise<void> {
-    await this.loginPage.openHome();
-    await this.loginPage.open();
+    await this.register(data);
+  }
+
+  public async submitRegistration(data: RegistrationData): Promise<RegistrationCorrelation> {
+    await this.registerPage.openHome();
     await this.registerPage.open();
     await this.registerPage.fillRegistration(data);
 
-    const requestedAfter = this.clock.now();
-    await this.registerPage.submit();
-    const code = await this.otpProvider.waitForOtp({
-      recipient: data.email,
-      purpose: 'registration',
-      requestedAfter,
-      ...this.otpQueryPolicy,
+    const context = Object.freeze({
+      email: data.email,
+      requestedAfter: this.now(),
     });
+    await this.registerPage.submit();
+    await this.registerPage.waitForOtpScreen();
+    return context;
+  }
 
-    await this.registerPage.enterOtp(code);
-    await this.registerPage.submitOtp();
+  public async verifyRegistration(context: RegistrationCorrelation): Promise<void> {
+    const otp = await this.otpProvider.getOtp(context);
+    await this.registerPage.enterOtp(otp);
+    await this.registerPage.waitForRegistrationSuccess();
+    await this.registerPage.completeRegistration();
+    await this.header.openAccountMenu();
+    await this.header.waitForAccountEmail(context.email);
   }
 }
