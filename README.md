@@ -95,6 +95,7 @@ Giá trị mặc định:
 RUN_OTP_E2E=false
 RUN_MUTATING_E2E=false
 RUN_PRODUCTION_REGISTRATION_E2E=false
+RUN_PRODUCTION_MUTATING_E2E=false
 ```
 
 Với mặc định này, các suite Login/Profile/validation không thay đổi dữ liệu có thể chạy; mọi file
@@ -108,8 +109,10 @@ RUN_OTP_E2E=true
 RUN_MUTATING_E2E=true
 ```
 
-When `TEST_ENV=production`, the schema, fixture, and mutating specs additionally require
-`RUN_PRODUCTION_REGISTRATION_E2E=true`. This production approval gate defaults to disabled.
+When `TEST_ENV=production`, authentication mutations additionally require the legacy-compatible
+`RUN_PRODUCTION_REGISTRATION_E2E=true` or the unified `RUN_PRODUCTION_MUTATING_E2E=true` approval.
+Listings mutations always require `RUN_PRODUCTION_MUTATING_E2E=true`. Both production approval
+flags default to disabled.
 
 `RUN_MUTATING_E2E=true` nhưng `RUN_OTP_E2E=false` bị schema và fixture từ chối. Các kịch bản này chạy
 trong project `mutating-chromium`, ở chế độ serial, một worker. Screenshot, video và trace bị tắt
@@ -277,13 +280,14 @@ riêng biệt; bản ghi xác nhận gỡ cần được seed lại trước l�
 
 Mọi spec `*.mutating.spec.ts` chỉ import `mutatingTest` từ `fixtures/mutating.fixture.ts`. Fixture tự
 động này tập trung toàn bộ kiểm tra môi trường và skip test trước Page action, trừ khi giá trị chính
-xác `ALLOW_MUTATING_E2E=true` được cung cấp. Không sao chép điều kiện môi trường vào từng spec.
+xác `ALLOW_MUTATING_E2E=true` được cung cấp. Trên production còn bắt buộc
+`RUN_PRODUCTION_MUTATING_E2E=true`. Không sao chép điều kiện môi trường vào từng spec.
 
 Mặc định an toàn, kể cả khi `TEST_ENV=production`:
 
 ```powershell
 Remove-Item Env:ALLOW_MUTATING_E2E -ErrorAction SilentlyContinue
-npx playwright test tests/listings/*.mutating.spec.ts --project=chromium
+npx playwright test tests/listings/*.mutating.spec.ts --project=mutating-chromium
 ```
 
 Lệnh trên phải báo toàn bộ kịch bản mutating là `skipped`. Chỉ bật opt-in cho staging/test đã được
@@ -292,11 +296,17 @@ phê duyệt, có dữ liệu seed riêng và chính sách khôi phục:
 ```powershell
 $env:TEST_ENV='staging'
 $env:ALLOW_MUTATING_E2E='true'
-npx playwright test tests/listings/*.mutating.spec.ts --project=chromium
+npx playwright test tests/listings/*.mutating.spec.ts --project=mutating-chromium
 ```
 
 Không chạy lệnh opt-in khi target hiện tại là production. Framework đã sẵn sàng cho `dev`, `staging`
 và `production` thông qua URL theo môi trường, nhưng cờ opt-in vẫn là quyết định chủ động độc lập.
+
+Mọi file `*.mutating.spec.ts` bị loại khỏi các project `chromium`, `firefox`, `webkit` và chỉ được
+discover trong project `mutating-chromium` với `fullyParallel: false`, `workers: 1`. Các kiểm tra tạo
+và chỉnh sửa thành công dùng component fixture xác định để không để lại bản ghi hoặc làm trôi alias
+trên môi trường dùng chung. Kịch bản xác nhận gỡ tin vẫn cần seed lại bản ghi dành riêng sau mỗi lần
+opt-in vì giao diện không cung cấp thao tác khôi phục trạng thái `Đang đăng`.
 
 Theo nghiệp vụ, “Gỡ tin đăng” chỉ chuyển trạng thái sang `Đã gỡ` và ẩn tin khỏi danh sách công khai.
 Test xác nhận hàng/bản ghi vẫn tồn tại; framework không thực hiện xóa vật lý trong cơ sở dữ liệu.

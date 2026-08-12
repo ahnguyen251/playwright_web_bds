@@ -125,14 +125,15 @@ export class MyListingsPage extends BasePage {
     return new EditListingPage(this.page);
   }
 
-  public async requestWithdraw(reference: ListingReference): Promise<void> {
+  public async requestWithdraw(reference: ListingReference): Promise<boolean> {
     await this.openActions(reference);
     const withdrawButton = this.menu
       .getByRole('button', { name: 'Gỡ tin đăng', exact: true })
       .or(this.page.getByRole('button', { name: 'Gỡ tin đăng', exact: true }))
       .last();
-    if (!(await withdrawButton.isVisible()) || !(await withdrawButton.isEnabled())) return;
+    if (!(await withdrawButton.isVisible()) || !(await withdrawButton.isEnabled())) return false;
     await withdrawButton.click();
+    return this.confirmDialog.isVisible();
   }
 
   public async confirmWithdraw(): Promise<void> {

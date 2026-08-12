@@ -70,7 +70,11 @@ export class ListingWorkflow {
 
   public async requestWithdrawal(reference: ListingReference): Promise<void> {
     await this.myListingsPage.open();
-    await this.myListingsPage.requestWithdraw(reference);
+    const opened = await this.myListingsPage.requestWithdraw(reference);
+    if (!opened) {
+      this.withdrawalReference = undefined;
+      throw new Error(`Listing withdrawal is unavailable: ${reference.id}`);
+    }
     this.withdrawalReference = reference;
   }
 

@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import { ListingFormComponent } from '../../../pages/components/ListingFormComponent';
 import { CreateListingPage } from '../../../pages/listings/CreateListingPage';
 import { EditListingPage } from '../../../pages/listings/EditListingPage';
+import { listingCaseTitle } from '../../../test-cases/listings/listing.test-cases';
 import { ListingDataFactory } from '../../../test-data/factories/ListingDataFactory';
 
 const listingFormFixture = (submitLabel: 'Đăng tin' | 'Cập nhật'): string => `
@@ -146,17 +147,36 @@ test('xóa đúng media theo tên và giữ nguyên media còn lại', async ({ 
   expect((await form.currentValues()).imageCount).toBe(0);
 });
 
-test('trang tạo tin dùng nhãn Đăng tin và trả về trạng thái Chờ duyệt', async ({ page }) => {
+test(listingCaseTitle('LIST-UC08-001'), async ({ page }) => {
   await page.setContent(listingFormFixture('Đăng tin'));
   const createPage = new CreateListingPage(page);
 
-  await createPage.submit(ListingDataFactory.create({ media: { imagePaths: [] } }));
+  await createPage.submit(
+    ListingDataFactory.create({ media: { imagePaths: ['listing-images/property.png'] } }),
+  );
 
   expect(await createPage.successMessage()).toContain('thành công');
   expect(await createPage.status()).toBe('Chờ duyệt');
 });
 
-test('trang chỉnh sửa dùng nhãn Cập nhật và trả về trạng thái Chờ duyệt', async ({ page }) => {
+test(listingCaseTitle('LIST-UC08-002'), async ({ page }) => {
+  await page.setContent(listingFormFixture('Đăng tin'));
+  const createPage = new CreateListingPage(page);
+
+  await createPage.submit(
+    ListingDataFactory.create({
+      media: {
+        imagePaths: ['listing-images/property.png'],
+        videoPath: 'listing-videos/property.mp4',
+      },
+    }),
+  );
+
+  expect(await createPage.successMessage()).toContain('thành công');
+  expect(await createPage.status()).toBe('Chờ duyệt');
+});
+
+test(listingCaseTitle('LIST-UC11-EDIT-001'), async ({ page }) => {
   await page.setContent(listingFormFixture('Cập nhật'));
   const editPage = new EditListingPage(page);
 

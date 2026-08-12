@@ -16,6 +16,7 @@ export interface ExecutionPolicy {
   readonly runOtpE2e: boolean;
   readonly runMutatingE2e: boolean;
   readonly runProductionRegistrationE2e: boolean;
+  readonly runProductionMutatingE2e: boolean;
 }
 
 export interface OtpQueryPolicy {
@@ -39,7 +40,11 @@ export class DisabledOtpProvider implements OtpProvider {
 }
 
 const readExecutionFlag = (
-  key: 'RUN_OTP_E2E' | 'RUN_MUTATING_E2E' | 'RUN_PRODUCTION_REGISTRATION_E2E',
+  key:
+    | 'RUN_OTP_E2E'
+    | 'RUN_MUTATING_E2E'
+    | 'RUN_PRODUCTION_REGISTRATION_E2E'
+    | 'RUN_PRODUCTION_MUTATING_E2E',
 ): boolean => {
   const value = process.env[key] ?? 'false';
   if (value !== 'true' && value !== 'false') {
@@ -61,12 +66,18 @@ const createExecutionPolicy = (): ExecutionPolicy => {
   const runOtpE2e = readExecutionFlag('RUN_OTP_E2E');
   const runMutatingE2e = readExecutionFlag('RUN_MUTATING_E2E');
   const runProductionRegistrationE2e = readExecutionFlag('RUN_PRODUCTION_REGISTRATION_E2E');
+  const runProductionMutatingE2e = readExecutionFlag('RUN_PRODUCTION_MUTATING_E2E');
   if (runMutatingE2e && !runOtpE2e) {
     throw new Error(
       'Invalid execution policy configuration: RUN_MUTATING_E2E requires RUN_OTP_E2E',
     );
   }
-  if (environment === 'production' && runMutatingE2e && !runProductionRegistrationE2e) {
+  if (
+    environment === 'production' &&
+    runMutatingE2e &&
+    !runProductionRegistrationE2e &&
+    !runProductionMutatingE2e
+  ) {
     throw new Error(
       'Invalid execution policy configuration: RUN_PRODUCTION_REGISTRATION_E2E is required for production mutations',
     );
@@ -76,6 +87,7 @@ const createExecutionPolicy = (): ExecutionPolicy => {
     runOtpE2e,
     runMutatingE2e,
     runProductionRegistrationE2e,
+    runProductionMutatingE2e,
   });
 };
 

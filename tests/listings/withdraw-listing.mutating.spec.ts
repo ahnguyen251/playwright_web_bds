@@ -24,7 +24,9 @@ test(listingCaseTitle('LIST-UC11-WITHDRAW-003'), async ({ listingWorkflow, contr
   await listingWorkflow.openMyListings();
   const statusBefore = await listingWorkflow.ownedListingStatus(reference);
 
-  await listingWorkflow.requestWithdrawal(reference);
+  await expect(listingWorkflow.requestWithdrawal(reference)).rejects.toThrow(
+    'Listing withdrawal is unavailable',
+  );
 
   expect(await listingWorkflow.ownedListingStatus(reference)).toBe(statusBefore);
 });

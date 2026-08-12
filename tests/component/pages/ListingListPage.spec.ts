@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 import { ListingListPage } from '../../../pages/listings/ListingListPage';
+import { listingCaseTitle } from '../../../test-cases/listings/listing.test-cases';
 
 const publicListingFixture = (): string => `
   <main>
@@ -158,6 +159,44 @@ test('kết hợp bộ lọc người đăng, giá và diện tích tùy chỉnh
 
   expect(await listPage.resultCount()).toBe(1);
   expect((await listPage.summaries()).map(({ poster }) => poster)).toEqual(['owner']);
+});
+
+test(listingCaseTitle('LIST-UC17-002'), async ({ page }) => {
+  await page.setContent(publicListingFixture());
+  const listPage = new ListingListPage(page);
+
+  await listPage.applyFilters({ poster: 'broker' });
+
+  expect(await listPage.resultCount()).toBe(2);
+  expect((await listPage.summaries()).map(({ poster }) => poster)).toEqual(['broker', 'broker']);
+});
+
+test(listingCaseTitle('LIST-UC17-003'), async ({ page }) => {
+  await page.setContent(publicListingFixture());
+  const listPage = new ListingListPage(page);
+
+  await listPage.applyFilters({ price: { kind: 'preset', label: 'Từ 2 đến 5 tỷ' } });
+
+  expect((await listPage.summaries()).map(({ price }) => price)).toEqual([3, 4]);
+});
+
+test(listingCaseTitle('LIST-UC17-005'), async ({ page }) => {
+  await page.setContent(publicListingFixture());
+  const listPage = new ListingListPage(page);
+
+  await listPage.applyFilters({ area: { kind: 'preset', label: 'Từ 50 đến 80 m²' } });
+
+  expect((await listPage.summaries()).map(({ area }) => area)).toEqual([60, 70]);
+});
+
+test(listingCaseTitle('LIST-UC17-008'), async ({ page }) => {
+  await page.setContent(publicListingFixture());
+  const listPage = new ListingListPage(page);
+
+  await listPage.applyFilters({ poster: 'broker' });
+
+  const summaries = await listPage.summaries();
+  expect(await listPage.resultCount()).toBe(summaries.length);
 });
 
 test('chuẩn hóa giá trị khoảng nhỏ hơn hoặc bằng không thành không', async ({ page }) => {

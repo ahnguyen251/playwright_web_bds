@@ -93,7 +93,7 @@ const uc08 = defineCases(
       testData: 'Dữ liệu hợp lệ từ ListingDataFactory và ảnh property.png',
       expectedResult: 'Tin được lưu, liên kết ảnh và chuyển sang trạng thái Chờ duyệt',
       requiredListingState: 'Không yêu cầu tin có sẵn',
-      playwrightTest: 'tests/listings/create-listing.mutating.spec.ts',
+      playwrightTest: 'tests/component/pages/ListingFormComponent.spec.ts',
     },
     {
       id: 'LIST-UC08-002',
@@ -102,7 +102,7 @@ const uc08 = defineCases(
       testData: 'Ảnh property.png và video tổng hợp property.mp4',
       expectedResult: 'Biểu mẫu chấp nhận video và tin mới có trạng thái Chờ duyệt',
       requiredListingState: 'Không yêu cầu tin có sẵn',
-      playwrightTest: 'tests/listings/create-listing.mutating.spec.ts',
+      playwrightTest: 'tests/component/pages/ListingFormComponent.spec.ts',
     },
     {
       id: 'LIST-UC08-003',
@@ -206,7 +206,7 @@ const uc11Edit = defineCases(
     tags: ['@listings', '@uc11-edit', '@mutating'],
   },
   withIds('LIST-UC11-EDIT', [
-    ['001', 'Chỉnh sửa thông tin tin thuộc sở hữu', 'Tin có thể sửa tồn tại', 'Tiêu đề và mô tả mới có hậu tố duy nhất', 'Lưu thay đổi và chuyển trạng thái sang Chờ duyệt', 'Tin thuộc sở hữu có thể sửa', 'tests/listings/edit-listing.mutating.spec.ts'],
+    ['001', 'Chỉnh sửa thông tin tin thuộc sở hữu', 'Biểu mẫu chỉnh sửa được dựng từ trạng thái tin kiểm soát', 'Dữ liệu cập nhật xác định trong component fixture', 'Lưu thay đổi và chuyển trạng thái sang Chờ duyệt mà không làm trôi dữ liệu staging', 'Tin thuộc sở hữu có thể sửa', 'tests/component/pages/ListingFormComponent.spec.ts'],
     ['002', 'Thêm và xóa media khi chỉnh sửa', 'Tin có thể sửa đã có media', 'Ảnh tổng hợp mới và tên media hiện có', 'Cập nhật danh sách media và chuyển trạng thái sang Chờ duyệt', 'Tin thuộc sở hữu có media', 'tests/component/pages/ListingFormComponent.spec.ts'],
     ['003', 'Từ chối người không phải chủ tin chỉnh sửa', 'Người dùng không sở hữu tin', 'Tham chiếu LISTING_OTHER_OWNER_ID', 'Hiển thị Không có quyền và không lưu thay đổi', 'Tin thuộc người dùng khác', 'tests/listings/edit-listing.mutating.spec.ts'],
     ['004', 'Từ chối dữ liệu chỉnh sửa không hợp lệ', 'Chủ tin đang mở biểu mẫu chỉnh sửa', 'Giá trị ngoài biên hoặc sai định dạng', 'Hiển thị lỗi theo trường và giữ nguyên dữ liệu cũ', 'Tin thuộc sở hữu có thể sửa', 'tests/component/pages/ListingFormComponent.spec.ts'],
@@ -279,13 +279,13 @@ const uc17 = defineCases(
   },
   withIds('LIST-UC17', [
     ['001', 'Lọc người đăng là Chủ nhà', 'Có tin do chủ nhà đăng', 'Giá trị người đăng Chủ nhà', 'Mọi kết quả đều do chủ nhà đăng', 'Có tin chủ nhà công khai', 'tests/listings/filter-listing.read-only.spec.ts'],
-    ['002', 'Lọc người đăng là Môi giới', 'Có tin do môi giới đăng', 'Giá trị người đăng Môi giới', 'Mọi kết quả đều do môi giới đăng', 'Có tin môi giới công khai', 'tests/listings/filter-listing.read-only.spec.ts'],
+    ['002', 'Lọc người đăng là Môi giới', 'Có tin do môi giới đăng', 'Giá trị người đăng Môi giới', 'Mọi kết quả đều do môi giới đăng', 'Có tin môi giới công khai', 'tests/component/pages/ListingListPage.spec.ts'],
     ['003', 'Lọc theo khoảng giá có sẵn', 'Có tin công khai với giá xác định', 'Khoảng giá có sẵn trên giao diện', 'Mọi giá hiển thị nằm trong khoảng được chọn', 'Có dữ liệu giá công khai', 'tests/component/pages/ListingListPage.spec.ts'],
     ['004', 'Lọc theo khoảng giá tùy chỉnh Từ và Đến', 'Có tin công khai với giá dạng số', 'Hai giá trị dương Từ và Đến', 'Mọi kết quả nằm trong khoảng giá tùy chỉnh', 'Có dữ liệu giá công khai', 'tests/component/pages/ListingListPage.spec.ts'],
     ['005', 'Lọc theo khoảng diện tích có sẵn', 'Có dữ liệu diện tích công khai', 'Khoảng diện tích có sẵn trên giao diện', 'Mọi diện tích hiển thị nằm trong khoảng được chọn', 'Có dữ liệu diện tích công khai', 'tests/component/pages/ListingListPage.spec.ts'],
     ['006', 'Lọc theo diện tích tùy chỉnh Từ và Đến', 'Có dữ liệu diện tích dạng số', 'Hai giá trị dương Từ và Đến', 'Mọi diện tích nằm trong khoảng tùy chỉnh', 'Có dữ liệu diện tích công khai', 'tests/component/pages/ListingListPage.spec.ts'],
     ['007', 'Kết hợp các bộ lọc được hỗ trợ', 'Có dữ liệu công khai khớp tổ hợp', 'Người đăng, khoảng giá và khoảng diện tích', 'Mọi kết quả thỏa mãn đồng thời tất cả điều kiện', 'Có danh sách khớp được kiểm soát', 'tests/listings/filter-listing.read-only.spec.ts'],
-    ['008', 'Hiển thị đúng số lượng kết quả lọc', 'Có ít nhất một bộ lọc đang hoạt động', 'Các điều kiện lọc đã chọn', 'Số lượng hiển thị bằng số bản tóm tắt tin trả về', 'Có danh sách công khai ổn định', 'tests/listings/filter-listing.read-only.spec.ts'],
+    ['008', 'Hiển thị đúng số lượng kết quả lọc', 'Có ít nhất một bộ lọc đang hoạt động', 'Các điều kiện lọc đã chọn', 'Số lượng hiển thị bằng số bản tóm tắt tin trả về', 'Có danh sách công khai ổn định', 'tests/component/pages/ListingListPage.spec.ts'],
     ['009', 'Đặt lại toàn bộ bộ lọc', 'Bộ lọc đang khác giá trị mặc định', 'Các điều kiện không mặc định', 'Khôi phục bộ lọc, danh sách và số lượng ban đầu', 'Có danh sách công khai ổn định', 'tests/component/pages/ListingListPage.spec.ts'],
     ['010', 'Hiển thị lỗi khi giá Từ lớn hơn giá Đến', 'Trang danh sách công khai đã mở', 'Giá Từ là mười và giá Đến là hai', 'Hiển thị thông báo validation khoảng giá', 'Không yêu cầu tin cụ thể', 'tests/component/pages/ListingListPage.spec.ts'],
     ['011', 'Hiển thị lỗi khi diện tích Từ lớn hơn diện tích Đến', 'Trang danh sách công khai đã mở', 'Diện tích Từ là một trăm và Đến là ba mươi', 'Hiển thị thông báo validation khoảng diện tích', 'Không yêu cầu tin cụ thể', 'tests/component/pages/ListingListPage.spec.ts'],

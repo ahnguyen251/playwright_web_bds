@@ -26,6 +26,7 @@ export interface EnvironmentConfig {
   readonly runOtpE2e: boolean;
   readonly runMutatingE2e: boolean;
   readonly runProductionRegistrationE2e: boolean;
+  readonly runProductionMutatingE2e: boolean;
   readonly gmail?: GmailConfig;
   readonly mutatingUser?: MutatingUserConfig;
   readonly otpPollIntervalMs: number;

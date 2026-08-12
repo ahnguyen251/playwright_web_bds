@@ -8,7 +8,7 @@ const environment = loadEnvironmentConfig();
 const defaultStorageState = '.auth/defaultUser.json';
 const endToEndTestMatch =
   /(authentication|profile|listings|appointments|transactions)\/.*\.spec\.ts/;
-const mutatingTestMatch = /(authentication|profile)\/.*\.mutating\.spec\.ts/;
+const mutatingTestMatch = /(authentication|profile|listings)\/.*\.mutating\.spec\.ts/;
 
 export default defineConfig({
   testDir: './tests',
@@ -94,6 +94,7 @@ export default defineConfig({
       name: 'mutating-chromium',
       testMatch: mutatingTestMatch,
       fullyParallel: false,
+      workers: 1,
       dependencies: ['auth-setup'],
       use: {
         ...devices['Desktop Chrome'],

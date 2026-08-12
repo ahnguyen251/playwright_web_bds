@@ -65,6 +65,7 @@ export const loadEnvironmentConfig = (
     runOtpE2e: parsed.data.RUN_OTP_E2E,
     runMutatingE2e: parsed.data.RUN_MUTATING_E2E,
     runProductionRegistrationE2e: parsed.data.RUN_PRODUCTION_REGISTRATION_E2E,
+    runProductionMutatingE2e: parsed.data.RUN_PRODUCTION_MUTATING_E2E,
     ...(gmail === undefined ? {} : { gmail }),
     ...(mutatingUser === undefined ? {} : { mutatingUser }),
     otpPollIntervalMs: parsed.data.OTP_POLL_INTERVAL_MS,

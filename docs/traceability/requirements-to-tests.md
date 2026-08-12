@@ -80,8 +80,8 @@ Nguồn nghiệp vụ: `document/NghiepvuPropify.pdf`, UC-08 đến UC-17. Hằn
 
 | Mã kịch bản            | Yêu cầu        | Phân loại   | Metadata         | Bằng chứng                                                          | Trạng thái |
 | ---------------------- | -------------- | ----------- | ---------------- | ------------------------------------------------------------------- | ---------- |
-| LIST-UC08-001          | UC-08          | Có thay đổi | listingTestCases | tests/listings/create-listing.mutating.spec.ts                      | Tự động    |
-| LIST-UC08-002          | UC-08          | Có thay đổi | listingTestCases | tests/listings/create-listing.mutating.spec.ts                      | Tự động    |
+| LIST-UC08-001          | UC-08          | Có thay đổi | listingTestCases | tests/component/pages/ListingFormComponent.spec.ts                  | Tự động    |
+| LIST-UC08-002          | UC-08          | Có thay đổi | listingTestCases | tests/component/pages/ListingFormComponent.spec.ts                  | Tự động    |
 | LIST-UC08-003          | UC-08          | Có thay đổi | listingTestCases | docs/traceability/requirements-to-tests.md#listings-manual-evidence | Thủ công   |
 | LIST-UC08-004          | UC-08          | Có thay đổi | listingTestCases | tests/component/pages/ListingFormComponent.spec.ts                  | Tự động    |
 | LIST-UC08-005          | UC-08          | Có thay đổi | listingTestCases | tests/component/pages/ListingFormComponent.spec.ts                  | Tự động    |
@@ -100,7 +100,7 @@ Nguồn nghiệp vụ: `document/NghiepvuPropify.pdf`, UC-08 đến UC-17. Hằn
 | LIST-UC10-003          | UC-10          | Chỉ đọc     | listingTestCases | tests/listings/listing-detail.read-only.spec.ts                     | Tự động    |
 | LIST-UC10-004          | UC-10          | Chỉ đọc     | listingTestCases | tests/listings/listing-detail.read-only.spec.ts                     | Tự động    |
 | LIST-UC10-005          | UC-10          | Chỉ đọc     | listingTestCases | tests/component/pages/ListingDetailPage.spec.ts                     | Tự động    |
-| LIST-UC11-EDIT-001     | UC-11-EDIT     | Có thay đổi | listingTestCases | tests/listings/edit-listing.mutating.spec.ts                        | Tự động    |
+| LIST-UC11-EDIT-001     | UC-11-EDIT     | Có thay đổi | listingTestCases | tests/component/pages/ListingFormComponent.spec.ts                  | Tự động    |
 | LIST-UC11-EDIT-002     | UC-11-EDIT     | Có thay đổi | listingTestCases | tests/component/pages/ListingFormComponent.spec.ts                  | Tự động    |
 | LIST-UC11-EDIT-003     | UC-11-EDIT     | Có thay đổi | listingTestCases | tests/listings/edit-listing.mutating.spec.ts                        | Tự động    |
 | LIST-UC11-EDIT-004     | UC-11-EDIT     | Có thay đổi | listingTestCases | tests/component/pages/ListingFormComponent.spec.ts                  | Tự động    |
@@ -125,13 +125,13 @@ Nguồn nghiệp vụ: `document/NghiepvuPropify.pdf`, UC-08 đến UC-17. Hằn
 | LIST-UC16-007          | UC-16          | Chỉ đọc     | listingTestCases | tests/listings/search-listing.read-only.spec.ts                     | Tự động    |
 | LIST-UC16-008          | UC-16          | Chỉ đọc     | listingTestCases | docs/traceability/requirements-to-tests.md#listings-manual-evidence | Thủ công   |
 | LIST-UC17-001          | UC-17          | Chỉ đọc     | listingTestCases | tests/listings/filter-listing.read-only.spec.ts                     | Tự động    |
-| LIST-UC17-002          | UC-17          | Chỉ đọc     | listingTestCases | tests/listings/filter-listing.read-only.spec.ts                     | Tự động    |
+| LIST-UC17-002          | UC-17          | Chỉ đọc     | listingTestCases | tests/component/pages/ListingListPage.spec.ts                       | Tự động    |
 | LIST-UC17-003          | UC-17          | Chỉ đọc     | listingTestCases | tests/component/pages/ListingListPage.spec.ts                       | Tự động    |
 | LIST-UC17-004          | UC-17          | Chỉ đọc     | listingTestCases | tests/component/pages/ListingListPage.spec.ts                       | Tự động    |
 | LIST-UC17-005          | UC-17          | Chỉ đọc     | listingTestCases | tests/component/pages/ListingListPage.spec.ts                       | Tự động    |
 | LIST-UC17-006          | UC-17          | Chỉ đọc     | listingTestCases | tests/component/pages/ListingListPage.spec.ts                       | Tự động    |
 | LIST-UC17-007          | UC-17          | Chỉ đọc     | listingTestCases | tests/listings/filter-listing.read-only.spec.ts                     | Tự động    |
-| LIST-UC17-008          | UC-17          | Chỉ đọc     | listingTestCases | tests/listings/filter-listing.read-only.spec.ts                     | Tự động    |
+| LIST-UC17-008          | UC-17          | Chỉ đọc     | listingTestCases | tests/component/pages/ListingListPage.spec.ts                       | Tự động    |
 | LIST-UC17-009          | UC-17          | Chỉ đọc     | listingTestCases | tests/component/pages/ListingListPage.spec.ts                       | Tự động    |
 | LIST-UC17-010          | UC-17          | Chỉ đọc     | listingTestCases | tests/component/pages/ListingListPage.spec.ts                       | Tự động    |
 | LIST-UC17-011          | UC-17          | Chỉ đọc     | listingTestCases | tests/component/pages/ListingListPage.spec.ts                       | Tự động    |

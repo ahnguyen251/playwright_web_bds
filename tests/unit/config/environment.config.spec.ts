@@ -46,6 +46,29 @@ test('chỉ bật E2E có thay đổi khi cờ có giá trị chính xác là tr
   ).toBe(true);
 });
 
+test('requires a dedicated production approval before mutating listings', () => {
+  expect(() =>
+    loadEnvironmentConfig({
+      ...validEnvironment,
+      TEST_ENV: 'production',
+      ALLOW_MUTATING_E2E: 'true',
+      RUN_PRODUCTION_REGISTRATION_E2E: 'true',
+    }),
+  ).toThrow(/RUN_PRODUCTION_MUTATING_E2E/);
+});
+
+test('permits production listing mutation only with the dedicated approval flag', () => {
+  const config = loadEnvironmentConfig({
+    ...validEnvironment,
+    TEST_ENV: 'production',
+    ALLOW_MUTATING_E2E: 'true',
+    RUN_PRODUCTION_MUTATING_E2E: 'true',
+  });
+
+  expect(config.runProductionMutatingE2e).toBe(true);
+  expect(config.allowMutatingE2E).toBe(true);
+});
+
 test('từ chối giá trị cờ E2E có thay đổi không hợp lệ', () => {
   expect(() =>
     loadEnvironmentConfig({
@@ -88,6 +111,7 @@ test('keeps Gmail integration disabled when optional values are absent', () => {
   expect(config.runOtpE2e).toBe(false);
   expect(config.runMutatingE2e).toBe(false);
   expect(config.runProductionRegistrationE2e).toBe(false);
+  expect(config.runProductionMutatingE2e).toBe(false);
   expect(config.gmail).toBeUndefined();
 });
 

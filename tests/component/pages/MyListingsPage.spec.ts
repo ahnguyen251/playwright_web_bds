@@ -95,7 +95,7 @@ test('hủy gỡ tin mà không thay đổi trạng thái', async ({ page }) => 
   const myListings = new MyListingsPage(page);
   const reference = { id: '91', title: 'Controlled published listing' };
 
-  await myListings.requestWithdraw(reference);
+  expect(await myListings.requestWithdraw(reference)).toBe(true);
   await myListings.cancelWithdraw();
 
   expect(await myListings.statusOf(reference)).toBe('Đang đăng');
@@ -106,7 +106,7 @@ test('xác nhận gỡ chỉ đổi trạng thái và không xóa bản ghi', as
   const myListings = new MyListingsPage(page);
   const reference = { id: '91', title: 'Controlled published listing' };
 
-  await myListings.requestWithdraw(reference);
+  expect(await myListings.requestWithdraw(reference)).toBe(true);
   await myListings.confirmWithdraw();
 
   expect(await myListings.statusOf(reference)).toBe('Đã gỡ');
@@ -117,7 +117,9 @@ test('hiển thị từ chối khi tin không ở trạng thái Đang đăng', a
   await page.setContent(myListingsFixture({ status: 'Chờ duyệt' }));
   const myListings = new MyListingsPage(page);
 
-  await myListings.requestWithdraw({ id: '91', title: 'Controlled published listing' });
+  expect(
+    await myListings.requestWithdraw({ id: '91', title: 'Controlled published listing' }),
+  ).toBe(false);
 
   expect(await myListings.feedback()).toBe('Không cho phép gỡ');
 });

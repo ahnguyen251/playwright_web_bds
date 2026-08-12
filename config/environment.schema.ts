@@ -33,6 +33,7 @@ export const environmentSchema = z
     RUN_OTP_E2E: booleanFlag,
     RUN_MUTATING_E2E: booleanFlag,
     RUN_PRODUCTION_REGISTRATION_E2E: booleanFlag,
+    RUN_PRODUCTION_MUTATING_E2E: booleanFlag,
     ALLOW_MUTATING_E2E: booleanFlag,
     GMAIL_CLIENT_ID: z.string().trim().min(1).optional(),
     GMAIL_CLIENT_SECRET: z.string().trim().min(1).optional(),
@@ -79,7 +80,11 @@ export const environmentSchema = z
         });
       }
 
-      if (environment.TEST_ENV === 'production' && !environment.RUN_PRODUCTION_REGISTRATION_E2E) {
+      if (
+        environment.TEST_ENV === 'production' &&
+        !environment.RUN_PRODUCTION_REGISTRATION_E2E &&
+        !environment.RUN_PRODUCTION_MUTATING_E2E
+      ) {
         context.addIssue({
           code: 'custom',
           path: ['RUN_PRODUCTION_REGISTRATION_E2E'],
@@ -103,6 +108,19 @@ export const environmentSchema = z
           });
         }
       }
+    }
+
+    if (
+      environment.TEST_ENV === 'production' &&
+      environment.ALLOW_MUTATING_E2E &&
+      !environment.RUN_PRODUCTION_MUTATING_E2E
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['RUN_PRODUCTION_MUTATING_E2E'],
+        message:
+          'RUN_PRODUCTION_MUTATING_E2E=true is required for listing mutations in production',
+      });
     }
   });
 
