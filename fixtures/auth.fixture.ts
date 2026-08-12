@@ -17,6 +17,7 @@ export interface ExecutionPolicy {
   readonly runMutatingE2e: boolean;
   readonly runProductionRegistrationE2e: boolean;
   readonly runProductionMutatingE2e: boolean;
+  readonly productionMutationsApproved: boolean;
 }
 
 export interface OtpQueryPolicy {
@@ -45,41 +46,49 @@ const readExecutionFlag = (
     | 'RUN_MUTATING_E2E'
     | 'RUN_PRODUCTION_REGISTRATION_E2E'
     | 'RUN_PRODUCTION_MUTATING_E2E',
+  source: NodeJS.ProcessEnv,
 ): boolean => {
-  const value = process.env[key] ?? 'false';
+  const value = source[key] ?? 'false';
   if (value !== 'true' && value !== 'false') {
     throw new Error(`Invalid execution policy configuration: ${key}`);
   }
   return value === 'true';
 };
 
-const readExecutionEnvironment = (): TestEnvironment => {
-  const value = process.env.TEST_ENV ?? 'production';
+const readExecutionEnvironment = (source: NodeJS.ProcessEnv): TestEnvironment => {
+  const value = source.TEST_ENV ?? 'production';
   if (value !== 'dev' && value !== 'staging' && value !== 'production') {
     throw new Error('Invalid execution policy configuration: TEST_ENV');
   }
   return value;
 };
 
-const createExecutionPolicy = (): ExecutionPolicy => {
-  const environment = readExecutionEnvironment();
-  const runOtpE2e = readExecutionFlag('RUN_OTP_E2E');
-  const runMutatingE2e = readExecutionFlag('RUN_MUTATING_E2E');
-  const runProductionRegistrationE2e = readExecutionFlag('RUN_PRODUCTION_REGISTRATION_E2E');
-  const runProductionMutatingE2e = readExecutionFlag('RUN_PRODUCTION_MUTATING_E2E');
+export const createExecutionPolicy = (
+  source: NodeJS.ProcessEnv = process.env,
+): ExecutionPolicy => {
+  const environment = readExecutionEnvironment(source);
+  const runOtpE2e = readExecutionFlag('RUN_OTP_E2E', source);
+  const runMutatingE2e = readExecutionFlag('RUN_MUTATING_E2E', source);
+  const runProductionRegistrationE2e = readExecutionFlag(
+    'RUN_PRODUCTION_REGISTRATION_E2E',
+    source,
+  );
+  const runProductionMutatingE2e = readExecutionFlag('RUN_PRODUCTION_MUTATING_E2E', source);
+  const productionMutationsApproved =
+    environment !== 'production' ||
+    runProductionRegistrationE2e ||
+    runProductionMutatingE2e;
   if (runMutatingE2e && !runOtpE2e) {
     throw new Error(
       'Invalid execution policy configuration: RUN_MUTATING_E2E requires RUN_OTP_E2E',
     );
   }
   if (
-    environment === 'production' &&
     runMutatingE2e &&
-    !runProductionRegistrationE2e &&
-    !runProductionMutatingE2e
+    !productionMutationsApproved
   ) {
     throw new Error(
-      'Invalid execution policy configuration: RUN_PRODUCTION_REGISTRATION_E2E is required for production mutations',
+      'Invalid execution policy configuration: RUN_PRODUCTION_REGISTRATION_E2E or RUN_PRODUCTION_MUTATING_E2E is required for production mutations',
     );
   }
   return Object.freeze({
@@ -88,6 +97,7 @@ const createExecutionPolicy = (): ExecutionPolicy => {
     runMutatingE2e,
     runProductionRegistrationE2e,
     runProductionMutatingE2e,
+    productionMutationsApproved,
   });
 };
 

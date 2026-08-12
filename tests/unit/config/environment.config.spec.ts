@@ -176,6 +176,37 @@ test('permits production authentication mutation only with the explicit approval
   expect(config.runProductionRegistrationE2e).toBe(true);
 });
 
+test('permits production authentication mutation with the unified approval flag', () => {
+  const config = loadEnvironmentConfig({
+    ...validOtpEnvironment,
+    TEST_ENV: 'production',
+    RUN_MUTATING_E2E: 'true',
+    RUN_PRODUCTION_REGISTRATION_E2E: 'false',
+    RUN_PRODUCTION_MUTATING_E2E: 'true',
+    MUTATING_USER_EMAIL: 'automation+mutating@gmail.com',
+    MUTATING_USER_BASELINE_PASSWORD: 'baseline-secret',
+    MUTATING_USER_BASELINE_NAME: 'Automation User',
+  });
+
+  expect(config.runProductionMutatingE2e).toBe(true);
+});
+
+test('permits non-production authentication mutation without production approval flags', () => {
+  const config = loadEnvironmentConfig({
+    ...validOtpEnvironment,
+    TEST_ENV: 'staging',
+    RUN_MUTATING_E2E: 'true',
+    RUN_PRODUCTION_REGISTRATION_E2E: 'false',
+    RUN_PRODUCTION_MUTATING_E2E: 'false',
+    MUTATING_USER_EMAIL: 'automation+mutating@gmail.com',
+    MUTATING_USER_BASELINE_PASSWORD: 'baseline-secret',
+    MUTATING_USER_BASELINE_NAME: 'Automation User',
+  });
+
+  expect(config.runProductionRegistrationE2e).toBe(false);
+  expect(config.runProductionMutatingE2e).toBe(false);
+});
+
 test('documents one parseable runtime contract using placeholder-only identities', () => {
   const exampleEnvironment = parse(readFileSync('.env.example', 'utf8'));
   const config = loadEnvironmentConfig(exampleEnvironment);

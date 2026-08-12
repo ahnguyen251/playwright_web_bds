@@ -11,7 +11,7 @@ test.beforeEach(({ executionPolicy }) => {
     'Requires Gmail OTP, mutating E2E, and production approval flags',
   );
   test.skip(
-    executionPolicy.environment === 'production' && !executionPolicy.runProductionRegistrationE2e,
+    !executionPolicy.productionMutationsApproved,
     'Requires explicit production authentication mutation approval',
   );
 });
