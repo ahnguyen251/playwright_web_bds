@@ -1,7 +1,7 @@
 import { OtpMessageParser } from './OtpMessageParser';
 
 import type { GmailMessage, GmailMessageClient } from './GmailApiClient';
-import type { OtpProvider, OtpQuery } from '../../types/otp.types';
+import type { OtpMailCorrelation, OtpProvider, OtpQuery } from '../../types/otp.types';
 
 export interface Clock {
   now(): Date;
@@ -20,6 +20,7 @@ const newestFirst = (first: GmailMessage, second: GmailMessage): number =>
 export class GmailOtpProvider implements OtpProvider {
   public constructor(
     private readonly client: GmailMessageClient,
+    private readonly correlation: OtpMailCorrelation,
     private readonly clock: Clock = systemClock,
   ) {}
 
@@ -27,6 +28,8 @@ export class GmailOtpProvider implements OtpProvider {
     const startedAt = this.clock.now();
     const gmailQuery = [
       `to:${query.recipient}`,
+      `from:${this.correlation.sender}`,
+      `subject:"${this.escapeQueryPhrase(this.correlation.subject)}"`,
       `after:${String(Math.floor(query.requestedAfter.getTime() / 1_000))}`,
     ].join(' ');
 
@@ -58,12 +61,14 @@ export class GmailOtpProvider implements OtpProvider {
       .filter(
         (message) =>
           message.recipient === query.recipient &&
+          message.sender.trim().toLowerCase() === this.correlation.sender.trim().toLowerCase() &&
+          message.subject === this.correlation.subject &&
           message.internalDate.getTime() > query.requestedAfter.getTime(),
       )
       .sort(newestFirst);
 
     for (const message of matchingMessages) {
-      const otp = OtpMessageParser.extract(message, query.purpose);
+      const otp = OtpMessageParser.extract(message, query.purpose, this.correlation);
       if (otp !== undefined) {
         return otp;
       }
@@ -84,6 +89,10 @@ export class GmailOtpProvider implements OtpProvider {
 
   private elapsedMilliseconds(startedAt: Date): number {
     return this.clock.now().getTime() - startedAt.getTime();
+  }
+
+  private escapeQueryPhrase(value: string): string {
+    return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
   }
 
   private throwTimeout(query: OtpQuery, startedAt: Date): never {

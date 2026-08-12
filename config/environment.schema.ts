@@ -6,6 +6,20 @@ const absoluteUrl = z
   .pipe(z.url())
   .transform((value) => new URL(value).toString());
 
+const booleanFlag = z
+  .enum(['true', 'false'])
+  .default('false')
+  .transform((value) => value === 'true');
+
+const otpPattern = z
+  .string()
+  .trim()
+  .min(1)
+  .max(500)
+  .refine((value) => value.split('{otp}').length === 2, {
+    message: 'GMAIL_OTP_PATTERN must contain exactly one literal {otp} placeholder',
+  });
+
 export const environmentSchema = z
   .object({
     TEST_ENV: z.enum(['dev', 'staging', 'production']).default('production'),
@@ -15,22 +29,17 @@ export const environmentSchema = z
     API_BASE_URL: absoluteUrl.optional(),
     DEFAULT_USER_EMAIL: z.string().trim().pipe(z.email()),
     DEFAULT_USER_PASSWORD: z.string().min(1),
-    CI: z
-      .enum(['true', 'false'])
-      .default('false')
-      .transform((value) => value === 'true'),
-    RUN_OTP_E2E: z
-      .enum(['true', 'false'])
-      .default('false')
-      .transform((value) => value === 'true'),
-    RUN_MUTATING_E2E: z
-      .enum(['true', 'false'])
-      .default('false')
-      .transform((value) => value === 'true'),
+    CI: booleanFlag,
+    RUN_OTP_E2E: booleanFlag,
+    RUN_MUTATING_E2E: booleanFlag,
+    RUN_PRODUCTION_REGISTRATION_E2E: booleanFlag,
     GMAIL_CLIENT_ID: z.string().trim().min(1).optional(),
     GMAIL_CLIENT_SECRET: z.string().trim().min(1).optional(),
     GMAIL_REFRESH_TOKEN: z.string().trim().min(1).optional(),
     OTP_MAILBOX_ADDRESS: z.string().trim().pipe(z.email()).optional(),
+    GMAIL_OTP_SENDER: z.string().trim().pipe(z.email()).optional(),
+    GMAIL_OTP_SUBJECT: z.string().trim().min(1).max(200).optional(),
+    GMAIL_OTP_PATTERN: otpPattern.optional(),
     MUTATING_USER_EMAIL: z.string().trim().pipe(z.email()).optional(),
     MUTATING_USER_BASELINE_PASSWORD: z.string().min(8).optional(),
     MUTATING_USER_BASELINE_NAME: z.string().trim().min(1).optional(),
@@ -44,6 +53,9 @@ export const environmentSchema = z
         ['GMAIL_CLIENT_SECRET', environment.GMAIL_CLIENT_SECRET],
         ['GMAIL_REFRESH_TOKEN', environment.GMAIL_REFRESH_TOKEN],
         ['OTP_MAILBOX_ADDRESS', environment.OTP_MAILBOX_ADDRESS],
+        ['GMAIL_OTP_SENDER', environment.GMAIL_OTP_SENDER],
+        ['GMAIL_OTP_SUBJECT', environment.GMAIL_OTP_SUBJECT],
+        ['GMAIL_OTP_PATTERN', environment.GMAIL_OTP_PATTERN],
       ] as const;
 
       for (const [key, value] of gmailKeys) {
@@ -63,6 +75,15 @@ export const environmentSchema = z
           code: 'custom',
           path: ['RUN_MUTATING_E2E'],
           message: 'RUN_MUTATING_E2E requires RUN_OTP_E2E',
+        });
+      }
+
+      if (environment.TEST_ENV === 'production' && !environment.RUN_PRODUCTION_REGISTRATION_E2E) {
+        context.addIssue({
+          code: 'custom',
+          path: ['RUN_PRODUCTION_REGISTRATION_E2E'],
+          message:
+            'RUN_PRODUCTION_REGISTRATION_E2E=true is required for authentication mutations in production',
         });
       }
 

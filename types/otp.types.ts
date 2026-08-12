@@ -1,5 +1,11 @@
 export type OtpPurpose = 'registration' | 'passwordRecovery';
 
+export interface OtpMailCorrelation {
+  readonly sender: string;
+  readonly subject: string;
+  readonly pattern: string;
+}
+
 export interface OtpQuery {
   readonly recipient: string;
   readonly purpose: OtpPurpose;

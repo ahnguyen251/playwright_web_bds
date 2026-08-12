@@ -24,10 +24,17 @@ const message = (overrides: Partial<GmailMessage>): GmailMessage => ({
   id: 'message-id',
   internalDate: afterRequest,
   recipient: alias,
-  subject: 'Propify password recovery',
-  body: 'Use 333333 to reset your password.',
+  sender: 'mailer@example.test',
+  subject: 'Account security code',
+  body: 'Use 333333 to continue.',
   ...overrides,
 });
+
+const correlation = {
+  sender: 'mailer@example.test',
+  subject: 'Account security code',
+  pattern: 'Use {otp} to continue.',
+};
 
 const query = (overrides: Partial<OtpQuery> = {}): OtpQuery => ({
   recipient: alias,
@@ -37,11 +44,6 @@ const query = (overrides: Partial<OtpQuery> = {}): OtpQuery => ({
   pollIntervalMs: 1_000,
   ...overrides,
 });
-
-const immediateClock: Clock = {
-  now: () => requestTime,
-  delay: () => Promise.resolve(),
-};
 
 const advancingClock = (): Clock => {
   let now = requestTime.getTime();
@@ -56,23 +58,40 @@ const advancingClock = (): Clock => {
 
 test('ignores old and wrong-recipient messages before returning the newest match', async () => {
   const client = new FakeGmailClient([
-    message({ id: 'old', recipient: alias, internalDate: beforeRequest, body: 'Use 111111.' }),
+    message({
+      id: 'old',
+      recipient: alias,
+      internalDate: beforeRequest,
+      body: 'Use 111111 to continue.',
+    }),
     message({
       id: 'wrong',
       recipient: 'other@gmail.com',
       internalDate: afterRequest,
-      body: 'Use 222222.',
+      body: 'Use 222222 to continue.',
     }),
-    message({ id: 'match', recipient: alias, internalDate: afterRequest, body: 'Use 333333.' }),
+    message({
+      id: 'wrong-sender',
+      sender: 'attacker@example.test',
+      body: 'Use 999999 to continue.',
+    }),
+    message({
+      id: 'match',
+      recipient: alias,
+      internalDate: afterRequest,
+      body: 'Use 333333 to continue.',
+    }),
   ]);
-  const provider = new GmailOtpProvider(client, immediateClock);
+  const provider = new GmailOtpProvider(client, correlation, advancingClock());
 
   await expect(provider.waitForOtp(query({ recipient: alias }))).resolves.toBe('333333');
-  expect(client.queries).toEqual(['to:automation+auth-1@gmail.com after:1785888000']);
+  expect(client.queries).toEqual([
+    'to:automation+auth-1@gmail.com from:mailer@example.test subject:"Account security code" after:1785888000',
+  ]);
 });
 
 test('times out with sanitized diagnostics', async () => {
-  const provider = new GmailOtpProvider(new FakeGmailClient([]), advancingClock());
+  const provider = new GmailOtpProvider(new FakeGmailClient([]), correlation, advancingClock());
 
   await expect(provider.waitForOtp(query({ timeoutMs: 5_000 }))).rejects.toThrow(
     /OTP not received.*passwordRecovery/,
@@ -82,6 +101,7 @@ test('times out with sanitized diagnostics', async () => {
 test('times out when a Gmail search does not settle before the deadline', async () => {
   const provider = new GmailOtpProvider(
     { search: () => new Promise<readonly GmailMessage[]>(() => undefined) },
+    correlation,
     advancingClock(),
   );
   const result = await Promise.race([

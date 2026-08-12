@@ -5,14 +5,17 @@ import { TIMEOUTS } from '../constants/timeouts';
 import { AuthenticationDataFactory } from '../test-data/factories/AuthenticationDataFactory';
 import { UserDataFactory } from '../test-data/factories/UserDataFactory';
 import type { OtpProvider, OtpQuery } from '../types/otp.types';
+import type { TestEnvironment } from '../types/environment.types';
 import type { RegistrationData, UserCredentials } from '../types/user.types';
 
 const disabledOtpMessage =
   'OTP automation is disabled. Enable RUN_OTP_E2E with valid Gmail configuration.';
 
 export interface ExecutionPolicy {
+  readonly environment: TestEnvironment;
   readonly runOtpE2e: boolean;
   readonly runMutatingE2e: boolean;
+  readonly runProductionRegistrationE2e: boolean;
 }
 
 export interface OtpQueryPolicy {
@@ -35,7 +38,9 @@ export class DisabledOtpProvider implements OtpProvider {
   }
 }
 
-const readExecutionFlag = (key: 'RUN_OTP_E2E' | 'RUN_MUTATING_E2E'): boolean => {
+const readExecutionFlag = (
+  key: 'RUN_OTP_E2E' | 'RUN_MUTATING_E2E' | 'RUN_PRODUCTION_REGISTRATION_E2E',
+): boolean => {
   const value = process.env[key] ?? 'false';
   if (value !== 'true' && value !== 'false') {
     throw new Error(`Invalid execution policy configuration: ${key}`);
@@ -43,15 +48,35 @@ const readExecutionFlag = (key: 'RUN_OTP_E2E' | 'RUN_MUTATING_E2E'): boolean => 
   return value === 'true';
 };
 
+const readExecutionEnvironment = (): TestEnvironment => {
+  const value = process.env.TEST_ENV ?? 'production';
+  if (value !== 'dev' && value !== 'staging' && value !== 'production') {
+    throw new Error('Invalid execution policy configuration: TEST_ENV');
+  }
+  return value;
+};
+
 const createExecutionPolicy = (): ExecutionPolicy => {
+  const environment = readExecutionEnvironment();
   const runOtpE2e = readExecutionFlag('RUN_OTP_E2E');
   const runMutatingE2e = readExecutionFlag('RUN_MUTATING_E2E');
+  const runProductionRegistrationE2e = readExecutionFlag('RUN_PRODUCTION_REGISTRATION_E2E');
   if (runMutatingE2e && !runOtpE2e) {
     throw new Error(
       'Invalid execution policy configuration: RUN_MUTATING_E2E requires RUN_OTP_E2E',
     );
   }
-  return Object.freeze({ runOtpE2e, runMutatingE2e });
+  if (environment === 'production' && runMutatingE2e && !runProductionRegistrationE2e) {
+    throw new Error(
+      'Invalid execution policy configuration: RUN_PRODUCTION_REGISTRATION_E2E is required for production mutations',
+    );
+  }
+  return Object.freeze({
+    environment,
+    runOtpE2e,
+    runMutatingE2e,
+    runProductionRegistrationE2e,
+  });
 };
 
 const createOtpProvider = async (executionPolicy: ExecutionPolicy): Promise<OtpProvider> => {
@@ -68,7 +93,11 @@ const createOtpProvider = async (executionPolicy: ExecutionPolicy): Promise<OtpP
     import('../helpers/otp/GmailApiClient.js'),
     import('../helpers/otp/GmailOtpProvider.js'),
   ]);
-  return new GmailOtpProvider(new GmailApiClient(configuration.gmail));
+  return new GmailOtpProvider(new GmailApiClient(configuration.gmail), {
+    sender: configuration.gmail.otpSender,
+    subject: configuration.gmail.otpSubject,
+    pattern: configuration.gmail.otpPattern,
+  });
 };
 
 const createOtpQueryPolicy = async (executionPolicy: ExecutionPolicy): Promise<OtpQueryPolicy> => {

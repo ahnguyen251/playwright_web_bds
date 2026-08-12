@@ -6,6 +6,7 @@ export interface GmailMessage {
   readonly id: string;
   readonly internalDate: Date;
   readonly recipient: string;
+  readonly sender: string;
   readonly subject: string;
   readonly body: string;
 }
@@ -19,11 +20,12 @@ const headerValue = (
   name: string,
 ): string => headers?.find((header) => header.name?.toLowerCase() === name)?.value ?? '';
 
-const recipientAddress = (
+const headerAddress = (
   headers: readonly gmail_v1.Schema$MessagePartHeader[] | null | undefined,
+  name: 'to' | 'from',
 ): string => {
-  const recipient = headerValue(headers, 'to');
-  return /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.exec(recipient)?.[0] ?? recipient;
+  const value = headerValue(headers, name);
+  return /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.exec(value)?.[0]?.toLowerCase() ?? value;
 };
 
 const decodeBody = (data: string): string => Buffer.from(data, 'base64url').toString('utf8');
@@ -83,7 +85,8 @@ export class GmailApiClient implements GmailMessageClient {
           {
             id,
             internalDate: new Date(internalDateMilliseconds),
-            recipient: recipientAddress(payload.headers),
+            recipient: headerAddress(payload.headers, 'to'),
+            sender: headerAddress(payload.headers, 'from'),
             subject: headerValue(payload.headers, 'subject'),
             body: messageBody(payload),
           },

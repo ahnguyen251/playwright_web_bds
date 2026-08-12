@@ -94,6 +94,7 @@ Giá trị mặc định:
 ```dotenv
 RUN_OTP_E2E=false
 RUN_MUTATING_E2E=false
+RUN_PRODUCTION_REGISTRATION_E2E=false
 ```
 
 Với mặc định này, các suite Login/Profile/validation không thay đổi dữ liệu có thể chạy; mọi file
@@ -107,6 +108,9 @@ RUN_OTP_E2E=true
 RUN_MUTATING_E2E=true
 ```
 
+When `TEST_ENV=production`, the schema, fixture, and mutating specs additionally require
+`RUN_PRODUCTION_REGISTRATION_E2E=true`. This production approval gate defaults to disabled.
+
 `RUN_MUTATING_E2E=true` nhưng `RUN_OTP_E2E=false` bị schema và fixture từ chối. Các kịch bản này chạy
 trong project `mutating-chromium`, ở chế độ serial, một worker. Screenshot, video và trace bị tắt
 trong project này để tránh ghi mật khẩu hoặc OTP vào artifact.
@@ -115,9 +119,9 @@ Chỉ bật mutating trên môi trường kiểm thử được phép. Không d�
 khoản automation chuyên dụng, có thể khôi phục qua Gmail, bằng:
 
 ```dotenv
-MUTATING_USER_EMAIL=automation-mailbox+propify-mutating@gmail.com
-MUTATING_USER_BASELINE_PASSWORD=replace-with-local-baseline-secret
-MUTATING_USER_BASELINE_NAME=Propify Automation User
+MUTATING_USER_EMAIL=replace-with-mutating-user@example.test
+MUTATING_USER_BASELINE_PASSWORD=replace-with-mutating-baseline-password
+MUTATING_USER_BASELINE_NAME=replace-with-mutating-baseline-name
 ```
 
 Các flow profile/password cố gắng đưa tên và mật khẩu về baseline. Password recovery được dùng để
@@ -136,10 +140,17 @@ lý như test data có trạng thái và không được chạy song song.
 GMAIL_CLIENT_ID=replace-with-google-oauth-client-id
 GMAIL_CLIENT_SECRET=replace-with-local-secret
 GMAIL_REFRESH_TOKEN=replace-with-local-refresh-token
-OTP_MAILBOX_ADDRESS=automation-mailbox@gmail.com
+OTP_MAILBOX_ADDRESS=replace-with-gmail-mailbox@example.test
+GMAIL_OTP_SENDER=replace-with-otp-sender@example.test
+GMAIL_OTP_SUBJECT=replace-with-exact-otp-subject
+GMAIL_OTP_PATTERN=replace-with-exact-otp-text-{otp}
 OTP_POLL_INTERVAL_MS=2000
 OTP_TIMEOUT_MS=60000
 ```
+
+`GMAIL_OTP_PATTERN` is a literal text template containing exactly one `{otp}` placeholder; the
+framework never compiles arbitrary environment-provided regular expressions. The provider requires
+the configured sender and subject in addition to the existing recipient and timestamp correlation.
 
 Không in các giá trị này ra log và không đính kèm nội dung email/OTP vào report. Khi
 `RUN_OTP_E2E=true`, thiếu bất kỳ biến Gmail bắt buộc nào sẽ làm cấu hình thất bại rõ ràng.

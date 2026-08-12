@@ -8,6 +8,9 @@ test('prefers the text body over a duplicate HTML alternative', async () => {
     clientSecret: 'test-client-secret',
     refreshToken: 'test-refresh-token',
     mailboxAddress: 'automation@gmail.com',
+    otpSender: 'mailer@example.test',
+    otpSubject: 'Account security code',
+    otpPattern: 'Use {otp} to continue.',
   });
   const gmail = {
     users: {
@@ -21,6 +24,7 @@ test('prefers the text body over a duplicate HTML alternative', async () => {
               payload: {
                 headers: [
                   { name: 'To', value: 'automation+auth-1@gmail.com' },
+                  { name: 'From', value: 'Propify Mailer <mailer@example.test>' },
                   { name: 'Subject', value: 'Propify password recovery' },
                 ],
                 mimeType: 'multipart/alternative',
@@ -41,6 +45,7 @@ test('prefers the text body over a duplicate HTML alternative', async () => {
       id: 'message-1',
       internalDate: new Date('2026-08-05T00:00:01Z'),
       recipient: 'automation+auth-1@gmail.com',
+      sender: 'mailer@example.test',
       subject: 'Propify password recovery',
       body: 'Use 333333.',
     },
@@ -53,6 +58,9 @@ test('normalizes a display-name recipient for exact alias correlation', async ()
     clientSecret: 'test-client-secret',
     refreshToken: 'test-refresh-token',
     mailboxAddress: 'automation@gmail.com',
+    otpSender: 'mailer@example.test',
+    otpSubject: 'Account security code',
+    otpPattern: 'Use {otp} to continue.',
   });
   const gmail = {
     users: {
@@ -66,6 +74,7 @@ test('normalizes a display-name recipient for exact alias correlation', async ()
               payload: {
                 headers: [
                   { name: 'To', value: 'Propify Automation <automation+auth-1@gmail.com>' },
+                  { name: 'From', value: 'Propify Mailer <mailer@example.test>' },
                   { name: 'Subject', value: 'Propify password recovery' },
                 ],
                 mimeType: 'text/plain',

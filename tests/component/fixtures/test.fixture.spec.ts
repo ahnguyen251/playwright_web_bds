@@ -41,6 +41,7 @@ test('composes focused authentication dependencies', ({
   expect(profileWorkflow).toBeInstanceOf(ProfileWorkflow);
   expect(typeof executionPolicy.runOtpE2e).toBe('boolean');
   expect(typeof executionPolicy.runMutatingE2e).toBe('boolean');
+  expect(executionPolicy.runProductionRegistrationE2e).toBe(false);
 });
 
 test('disabled OTP provider reports only safe activation guidance', async () => {

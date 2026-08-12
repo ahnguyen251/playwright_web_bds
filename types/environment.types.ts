@@ -5,6 +5,9 @@ export interface GmailConfig {
   readonly clientSecret: string;
   readonly refreshToken: string;
   readonly mailboxAddress: string;
+  readonly otpSender: string;
+  readonly otpSubject: string;
+  readonly otpPattern: string;
 }
 
 export interface MutatingUserConfig {
@@ -22,6 +25,7 @@ export interface EnvironmentConfig {
   readonly ci: boolean;
   readonly runOtpE2e: boolean;
   readonly runMutatingE2e: boolean;
+  readonly runProductionRegistrationE2e: boolean;
   readonly gmail?: GmailConfig;
   readonly mutatingUser?: MutatingUserConfig;
   readonly otpPollIntervalMs: number;

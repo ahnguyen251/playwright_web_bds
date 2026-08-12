@@ -7,7 +7,11 @@ test.describe.configure({ mode: 'serial' });
 test.beforeEach(({ executionPolicy }) => {
   test.skip(
     !executionPolicy.runOtpE2e || !executionPolicy.runMutatingE2e,
-    'Requires Gmail OTP and mutating E2E flags',
+    'Requires Gmail OTP, mutating E2E, and production approval flags',
+  );
+  test.skip(
+    executionPolicy.environment === 'production' && !executionPolicy.runProductionRegistrationE2e,
+    'Requires explicit production registration approval',
   );
 });
 

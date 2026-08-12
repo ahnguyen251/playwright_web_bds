@@ -29,12 +29,18 @@ export const loadEnvironmentConfig = (
     parsed.data.GMAIL_CLIENT_ID &&
     parsed.data.GMAIL_CLIENT_SECRET &&
     parsed.data.GMAIL_REFRESH_TOKEN &&
-    parsed.data.OTP_MAILBOX_ADDRESS
+    parsed.data.OTP_MAILBOX_ADDRESS &&
+    parsed.data.GMAIL_OTP_SENDER &&
+    parsed.data.GMAIL_OTP_SUBJECT &&
+    parsed.data.GMAIL_OTP_PATTERN
       ? Object.freeze({
           clientId: parsed.data.GMAIL_CLIENT_ID,
           clientSecret: parsed.data.GMAIL_CLIENT_SECRET,
           refreshToken: parsed.data.GMAIL_REFRESH_TOKEN,
           mailboxAddress: parsed.data.OTP_MAILBOX_ADDRESS,
+          otpSender: parsed.data.GMAIL_OTP_SENDER,
+          otpSubject: parsed.data.GMAIL_OTP_SUBJECT,
+          otpPattern: parsed.data.GMAIL_OTP_PATTERN,
         })
       : undefined;
 
@@ -58,6 +64,7 @@ export const loadEnvironmentConfig = (
     ci: parsed.data.CI,
     runOtpE2e: parsed.data.RUN_OTP_E2E,
     runMutatingE2e: parsed.data.RUN_MUTATING_E2E,
+    runProductionRegistrationE2e: parsed.data.RUN_PRODUCTION_REGISTRATION_E2E,
     ...(gmail === undefined ? {} : { gmail }),
     ...(mutatingUser === undefined ? {} : { mutatingUser }),
     otpPollIntervalMs: parsed.data.OTP_POLL_INTERVAL_MS,
