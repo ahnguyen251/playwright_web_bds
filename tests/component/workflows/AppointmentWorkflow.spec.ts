@@ -28,6 +28,17 @@ test('resolves and prepares the earliest available appointment options', async (
   await expect(appointmentPage.submitButton).toBeEnabled();
 });
 
+test('submits a prepared appointment through the workflow', async ({ page }) => {
+  const appointmentPage = new AppointmentPage(page);
+  const workflow = new AppointmentWorkflow(new ListingDetailPage(page), appointmentPage);
+
+  await workflow.prepareAppointment(AppointmentDataFactory.create(48));
+  await workflow.submitPreparedAppointment();
+
+  await expect(appointmentPage.successHeading).toBeVisible();
+  await expect(appointmentPage.formHeading).toBeHidden();
+});
+
 test('rejects an unavailable exact appointment option descriptively', async ({ page }) => {
   const workflow = new AppointmentWorkflow(new ListingDetailPage(page), new AppointmentPage(page));
   const appointment = AppointmentDataFactory.create(48, {
