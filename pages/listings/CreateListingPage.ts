@@ -1,30 +1,41 @@
 import type { Page } from '@playwright/test';
 
-import type { ListingData } from '../../types/listing.types';
+import { ROUTES } from '../../constants/routes';
+import type { ListingData, ListingStatus } from '../../types/listing.types';
 import { BasePage } from '../base/BasePage';
-import { HeaderComponent } from '../components/HeaderComponent';
 import { ListingFormComponent } from '../components/ListingFormComponent';
 
 export class CreateListingPage extends BasePage {
-  private readonly header: HeaderComponent;
   private readonly form: ListingFormComponent;
 
   public constructor(page: Page) {
     super(page);
-    this.header = new HeaderComponent(page);
     this.form = new ListingFormComponent(page);
   }
 
   public async open(): Promise<void> {
-    await this.header.openCreateListing();
+    await this.navigate(ROUTES.postListing);
+  }
+
+  public async submit(data: ListingData): Promise<void> {
+    await this.createDraft(data);
+    await this.publish();
   }
 
   public async createDraft(data: ListingData): Promise<void> {
     await this.form.fill(data);
-    await this.form.uploadImages(data.imagePaths);
+    await this.form.uploadMedia(data.media);
   }
 
   public async publish(): Promise<void> {
     await this.form.submit();
+  }
+
+  public async successMessage(): Promise<string> {
+    return this.form.successMessage();
+  }
+
+  public async status(): Promise<ListingStatus> {
+    return this.form.status();
   }
 }

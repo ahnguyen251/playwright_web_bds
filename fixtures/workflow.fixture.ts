@@ -43,8 +43,27 @@ export const workflowTest = pageTest.extend<WorkflowFixtures>({
   profileWorkflow: async ({ profilePage }, use) => use(new ProfileWorkflow(profilePage)),
   authenticationWorkflow: async ({ loginWorkflow, header }, use) =>
     use(new AuthenticationWorkflow(loginWorkflow, header)),
-  listingWorkflow: async ({ listingListPage, createListingPage, myListingsPage }, use) =>
-    use(new ListingWorkflow(listingListPage, createListingPage, myListingsPage)),
+  listingWorkflow: async (
+    {
+      listingListPage,
+      listingDetailPage,
+      createListingPage,
+      editListingPage,
+      myListingsPage,
+      favoritesPage,
+    },
+    use,
+  ) =>
+    use(
+      new ListingWorkflow(
+        listingListPage,
+        listingDetailPage,
+        createListingPage,
+        editListingPage,
+        myListingsPage,
+        favoritesPage,
+      ),
+    ),
   appointmentWorkflow: async ({ listingDetailPage, appointmentPage }, use) =>
     use(new AppointmentWorkflow(listingDetailPage, appointmentPage)),
   transactionWorkflow: async ({ transactionPage }, use) =>

@@ -69,5 +69,6 @@ export const loadEnvironmentConfig = (
     ...(mutatingUser === undefined ? {} : { mutatingUser }),
     otpPollIntervalMs: parsed.data.OTP_POLL_INTERVAL_MS,
     otpTimeoutMs: parsed.data.OTP_TIMEOUT_MS,
+    allowMutatingE2E: parsed.data.ALLOW_MUTATING_E2E,
   });
 };

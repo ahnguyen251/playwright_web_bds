@@ -33,6 +33,28 @@ test('selects the base URL for the requested environment', () => {
   expect(config.ci).toBe(false);
 });
 
+test('tắt E2E có thay đổi theo mặc định', () => {
+  expect(loadEnvironmentConfig(validEnvironment).allowMutatingE2E).toBe(false);
+});
+
+test('chỉ bật E2E có thay đổi khi cờ có giá trị chính xác là true', () => {
+  expect(
+    loadEnvironmentConfig({
+      ...validEnvironment,
+      ALLOW_MUTATING_E2E: 'true',
+    }).allowMutatingE2E,
+  ).toBe(true);
+});
+
+test('từ chối giá trị cờ E2E có thay đổi không hợp lệ', () => {
+  expect(() =>
+    loadEnvironmentConfig({
+      ...validEnvironment,
+      ALLOW_MUTATING_E2E: 'TRUE',
+    }),
+  ).toThrow(/ALLOW_MUTATING_E2E/);
+});
+
 test('rejects an unsupported environment before browser launch', () => {
   expect(() =>
     loadEnvironmentConfig({

@@ -33,6 +33,7 @@ export const environmentSchema = z
     RUN_OTP_E2E: booleanFlag,
     RUN_MUTATING_E2E: booleanFlag,
     RUN_PRODUCTION_REGISTRATION_E2E: booleanFlag,
+    ALLOW_MUTATING_E2E: booleanFlag,
     GMAIL_CLIENT_ID: z.string().trim().min(1).optional(),
     GMAIL_CLIENT_SECRET: z.string().trim().min(1).optional(),
     GMAIL_REFRESH_TOKEN: z.string().trim().min(1).optional(),

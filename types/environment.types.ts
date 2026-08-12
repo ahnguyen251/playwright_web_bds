@@ -30,4 +30,5 @@ export interface EnvironmentConfig {
   readonly mutatingUser?: MutatingUserConfig;
   readonly otpPollIntervalMs: number;
   readonly otpTimeoutMs: number;
+  readonly allowMutatingE2E: boolean;
 }

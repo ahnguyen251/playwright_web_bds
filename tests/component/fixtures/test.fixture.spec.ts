@@ -3,6 +3,7 @@ import type { BrowserContext } from '@playwright/test';
 import { DisabledOtpProvider } from '../../../fixtures/auth.fixture';
 import { ForgotPasswordPage } from '../../../pages/authentication/ForgotPasswordPage';
 import { AuthenticationWorkflow } from '../../../workflows/authentication/AuthenticationWorkflow';
+import { ListingWorkflow } from '../../../workflows/listings/ListingWorkflow';
 import { LoginPage } from '../../../pages/authentication/LoginPage';
 import { RegisterPage } from '../../../pages/authentication/RegisterPage';
 import { ProfilePage } from '../../../pages/profile/ProfilePage';
@@ -10,6 +11,7 @@ import { LoginWorkflow } from '../../../workflows/authentication/LoginWorkflow';
 import { PasswordRecoveryWorkflow } from '../../../workflows/authentication/PasswordRecoveryWorkflow';
 import { ProfileWorkflow } from '../../../workflows/authentication/ProfileWorkflow';
 import { RegistrationWorkflow } from '../../../workflows/authentication/RegistrationWorkflow';
+import { FavoritesPage } from '../../../pages/listings/FavoritesPage';
 import { expect, test } from '../../../fixtures/test.fixture';
 
 test('BaseTest composition provides real Page Objects and Workflows', ({
@@ -90,4 +92,14 @@ test.describe.serial('named browser context lifecycle', () => {
 
     await expect(namedContext.newPage()).rejects.toThrow();
   });
+});
+
+test('cung cấp đầy đủ Page, Workflow và bộ phân giải trạng thái tin kiểm soát', ({
+  favoritesPage,
+  listingWorkflow,
+  controlledListing,
+}) => {
+  expect(favoritesPage).toBeInstanceOf(FavoritesPage);
+  expect(listingWorkflow).toBeInstanceOf(ListingWorkflow);
+  expect(controlledListing).toBeInstanceOf(Function);
 });

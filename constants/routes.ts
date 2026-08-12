@@ -6,6 +6,7 @@ export const ROUTES = Object.freeze({
   profile: '/profile',
   favorites: '/profile?tab=favorites',
   viewedListings: '/profile?tab=viewed',
+  postListing: '/post-listing',
   myListings: '/profile?tab=listings',
   appointments: '/profile?tab=appointments',
   transactions: '/profile?tab=transactions',

@@ -254,3 +254,55 @@ Khi thêm Chat, Payment, Notification, Admin, API, Visual hoặc AI testing:
 
 Gmail hiện chỉ là adapter đầu tiên của `OtpProvider`; có thể thay bằng IMAP, test-mail service hoặc API
 nội bộ mà không sửa Page Object hay test scenario.
+
+## Listings module
+
+Module Tin đăng bao phủ tạo, xem danh sách, xem chi tiết, chỉnh sửa, gỡ hiển thị, tìm kiếm, lọc và
+yêu thích theo Page Object Model. Tiêu đề và nội dung nghiệp vụ của test case dùng tiếng Việt; tên
+file, identifier và API contract giữ bằng tiếng Anh để phù hợp kiến trúc TypeScript hiện có.
+
+Chạy nhóm chỉ đọc trên Chromium (không cần cờ mutation):
+
+```powershell
+Remove-Item Env:ALLOW_MUTATING_E2E -ErrorAction SilentlyContinue
+npx playwright test tests/listings/*.read-only.spec.ts --project=chromium
+```
+
+Các test cần trạng thái tin cụ thể đọc tham chiếu `LISTING_*_ID` và `LISTING_*_TITLE` từ môi trường.
+Nếu staging/test chưa seed alias tương ứng, fixture sẽ skip có lý do thay vì chọn ngẫu nhiên một tin.
+Các cặp `OWNED_PUBLISHED_CANCEL` và `OWNED_PUBLISHED_WITHDRAW` phải là hai bản ghi `Đang đăng`
+riêng biệt; bản ghi xác nhận gỡ cần được seed lại trước lần chạy opt-in tiếp theo.
+
+### Cổng an toàn cho E2E có thay đổi dữ liệu
+
+Mọi spec `*.mutating.spec.ts` chỉ import `mutatingTest` từ `fixtures/mutating.fixture.ts`. Fixture tự
+động này tập trung toàn bộ kiểm tra môi trường và skip test trước Page action, trừ khi giá trị chính
+xác `ALLOW_MUTATING_E2E=true` được cung cấp. Không sao chép điều kiện môi trường vào từng spec.
+
+Mặc định an toàn, kể cả khi `TEST_ENV=production`:
+
+```powershell
+Remove-Item Env:ALLOW_MUTATING_E2E -ErrorAction SilentlyContinue
+npx playwright test tests/listings/*.mutating.spec.ts --project=chromium
+```
+
+Lệnh trên phải báo toàn bộ kịch bản mutating là `skipped`. Chỉ bật opt-in cho staging/test đã được
+phê duyệt, có dữ liệu seed riêng và chính sách khôi phục:
+
+```powershell
+$env:TEST_ENV='staging'
+$env:ALLOW_MUTATING_E2E='true'
+npx playwright test tests/listings/*.mutating.spec.ts --project=chromium
+```
+
+Không chạy lệnh opt-in khi target hiện tại là production. Framework đã sẵn sàng cho `dev`, `staging`
+và `production` thông qua URL theo môi trường, nhưng cờ opt-in vẫn là quyết định chủ động độc lập.
+
+Theo nghiệp vụ, “Gỡ tin đăng” chỉ chuyển trạng thái sang `Đã gỡ` và ẩn tin khỏi danh sách công khai.
+Test xác nhận hàng/bản ghi vẫn tồn tại; framework không thực hiện xóa vật lý trong cơ sở dữ liệu.
+
+## Safety
+
+Test Listings chỉ đọc chạy mặc định. Các luồng tạo, sửa, gỡ và yêu thích được bảo vệ bởi cổng an
+toàn tập trung nêu trên. Appointment, Payment và Transaction mutation vẫn cần môi trường kiểm thử
+và chính sách dọn dữ liệu riêng trước khi được tự động hóa trên target có ghi dữ liệu.
