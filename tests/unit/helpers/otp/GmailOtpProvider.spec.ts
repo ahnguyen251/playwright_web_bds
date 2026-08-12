@@ -82,42 +82,31 @@ const baseConfig = {
   pollIntervalMs: 2_000,
 } satisfies GmailOtpConfig;
 
-test('filters by receive time, identity, sender, and subject before selecting the newest OTP', async () => {
+test('queries Sent and selects the newest exact-header message without body identity', async () => {
   const after = requestedAfter.getTime();
   const client = new FakeGmailClient(
     new Map([
       [
         'old',
-        message('old', after, `${query.email} — Verification code: 000001`, {
-          from: 'otp@example.test',
-          subject: 'Verify registration',
-        }),
-      ],
-      [
-        'other-email',
-        message('other-email', after + 4_000, 'other@example.test — Verification code: 000002', {
-          from: 'otp@example.test',
-          subject: 'Verify registration',
-        }),
-      ],
-      [
-        'wrong-sender',
-        message('wrong-sender', after + 5_000, `${query.email} — Verification code: 000003`, {
-          from: 'attacker@example.test',
+        message('old', after, 'Verification code: 000001', {
+          from: 'Propify <otp@example.test>',
+          to: query.email,
           subject: 'Verify registration',
         }),
       ],
       [
         'newest-valid',
-        message('newest-valid', after + 3_000, `${query.email} — Verification code: 482108`, {
-          from: 'Propify OTP <otp@example.test>',
-          subject: 'Verify registration now',
+        message('newest-valid', after + 3_000, 'Verification code: 482108', {
+          from: 'Propify <OTP@example.test>',
+          to: `Automation User <${query.email.toUpperCase()}>`,
+          subject: '  Verify registration  ',
         }),
       ],
       [
         'older-valid',
         message('older-valid', after + 1_000, `${query.email} — Verification code: 111111`, {
           from: 'otp@example.test',
+          to: query.email,
           subject: 'Verify registration',
         }),
       ],
@@ -126,15 +115,131 @@ test('filters by receive time, identity, sender, and subject before selecting th
   const clock = new FakeClock(0);
   const provider = new GmailOtpProvider(
     client,
-    { ...baseConfig, sender: 'otp@example.test', subject: 'Verify registration' },
+    { ...baseConfig, sender: 'otp@example.test' },
     clock,
   );
 
   await expect(provider.getOtp(query)).resolves.toBe('482108');
   expect(client.queries).toEqual([
-    'after:2026/08/11 from:otp@example.test subject:"Verify registration"',
+    'in:sent after:2026/08/11 to:"registration+run-1@example.test" subject:"Verify registration" from:"otp@example.test"',
   ]);
   expect(clock.sleeps).toEqual([]);
+});
+
+test('rejects different and substring-collision To addresses', async () => {
+  const after = requestedAfter.getTime();
+  const client = new FakeGmailClient(
+    new Map([
+      [
+        'collision',
+        message('collision', after + 3_000, `${query.email} Verification code: 100003`, {
+          to: `${query.email}.invalid`,
+          subject: 'Verify registration',
+        }),
+      ],
+      [
+        'other',
+        message('other', after + 2_000, `${query.email} Verification code: 100002`, {
+          to: 'other@example.test',
+          subject: 'Verify registration',
+        }),
+      ],
+      [
+        'valid',
+        message('valid', after + 1_000, 'Verification code: 654321', {
+          to: query.email,
+          subject: 'Verify registration',
+        }),
+      ],
+    ]),
+  );
+
+  await expect(
+    new GmailOtpProvider(client, baseConfig, new FakeClock(0)).getOtp(query),
+  ).resolves.toBe('654321');
+});
+
+test('requires the exact trimmed registration subject', async () => {
+  const after = requestedAfter.getTime();
+  const client = new FakeGmailClient(
+    new Map([
+      [
+        'partial',
+        message('partial', after + 3_000, `${query.email} Verification code: 100003`, {
+          to: query.email,
+          subject: 'Verify registration now',
+        }),
+      ],
+      [
+        'password-reset',
+        message('password-reset', after + 2_000, `${query.email} Verification code: 100002`, {
+          to: query.email,
+          subject: 'Reset password',
+        }),
+      ],
+      [
+        'valid',
+        message('valid', after + 1_000, 'Verification code: 654321', {
+          to: query.email,
+          subject: ' Verify registration ',
+        }),
+      ],
+    ]),
+  );
+
+  await expect(
+    new GmailOtpProvider(client, baseConfig, new FakeClock(0)).getOtp(query),
+  ).resolves.toBe('654321');
+});
+
+test('requires an exact optional sender address', async () => {
+  const after = requestedAfter.getTime();
+  const client = new FakeGmailClient(
+    new Map([
+      [
+        'sender-collision',
+        message('sender-collision', after + 2_000, `${query.email} Verification code: 100002`, {
+          from: 'otp@example.test.invalid',
+          to: query.email,
+          subject: 'Verify registration',
+        }),
+      ],
+      [
+        'valid',
+        message('valid', after + 1_000, 'Verification code: 654321', {
+          from: 'Propify <otp@example.test>',
+          to: query.email,
+          subject: 'Verify registration',
+        }),
+      ],
+    ]),
+  );
+
+  await expect(
+    new GmailOtpProvider(
+      client,
+      { ...baseConfig, sender: 'OTP@example.test' },
+      new FakeClock(0),
+    ).getOtp(query),
+  ).resolves.toBe('654321');
+});
+
+test('accepts the exact recipient in a multiple-address To header', async () => {
+  const client = new FakeGmailClient(
+    new Map([
+      [
+        'multiple-to',
+        message('multiple-to', requestedAfter.getTime() + 1_000, 'Verification code: 654321', {
+          to: `Other <other@example.test>, Registration <${query.email}>`,
+          subject: 'Verify registration',
+        }),
+      ],
+    ]),
+  );
+
+  await expect(
+    new GmailOtpProvider(client, baseConfig, new FakeClock(0)).getOtp(query),
+  ).resolves.toBe('654321');
 });
 
 test('fails immediately when the newest matching email violates the OTP contract', async () => {
@@ -143,13 +248,15 @@ test('fails immediately when the newest matching email violates the OTP contract
     new Map([
       [
         'older-valid',
-        message('older-valid', after + 1_000, `${query.email} Verification code: 111111`, {
+        message('older-valid', after + 1_000, 'Verification code: 111111', {
+          to: query.email,
           subject: 'Verify registration',
         }),
       ],
       [
         'newest-invalid',
-        message('newest-invalid', after + 2_000, `${query.email} reference 999999`, {
+        message('newest-invalid', after + 2_000, 'Reference 999999', {
+          to: query.email,
           subject: 'Verify registration',
         }),
       ],

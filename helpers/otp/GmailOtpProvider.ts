@@ -23,6 +23,21 @@ const maskEmail = (email: string): string => {
 
 const quoteSearchValue = (value: string): string => `"${value.replace(/["\\]/g, '\\$&')}"`;
 
+const normalizeAddress = (value: string): string => value.trim().toLowerCase();
+
+const extractAddresses = (header: string | undefined): string[] => {
+  if (header === undefined) return [];
+
+  return header
+    .split(',')
+    .map((part) => /<([^<>]+)>/.exec(part)?.[1] ?? part)
+    .map(normalizeAddress)
+    .filter((address) => /^[^\s@<>]+@[^\s@<>]+$/.test(address));
+};
+
+const hasExactAddress = (header: string | undefined, expected: string): boolean =>
+  extractAddresses(header).includes(normalizeAddress(expected));
+
 export class GmailOtpProvider implements OtpProvider {
   public constructor(
     private readonly client: GmailClient,
@@ -37,8 +52,7 @@ export class GmailOtpProvider implements OtpProvider {
       const messages = await this.loadCandidates(query);
       const matching = messages
         .filter((candidate) => candidate.internalDate > query.requestedAfter.getTime())
-        .filter((candidate) => this.matchesConfiguredHeaders(candidate))
-        .filter((candidate) => candidate.body.includes(query.email))
+        .filter((candidate) => this.matchesCorrelation(candidate, query))
         .sort((left, right) => right.internalDate - left.internalDate);
 
       const newest = matching[0];
@@ -68,19 +82,19 @@ export class GmailOtpProvider implements OtpProvider {
   private buildSearchQuery(query: OtpQuery): string {
     const requestDate = query.requestedAfter.toISOString().slice(0, 10).replaceAll('-', '/');
     return [
+      'in:sent',
       `after:${requestDate}`,
-      ...(this.config.sender === undefined ? [] : [`from:${this.config.sender}`]),
-      `subject:${quoteSearchValue(this.config.subject)}`,
+      `to:${quoteSearchValue(query.email.trim())}`,
+      `subject:${quoteSearchValue(this.config.subject.trim())}`,
+      ...(this.config.sender === undefined
+        ? []
+        : [`from:${quoteSearchValue(this.config.sender.trim())}`]),
     ].join(' ');
   }
 
-  private matchesConfiguredHeaders(message: ParsedGmailMessage): boolean {
-    if (this.config.sender !== undefined && !message.from?.includes(this.config.sender)) {
-      return false;
-    }
-    if (!message.subject?.includes(this.config.subject)) {
-      return false;
-    }
-    return true;
+  private matchesCorrelation(message: ParsedGmailMessage, query: OtpQuery): boolean {
+    if (!hasExactAddress(message.to, query.email)) return false;
+    if (message.subject?.trim() !== this.config.subject.trim()) return false;
+    return this.config.sender === undefined || hasExactAddress(message.from, this.config.sender);
   }
 }
