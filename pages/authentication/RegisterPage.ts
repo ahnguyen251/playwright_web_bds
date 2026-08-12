@@ -94,6 +94,10 @@ export class RegisterPage extends BasePage {
   }
 
   public async enterOtp(code: string): Promise<void> {
+    if (!/^\d{6}$/.test(code)) {
+      throw new Error('Expected a six-digit OTP.');
+    }
+
     const otpInputCount = await this.otpInputs.count();
     if (otpInputCount !== 6) {
       throw new Error(`Expected six OTP inputs, found ${String(otpInputCount)}.`);
