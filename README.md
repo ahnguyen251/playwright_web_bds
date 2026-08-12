@@ -143,29 +143,36 @@ Required when `RUN_PRODUCTION_REGISTRATION_E2E=true`:
 | `REGISTRATION_PASSWORD`       | Local secret for the unique production registration identity.   |
 | `GMAIL_CLIENT_ID`             | Google OAuth client identifier.                                 |
 | `GMAIL_CLIENT_SECRET`         | Google OAuth client secret.                                     |
-| `GMAIL_REFRESH_TOKEN`         | Offline OAuth token for the dedicated OTP mailbox.              |
+| `GMAIL_REFRESH_TOKEN`         | Offline OAuth token for the application sender Gmail mailbox.   |
 | `GMAIL_OTP_PATTERN`           | Verified regex source containing a named `(?<otp>...)` capture. |
+| `GMAIL_OTP_SUBJECT`           | Exact registration-email subject used for strict correlation.   |
 
 Optional Gmail filters and polling controls:
 
-| Variable                     | Default | Purpose                                                   |
-| ---------------------------- | ------- | --------------------------------------------------------- |
-| `GMAIL_OTP_SENDER`           | unset   | Stable sender filter, rechecked against decoded headers.  |
-| `GMAIL_OTP_SUBJECT`          | unset   | Stable subject filter, rechecked against decoded headers. |
-| `GMAIL_OTP_TIMEOUT_MS`       | `60000` | Maximum bounded mailbox polling time.                     |
-| `GMAIL_OTP_POLL_INTERVAL_MS` | `2000`  | Delay between mailbox polling attempts.                   |
+| Variable                     | Default | Purpose                                                  |
+| ---------------------------- | ------- | -------------------------------------------------------- |
+| `GMAIL_OTP_SENDER`           | unset   | Optional exact sender/alias address rechecked in `From`. |
+| `GMAIL_OTP_TIMEOUT_MS`       | `60000` | Maximum bounded Sent-mailbox polling time.               |
+| `GMAIL_OTP_POLL_INTERVAL_MS` | `2000`  | Delay between Sent-mailbox polling attempts.             |
 
 Gmail is accessed through the REST API rather than Gmail's browser UI. This avoids coupling the
-test to Gmail page layout, browser login state, 2FA prompts, cookies, and storage state. Create the
-OAuth client and refresh token outside this repository and grant only the
-`https://www.googleapis.com/auth/gmail.readonly` scope. Store the client secret and refresh token in
-a local ignored `.env` or CI secret store. Never commit them, place them in test data, attach them to
-reports, or print access tokens, OTP values, or email bodies in logs.
+test to Gmail page layout, browser login state, 2FA prompts, cookies, and storage state. The OAuth
+client and refresh token must authorize the application sender account whose Sent folder contains
+registration OTP messages. Create them outside this repository and grant only the
+`https://www.googleapis.com/auth/gmail.readonly` scope. That scope can read the authorized sender
+mailbox, so prefer a dedicated test sender when the product environment supports one. Store the
+client secret and refresh token in a local ignored `.env` or CI secret store. Never commit them,
+place them in test data, attach them to reports, or print access tokens, OTP values, or email bodies
+in logs.
 
 The Gmail adapter performs read-only list/get operations. It never labels, marks read, deletes, or
-modifies messages. It considers only messages received after registration submission, correlates the
-exact generated email, applies configured sender/subject filters when supplied, and extracts only the
-configured named OTP capture.
+modifies messages. It searches `in:sent` using the generated recipient, required registration
+subject, and submission date as coarse filters. Every loaded candidate is then rechecked using
+`internalDate > requestedAfter`, an exact case-insensitive address from the root `To` header, the
+exact trimmed registration subject, and the optional exact address from the root `From` header.
+The message body does not need to contain the registered email. `GMAIL_OTP_SUBJECT` prevents a
+password-reset OTP from being accepted for registration, and the configured named `otp` capture
+must return exactly six digits.
 
 ## Step 4 — Base classes
 
@@ -235,7 +242,8 @@ The `framework` project also executes focused unit and browser-component specifi
 - fixture composition;
 - login-modal actions and forgot-password navigation;
 - registration configuration, unique registration identity generation, and deployed form contracts;
-- Gmail OAuth/REST contracts, MIME parsing, exact OTP extraction, correlation, and bounded polling;
+- Gmail OAuth/REST contracts, MIME parsing, Sent-mailbox query, exact header correlation, six-digit
+  OTP extraction, and bounded polling;
 - registration Workflow orchestration, lazy fixture composition, and the explicit OTP accessibility
   blocker;
 - atomic multi-file selection in the reusable listing form component.
