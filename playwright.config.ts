@@ -20,7 +20,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: environment.ci,
   retries: environment.ci ? 2 : 0,
-  ...(environment.ci ? { workers: 2 } : {}),
+  workers: 2,
   timeout: TIMEOUTS.test,
   expect: {
     timeout: TIMEOUTS.assertion,
@@ -76,7 +76,6 @@ export default defineConfig({
       name: 'firefox',
       testMatch: endToEndTestMatch,
       testIgnore: normalBrowserTestIgnore,
-      workers: 2,
       dependencies: ['auth-setup'],
       use: {
         ...devices['Desktop Firefox'],
