@@ -22,6 +22,7 @@ export interface EnvironmentConfig {
   readonly apiBaseUrl?: string;
   readonly defaultUserEmail: string;
   readonly defaultUserPassword: string;
+  readonly appointmentListingId?: number;
   readonly ci: boolean;
   readonly runOtpE2e: boolean;
   readonly runMutatingE2e: boolean;

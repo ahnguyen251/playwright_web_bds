@@ -1,8 +1,4 @@
 {
-  "listingId": 41,
-  "contactName": "Automation User",
-  "phone": "0900000000",
-  "date": "31/12/2026",
-  "timeSlot": "08:00 - 09:00",
-  "note": "Non-destructive appointment template data"
+  "fullName": "Automation Appointment",
+  "note": "Appointment created by controlled Playwright automation"
 }

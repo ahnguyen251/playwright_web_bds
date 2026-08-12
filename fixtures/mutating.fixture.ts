@@ -6,29 +6,29 @@ interface MutationSafetyFixture {
   readonly mutationSafety: undefined;
 }
 
-interface ListingMutationPolicy {
+interface MutationPolicy {
   readonly environment: TestEnvironment;
   readonly allowMutatingE2E: boolean;
   readonly runProductionMutatingE2e: boolean;
 }
 
-export const listingMutationSkipReason = (
-  policy: ListingMutationPolicy,
-): string | undefined => {
+export const mutationSkipReason = (policy: MutationPolicy): string | undefined => {
   if (!policy.allowMutatingE2E) {
     return 'Mutating E2E is disabled. Set ALLOW_MUTATING_E2E=true only for an approved target.';
   }
   if (policy.environment === 'production' && !policy.runProductionMutatingE2e) {
-    return 'Production listing mutation is disabled. Set RUN_PRODUCTION_MUTATING_E2E=true only with explicit production approval.';
+    return 'Production mutation is disabled. Set RUN_PRODUCTION_MUTATING_E2E=true only with explicit production approval.';
   }
   return undefined;
 };
+
+export const listingMutationSkipReason = mutationSkipReason;
 
 export const mutatingTest = base.extend<MutationSafetyFixture>({
   mutationSafety: [
     async ({}, use, testInfo) => {
       const configuration = loadEnvironmentConfig();
-      const skipReason = listingMutationSkipReason(configuration);
+      const skipReason = mutationSkipReason(configuration);
 
       testInfo.skip(skipReason !== undefined, skipReason);
 

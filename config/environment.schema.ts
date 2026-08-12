@@ -6,6 +6,11 @@ const absoluteUrl = z
   .pipe(z.url())
   .transform((value) => new URL(value).toString());
 
+const optionalPositiveInteger = z.preprocess(
+  (value) => (value === undefined || value === '' ? undefined : value),
+  z.coerce.number().int().positive().optional(),
+);
+
 const booleanFlag = z
   .enum(['true', 'false'])
   .default('false')
@@ -29,6 +34,7 @@ export const environmentSchema = z
     API_BASE_URL: absoluteUrl.optional(),
     DEFAULT_USER_EMAIL: z.string().trim().pipe(z.email()),
     DEFAULT_USER_PASSWORD: z.string().min(1),
+    APPOINTMENT_LISTING_ID: optionalPositiveInteger,
     CI: booleanFlag,
     RUN_OTP_E2E: booleanFlag,
     RUN_MUTATING_E2E: booleanFlag,
@@ -118,8 +124,7 @@ export const environmentSchema = z
       context.addIssue({
         code: 'custom',
         path: ['RUN_PRODUCTION_MUTATING_E2E'],
-        message:
-          'RUN_PRODUCTION_MUTATING_E2E=true is required for listing mutations in production',
+        message: 'RUN_PRODUCTION_MUTATING_E2E=true is required for listing mutations in production',
       });
     }
   });

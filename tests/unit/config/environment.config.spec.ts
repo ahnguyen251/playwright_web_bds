@@ -31,6 +31,25 @@ test('selects the base URL for the requested environment', () => {
   expect(config.environment).toBe('dev');
   expect(config.baseUrl).toBe('https://dev.example.test/');
   expect(config.ci).toBe(false);
+  expect(config.appointmentListingId).toBeUndefined();
+});
+
+test('parses a controlled appointment listing reference', () => {
+  const config = loadEnvironmentConfig({
+    ...validEnvironment,
+    APPOINTMENT_LISTING_ID: '48',
+  });
+
+  expect(config.appointmentListingId).toBe(48);
+});
+
+test('rejects an invalid appointment listing id', () => {
+  expect(() =>
+    loadEnvironmentConfig({
+      ...validEnvironment,
+      APPOINTMENT_LISTING_ID: '0',
+    }),
+  ).toThrow(/APPOINTMENT_LISTING_ID/);
 });
 
 test('tắt E2E có thay đổi theo mặc định', () => {

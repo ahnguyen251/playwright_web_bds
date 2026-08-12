@@ -2,7 +2,7 @@ import type { Locator, Page } from '@playwright/test';
 
 import { ROUTES } from '../../constants/routes';
 import type {
-  AppointmentData,
+  AppointmentContactData,
   AppointmentStatus,
   AppointmentView,
 } from '../../types/appointment.types';
@@ -17,22 +17,56 @@ const statusLabels: Readonly<Record<AppointmentStatus, string>> = {
   expired: 'Quá hạn',
 };
 
+const normalizeOptionLabels = async (options: Locator): Promise<readonly string[]> =>
+  options.evaluateAll((elements) =>
+    elements.map((element) => {
+      const childSegments = [...element.children]
+        .map((child) => child.textContent.trim())
+        .filter(Boolean);
+      const text = childSegments.length > 0 ? childSegments.join(' ') : element.textContent;
+      return text.replace(/\s+/g, ' ').trim();
+    }),
+  );
+
 export class AppointmentPage extends BasePage {
-  private readonly contactNameInput: Locator;
+  public readonly formHeading: Locator;
+  public readonly submitButton: Locator;
+  public readonly successHeading: Locator;
+  public readonly nameRequiredError: Locator;
+  public readonly phoneInvalidError: Locator;
+  public readonly emailInvalidError: Locator;
+
+  private readonly fullNameInput: Locator;
   private readonly phoneInput: Locator;
-  private readonly dateInput: Locator;
-  private readonly timeSlotSelect: Locator;
+  private readonly emailInput: Locator;
   private readonly noteInput: Locator;
-  private readonly submitButton: Locator;
+  private readonly dateOptions: Locator;
+  private readonly timeSlotOptions: Locator;
 
   public constructor(page: Page) {
     super(page);
-    this.contactNameInput = page.getByLabel('Họ và tên');
-    this.phoneInput = page.getByLabel('Số điện thoại');
-    this.dateInput = page.getByLabel('Ngày xem nhà');
-    this.timeSlotSelect = page.getByLabel('Khung giờ');
-    this.noteInput = page.getByLabel('Ghi chú');
-    this.submitButton = page.getByRole('button', { name: 'Đặt lịch', exact: true });
+    this.formHeading = page.getByRole('heading', { name: 'Đặt lịch xem nhà', exact: true });
+    this.submitButton = page.getByRole('button', { name: 'Đặt lịch ngay', exact: true });
+    this.successHeading = page.getByRole('heading', {
+      name: 'Đặt lịch thành công!',
+      exact: true,
+    });
+    this.nameRequiredError = page.getByText('Vui lòng nhập họ và tên.', { exact: true });
+    this.phoneInvalidError = page.getByText(
+      'Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam (VD: 0901234567).',
+      { exact: true },
+    );
+    this.emailInvalidError = page.getByText('Email phải có đuôi @gmail.com.', { exact: true });
+    this.fullNameInput = page.getByPlaceholder('Họ và tên *', { exact: true });
+    this.phoneInput = page.getByPlaceholder('Số điện thoại *', { exact: true });
+    this.emailInput = page.getByPlaceholder('Email *', { exact: true });
+    this.noteInput = page.getByPlaceholder('Ghi chú', { exact: true });
+    this.dateOptions = page.getByRole('button', {
+      name: /^(?:Hôm nay|Chủ nhật|Thứ [2-7]) \d{1,2} Tháng \d{1,2}$/,
+    });
+    this.timeSlotOptions = page.getByRole('button', {
+      name: /^\d{2}:\d{2} - \d{2}:\d{2}$/,
+    });
   }
 
   public async open(): Promise<void> {
@@ -52,11 +86,29 @@ export class AppointmentPage extends BasePage {
     await this.page.getByRole('button', { name: statusLabels[status], exact: true }).click();
   }
 
-  public async fillAppointment(data: AppointmentData): Promise<void> {
-    await this.contactNameInput.fill(data.contactName);
+  public async availableDateLabels(): Promise<readonly string[]> {
+    return normalizeOptionLabels(this.dateOptions);
+  }
+
+  public async availableTimeSlotLabels(): Promise<readonly string[]> {
+    return normalizeOptionLabels(this.timeSlotOptions);
+  }
+
+  public async selectDate(label: string): Promise<void> {
+    await this.page.getByRole('button', { name: label, exact: true }).click();
+  }
+
+  public async selectTimeSlot(label: string): Promise<void> {
+    await this.page.getByRole('button', { name: label, exact: true }).click();
+  }
+
+  public async fillContact(data: AppointmentContactData): Promise<void> {
+    await this.fullNameInput.fill(data.fullName);
+    await this.fullNameInput.blur();
     await this.phoneInput.fill(data.phone);
-    await this.dateInput.fill(data.date);
-    await this.timeSlotSelect.selectOption({ label: data.timeSlot });
+    await this.phoneInput.blur();
+    await this.emailInput.fill(data.email);
+    await this.emailInput.blur();
     if (data.note !== undefined) {
       await this.noteInput.fill(data.note);
     }

@@ -7,6 +7,8 @@ Authentication, Profile, Listings, Appointments và Transactions; không triển
 Module Authentication hiện có Login, Register, Gmail OTP, Forgot Password, xem/chỉnh sửa Profile
 và Change Password. Mặc định framework chỉ chạy các kịch bản không thay đổi dữ liệu. Các hành trình
 tạo tài khoản hoặc thay đổi tài khoản phải được bật rõ ràng bằng chính sách thực thi ở phần dưới.
+Module Appointment Booking có workflow, dữ liệu độc lập, test truy vết và cổng mutation tập trung;
+Admin và các thao tác phá hủy dữ liệu production nằm ngoài phạm vi hiện tại.
 
 ## Công nghệ
 
@@ -102,7 +104,16 @@ Với mặc định này, các suite Login/Profile/validation không thay đổi
 `*.mutating.spec.ts` tự `skip`. Không được coi một lần chạy chỉ có kết quả skip là bằng chứng rằng
 registration, password recovery, profile update hoặc password change đã chạy thành công thực tế.
 
-Một kịch bản mutating chỉ được phép chạy khi **đồng thời** thỏa cả hai điều kiện:
+Appointment E2E scenarios require a controlled, published listing owned by another user:
+
+```dotenv
+APPOINTMENT_LISTING_ID=replace-with-a-resettable-non-production-listing-id
+```
+
+`APPOINTMENT_LISTING_ID` is optional so unit/component tests and test discovery remain available
+without controlled backend state.
+
+Một kịch bản mutating Authentication chỉ được phép chạy khi **đồng thời** thỏa cả hai điều kiện:
 
 ```dotenv
 RUN_OTP_E2E=true
@@ -311,8 +322,55 @@ opt-in vì giao diện không cung cấp thao tác khôi phục trạng thái `�
 Theo nghiệp vụ, “Gỡ tin đăng” chỉ chuyển trạng thái sang `Đã gỡ` và ẩn tin khỏi danh sách công khai.
 Test xác nhận hàng/bản ghi vẫn tồn tại; framework không thực hiện xóa vật lý trong cơ sở dữ liệu.
 
+## Appointment Booking module
+
+The Appointment module implements the UC-18 journey through
+`AppointmentWorkflow.prepareAppointment()` and `submitPreparedAppointment()`. It discovers the
+currently available semantic date/time buttons and selects either an exact option or the earliest
+available option, so no expiring date is stored in source or JSON.
+
+Automated Test Case IDs:
+
+- `APPOINTMENT-001`: create an appointment successfully (mutating, guarded);
+- `APPOINTMENT-002`: require an appointment time;
+- `APPOINTMENT-003`: require a contact name;
+- `APPOINTMENT-004`: validate a Vietnamese phone number;
+- `APPOINTMENT-005`: require a Gmail email address.
+
+Discover all appointment tests without executing them:
+
+```bash
+npx playwright test tests/appointments --list
+```
+
+Run deterministic unit/component coverage:
+
+```bash
+npx playwright test tests/unit tests/component --project=framework
+```
+
+Run read-only appointment validation against a configured controlled listing:
+
+```bash
+npx playwright test tests/appointments/appointment-validation.read-only.spec.ts --project=chromium
+```
+
+Run the create scenario only on an explicitly selected dev/staging environment:
+
+```powershell
+$env:TEST_ENV='staging'
+$env:ALLOW_MUTATING_E2E='true'
+npx playwright test tests/appointments/appointment-booking.mutating.spec.ts --project=mutating-chromium
+```
+
+Do not use that opt-in command against production. Appointment mutation shares the centralized
+policy fixture with Listings; production additionally requires `RUN_PRODUCTION_MUTATING_E2E=true`.
+All appointment mutation runs are isolated in the serialized, single-worker `mutating-chromium`
+project and are excluded from normal browser projects.
+
 ## Safety
 
 Test Listings chỉ đọc chạy mặc định. Các luồng tạo, sửa, gỡ và yêu thích được bảo vệ bởi cổng an
-toàn tập trung nêu trên. Appointment, Payment và Transaction mutation vẫn cần môi trường kiểm thử
-và chính sách dọn dữ liệu riêng trước khi được tự động hóa trên target có ghi dữ liệu.
+toàn tập trung nêu trên. Appointment creation cũng dùng cổng này và chỉ chạy trong project mutation
+tuần tự; tin cấu hình phải reset được và không có lịch hẹn chưa hoàn tất cho người dùng kiểm thử.
+Payment và Transaction mutation vẫn cần môi trường kiểm thử cùng chính sách dọn dữ liệu riêng.

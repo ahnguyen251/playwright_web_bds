@@ -153,7 +153,47 @@ biệt. Chúng được giữ trong metadata để không mất truy vết và k
 Khi staging/test cung cấp seed hoặc fault injection ổn định, cập nhật `playwrightTest` sang file bằng
 chứng tương ứng và giữ nguyên mã kịch bản.
 
+## Appointment Booking - UC-18
+
+| Test Case ID      | Requirement / observable rule                                                         | Classification                | Automated evidence                                                    |
+| ----------------- | ------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------- |
+| `APPOINTMENT-001` | Authenticated non-owner creates a valid appointment for an eligible published listing | Mutating E2E; default blocked | `tests/appointments/appointment-booking.mutating.spec.ts`             |
+| `APPOINTMENT-002` | A time slot is required before submission is enabled                                  | Read-only E2E and component   | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts` |
+| `APPOINTMENT-003` | Contact name is required                                                              | Read-only E2E and component   | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts` |
+| `APPOINTMENT-004` | Phone must match the deployed Vietnamese format                                       | Read-only E2E and component   | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts` |
+| `APPOINTMENT-005` | Email must use the deployed Gmail format                                              | Read-only E2E and component   | `appointment-validation.read-only.spec.ts`, `AppointmentPage.spec.ts` |
+
+Every E2E title is generated from `test-cases/appointments/appointment.test-cases.ts` and includes
+the Test Case ID plus centralized tags. `APPOINTMENT-001` imports only the automatic centralized
+mutating fixture and runs exclusively in the serialized `mutating-chromium` project.
+
+## Appointment business rules not verified
+
+The following items are intentionally labeled `BUSINESS RULE NOT VERIFIED` rather than represented
+as passing automation:
+
+- **Required appointment date - BUSINESS RULE NOT VERIFIED:** the deployed UI selects the first
+  available date by default and has no observable blank-date state.
+- **Booking one's own listing - BUSINESS RULE NOT VERIFIED:** no controlled owner listing/user pair
+  is configured.
+- **Duplicate unfinished appointment - BUSINESS RULE NOT VERIFIED:** no resettable booking seed or
+  cleanup contract exists.
+- **Urgent booking timeout - BUSINESS RULE NOT VERIFIED:** UC-18 describes the timeout, but the UI
+  exposes no observable timeout value.
+- **Notification delivery - BUSINESS RULE NOT VERIFIED:** no deterministic notification or mailbox
+  fixture exists.
+- **Network/server failure - BUSINESS RULE NOT VERIFIED:** no sanctioned fault-injection layer
+  exists.
+
+## Appointment locator risks
+
+- The deployed appointment popup has no `role="dialog"`, so it cannot be scoped by dialog semantics.
+- The popup's icon-only close button has no accessible name. Automation does not use that control.
+- Verified unique role names and placeholders are used globally until the application supplies a
+  semantic dialog boundary.
+
 ## Future traceability
 
-Profile, Appointments, and Transactions continue to use implementation templates. Add a test-case
-ID and an automated evidence row when a safe executable scenario is added.
+Profile, Listings lifecycle operations, Appointment view/confirm/reject/cancel, and Transactions
+currently provide implementation templates. Add a test-case ID and automated evidence row when each
+scenario receives controlled state and safe execution policy.

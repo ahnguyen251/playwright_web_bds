@@ -36,6 +36,7 @@ test('all mutating specs run only in the single-worker mutating project', () => 
     'authentication/registration.otp.mutating.spec.ts',
     'profile/profile.mutating.spec.ts',
     'listings/create-listing.mutating.spec.ts',
+    'appointments/appointment-booking.mutating.spec.ts',
   ];
 
   for (const projectName of ['chromium', 'firefox', 'webkit']) {

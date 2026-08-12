@@ -1,7 +1,7 @@
 import { expect } from '@playwright/test';
 
-import { listingStateTest } from './listing-state.fixture';
+import { appointmentTest } from './appointment.fixture';
 
-export const BaseTest = listingStateTest;
+export const BaseTest = appointmentTest;
 export const test = BaseTest;
 export { expect };
