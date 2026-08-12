@@ -49,7 +49,7 @@ export class GmailOtpProvider implements OtpProvider {
     const deadline = this.clock.now() + this.config.timeoutMs;
 
     while (this.clock.now() < deadline) {
-      const messages = await this.loadCandidates(query);
+      const messages = await this.loadCandidates(query, deadline);
       const matching = messages
         .filter((candidate) => candidate.internalDate > query.requestedAfter.getTime())
         .filter((candidate) => this.matchesCorrelation(candidate, query))
@@ -69,14 +69,44 @@ export class GmailOtpProvider implements OtpProvider {
       );
     }
 
-    throw new Error(`OTP email was not received before timeout for ${maskEmail(query.email)}.`);
+    throw this.timeoutError(query);
   }
 
-  private async loadCandidates(query: OtpQuery): Promise<ParsedGmailMessage[]> {
-    const ids = await this.client.listMessageIds(this.buildSearchQuery(query));
-    return Promise.all(
-      ids.map(async (id) => GmailMessageParser.parse(await this.client.getMessage(id))),
-    );
+  private async loadCandidates(query: OtpQuery, deadline: number): Promise<ParsedGmailMessage[]> {
+    return this.withDeadline(query, deadline, async (signal) => {
+      const ids = await this.client.listMessageIds(this.buildSearchQuery(query), signal);
+      return Promise.all(
+        ids.map(async (id) => GmailMessageParser.parse(await this.client.getMessage(id, signal))),
+      );
+    });
+  }
+
+  private async withDeadline<T>(
+    query: OtpQuery,
+    deadline: number,
+    operation: (signal: AbortSignal) => Promise<T>,
+  ): Promise<T> {
+    const remainingMs = Math.max(0, deadline - this.clock.now());
+    if (remainingMs === 0) throw this.timeoutError(query);
+
+    const controller = new AbortController();
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadlineExceeded = new Promise<never>((_resolve, reject) => {
+      timer = setTimeout(() => {
+        reject(this.timeoutError(query));
+        controller.abort();
+      }, remainingMs);
+    });
+
+    try {
+      return await Promise.race([operation(controller.signal), deadlineExceeded]);
+    } finally {
+      if (timer !== undefined) clearTimeout(timer);
+    }
+  }
+
+  private timeoutError(query: OtpQuery): Error {
+    return new Error(`OTP email was not received before timeout for ${maskEmail(query.email)}.`);
   }
 
   private buildSearchQuery(query: OtpQuery): string {

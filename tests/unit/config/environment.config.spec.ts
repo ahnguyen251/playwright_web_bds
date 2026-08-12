@@ -3,6 +3,7 @@ import { expect, test } from '@playwright/test';
 import { parse } from 'dotenv';
 
 import { loadEnvironmentConfig } from '../../../config/environment.config';
+import { loadProductionRegistrationConfig } from '../../../config/registration.config';
 
 const validEnvironment = {
   TEST_ENV: 'dev',
@@ -244,7 +245,11 @@ test('documents one parseable runtime contract using placeholder-only identities
     baselinePassword: 'replace-with-mutating-baseline-password',
     baselineName: 'replace-with-mutating-baseline-name',
   });
-  expect(exampleEnvironment).not.toHaveProperty('REGISTRATION_EMAIL_TEMPLATE');
+  expect(loadProductionRegistrationConfig(exampleEnvironment)).toEqual({
+    fullName: 'replace-with-registration-full-name',
+    emailTemplate: 'replace-with-registration+{unique}@example.test',
+    password: 'replace-with-registration-password',
+  });
   expect(exampleEnvironment).not.toHaveProperty('GMAIL_OTP_TIMEOUT_MS');
   expect(exampleEnvironment).not.toHaveProperty('GMAIL_OTP_POLL_INTERVAL_MS');
 });

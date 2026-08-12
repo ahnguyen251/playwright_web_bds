@@ -25,5 +25,4 @@ export interface ProductionRegistrationConfig {
   readonly fullName: string;
   readonly emailTemplate: string;
   readonly password: string;
-  readonly gmail: GmailOtpConfig;
 }

@@ -23,6 +23,11 @@ const matches = (pattern: unknown, file: string): boolean => {
   return patterns.some((candidate) => candidate instanceof RegExp && candidate.test(file));
 };
 
+const discovers = (projectName: string, file: string): boolean => {
+  const project = projectFor(projectName);
+  return matches(project.testMatch, file) && !matches(project.testIgnore, file);
+};
+
 test('mutating project disables artifacts that can capture account secrets', () => {
   const use = effectiveUseFor('mutating-chromium');
 
@@ -74,6 +79,29 @@ test('all mutating specs run only in their single-worker mutation project', () =
   for (const file of generalMutatingFiles) {
     expect(matches(appointmentProject.testMatch, file)).toBe(false);
   }
+});
+
+test('production registration is discovered only by its dedicated Chromium project', () => {
+  const file = 'authentication/registration.production.spec.ts';
+  const discoveredBy = playwrightConfig.projects
+    ?.filter(({ name }) => name !== undefined && discovers(name, file))
+    .map(({ name }) => name);
+
+  expect(discoveredBy).toEqual(['production-registration-chromium']);
+});
+
+test('production registration project is unauthenticated, serialized, zero-retry, and artifact-free', () => {
+  const project = projectFor('production-registration-chromium');
+  const use = effectiveUseFor('production-registration-chromium');
+
+  expect(project.dependencies).toBeUndefined();
+  expect(project.fullyParallel).toBe(false);
+  expect(project.workers).toBe(1);
+  expect(project.retries).toBe(0);
+  expect(use.storageState).toEqual({ cookies: [], origins: [] });
+  expect(use.screenshot).toBe('off');
+  expect(use.video).toBe('off');
+  expect(use.trace).toBe('off');
 });
 
 test('credential-bearing projects disable traces while retaining default screenshot and video policies', () => {

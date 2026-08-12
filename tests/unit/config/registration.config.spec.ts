@@ -6,19 +6,10 @@ import {
 } from '../../../config/registration.config';
 
 const completeSource: NodeJS.ProcessEnv = {
-  RUN_OTP_E2E: 'true',
-  RUN_MUTATING_E2E: 'true',
   RUN_PRODUCTION_REGISTRATION_E2E: 'true',
   REGISTRATION_EMAIL_TEMPLATE: 'registration+{unique}@example.test',
   REGISTRATION_FULL_NAME: 'Registration Automation',
   REGISTRATION_PASSWORD: 'StrongPassword1',
-  GMAIL_CLIENT_ID: 'client-id',
-  GMAIL_CLIENT_SECRET: 'client-secret',
-  GMAIL_REFRESH_TOKEN: 'refresh-token',
-  GMAIL_OTP_PATTERN: 'Verification code: {otp}',
-  GMAIL_OTP_SUBJECT: 'Verify registration',
-  GMAIL_OTP_TIMEOUT_MS: '60000',
-  GMAIL_OTP_POLL_INTERVAL_MS: '2000',
 };
 
 test('keeps production registration disabled by default', () => {
@@ -32,17 +23,16 @@ test('enables production registration only for the exact production-registration
 
 test('fails fast with missing key names and no configured secret values', () => {
   const source = { ...completeSource };
-  delete source.GMAIL_CLIENT_ID;
+  delete source.REGISTRATION_PASSWORD;
 
   expect(() => loadProductionRegistrationConfig(source)).toThrow(
-    'Invalid production registration configuration: GMAIL_CLIENT_ID',
+    'Invalid production registration configuration: REGISTRATION_PASSWORD',
   );
 
   try {
     loadProductionRegistrationConfig(source);
   } catch (error) {
-    expect(String(error)).not.toContain('client-secret');
-    expect(String(error)).not.toContain('refresh-token');
+    expect(String(error)).not.toContain('StrongPassword1');
   }
 });
 
@@ -55,29 +45,16 @@ test('requires exactly one unique token in the registration email template', () 
   ).toThrow(/REGISTRATION_EMAIL_TEMPLATE/);
 });
 
-test('requires exactly one literal OTP placeholder', () => {
-  expect(() =>
-    loadProductionRegistrationConfig({
-      ...completeSource,
-      GMAIL_OTP_PATTERN: 'Verification code',
-    }),
-  ).toThrow(/GMAIL_OTP_PATTERN/);
-});
-
-test('requires the exact registration subject when production registration is enabled', () => {
-  const source = { ...completeSource };
-  delete source.GMAIL_OTP_SUBJECT;
-
-  expect(() => loadProductionRegistrationConfig(source)).toThrow(
-    'Invalid production registration configuration: GMAIL_OTP_SUBJECT',
-  );
-});
-
-test('loads a trimmed registration subject', () => {
+test('loads only registration identity and leaves Gmail validation to the shared OTP contract', () => {
   const config = loadProductionRegistrationConfig({
     ...completeSource,
-    GMAIL_OTP_SUBJECT: '  Verify registration  ',
+    GMAIL_OTP_PATTERN: 'not-a-valid-shared-pattern',
+    GMAIL_OTP_TIMEOUT_MS: 'not-a-number',
   });
 
-  expect(config.gmail.subject).toBe('Verify registration');
+  expect(config).toEqual({
+    fullName: 'Registration Automation',
+    emailTemplate: 'registration+{unique}@example.test',
+    password: 'StrongPassword1',
+  });
 });

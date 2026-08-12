@@ -75,6 +75,28 @@ test('refreshes once, paginates Gmail list, and keeps the token out of URLs', as
   expect(calls.slice(1).every((call) => !call.url.includes('access-token'))).toBe(true);
 });
 
+test('forwards one caller abort signal through OAuth and Gmail requests', async () => {
+  const signals: (AbortSignal | null | undefined)[] = [];
+  let callCount = 0;
+  const fetchImpl: typeof fetch = (_input, init) => {
+    signals.push(init?.signal);
+    callCount += 1;
+    return Promise.resolve(
+      callCount === 1
+        ? jsonResponse({ access_token: 'access-token' })
+        : jsonResponse({ messages: [] }),
+    );
+  };
+  const controller = new AbortController();
+
+  await new GmailApiClient(config, fetchImpl).listMessageIds('after:2026/08/11', controller.signal);
+
+  expect(signals).toHaveLength(2);
+  for (const signal of signals) {
+    expect(signal).toBe(controller.signal);
+  }
+});
+
 test('gets a full Gmail message using an encoded message id', async () => {
   const calls: FetchCall[] = [];
   const fetchImpl: typeof fetch = (input, init) => {

@@ -116,19 +116,25 @@ the existing class name to avoid an unrelated architecture change.
 `RegistrationWorkflow` continues to orchestrate UI actions and the `OtpProvider`
 without raw selectors or Gmail logic. Fixtures perform construction only and remain
 lazy so ordinary framework tests do not require Gmail credentials. The production
-test remains opt-in, serial, and configured with zero retries.
+test remains opt-in and is discovered only by its unauthenticated, artifact-free,
+single-worker Chromium project with zero retries.
 
 ## 5. Configuration contract
 
-When `RUN_PRODUCTION_REGISTRATION_E2E=true`, these existing registration and Gmail
-values remain required:
+The production-registration-specific configuration contains only identity values:
 
 - `REGISTRATION_EMAIL_TEMPLATE`;
 - `REGISTRATION_FULL_NAME`;
-- `REGISTRATION_PASSWORD`;
+- `REGISTRATION_PASSWORD`.
+
+The flow consumes the same hardened Gmail OTP configuration as every other OTP flow.
+When `RUN_OTP_E2E=true`, the shared environment contract requires:
+
 - `GMAIL_CLIENT_ID`;
 - `GMAIL_CLIENT_SECRET`;
 - `GMAIL_REFRESH_TOKEN`;
+- `OTP_MAILBOX_ADDRESS`;
+- `GMAIL_OTP_SENDER`;
 - `GMAIL_OTP_PATTERN`;
 - `GMAIL_OTP_SUBJECT`.
 
@@ -136,20 +142,20 @@ values remain required:
 messages both contain OTPs. Exact subject equality prevents the provider from using
 a password-reset OTP for registration.
 
-These values remain optional:
+The shared polling controls are:
 
-- `GMAIL_OTP_SENDER`, for validating the exact sender address or configured alias;
-- `GMAIL_OTP_TIMEOUT_MS`;
-- `GMAIL_OTP_POLL_INTERVAL_MS`.
+- `OTP_TIMEOUT_MS`;
+- `OTP_POLL_INTERVAL_MS`.
 
 The OAuth client and refresh token must authorize the Gmail sender mailbox whose
 Sent folder contains the registration message. The required scope is
 `gmail.readonly`. Secrets belong only in a local ignored `.env` file or CI secret
 store. `.env.example` contains placeholders or non-secret examples only.
 
-`GMAIL_OTP_PATTERN` is a JavaScript regular-expression source with a named `otp`
-capture. The captured value must be exactly six digits. The framework does not use
-an arbitrary-number fallback.
+`GMAIL_OTP_PATTERN` is literal verified email text with exactly one `{otp}`
+placeholder. The provider escapes the surrounding text and requires the placeholder
+value to be exactly six digits; it never compiles an environment-provided regular
+expression or uses an arbitrary-number fallback.
 
 ## 6. Sent-message correlation algorithm
 
@@ -237,7 +243,7 @@ and screenshots from local runs remain ignored by Git.
 
 Deterministic framework tests must cover:
 
-- production configuration rejects a missing registration subject;
+- the shared OTP configuration rejects a missing registration subject;
 - the Gmail query contains `in:sent`, exact recipient narrowing, registration
   subject narrowing, and the request date;
 - an optional sender filter is applied when configured;
@@ -251,6 +257,7 @@ Deterministic framework tests must cover:
 - the newest strictly valid candidate wins;
 - the named capture must yield exactly six digits;
 - the existing exact OTP-contract-mismatch error is preserved;
+- never-settling list and message-read calls remain bounded by the absolute timeout;
 - timeout masking and immediate `401`/`403` behavior remain sanitized;
 - parser tests cover root headers and inline plain/HTML MIME content without assuming
   a specific production HTML structure.
@@ -258,10 +265,11 @@ Deterministic framework tests must cover:
 Tests use fake HTTP behavior and synthetic, non-personal addresses. They do not call
 Gmail or production.
 
-The real production registration test remains disabled by default, serial, and
-`retries: 0`. It must not run without valid local secrets and the resolved OTP input
-accessibility contract. A skipped or blocked production test is never reported as a
-pass.
+The real production registration test remains disabled by default. Its dedicated
+project runs serially with one worker and `retries: 0`, uses empty storage, and turns
+screenshot, video, and trace off. It must not run without valid local secrets and the
+resolved OTP input accessibility contract. A skipped or blocked production test is
+never reported as a pass.
 
 ## 11. Incremental implementation scope
 

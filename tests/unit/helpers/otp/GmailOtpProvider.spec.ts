@@ -82,6 +82,35 @@ const baseConfig = {
   pollIntervalMs: 2_000,
 } satisfies GmailOtpConfig;
 
+const settleWithin = async (
+  operation: Promise<unknown>,
+  milliseconds: number,
+): Promise<unknown> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      operation.catch((reason: unknown) => reason),
+      new Promise<Error>((resolve) => {
+        timer = setTimeout(
+          () => resolve(new Error('OTP provider did not enforce its network deadline.')),
+          milliseconds,
+        );
+      }),
+    ]);
+  } finally {
+    if (timer !== undefined) clearTimeout(timer);
+  }
+};
+
+const expectSanitizedTimeout = (error: unknown): void => {
+  expect(String(error)).toContain(
+    'OTP email was not received before timeout for r***@example.test.',
+  );
+  for (const sensitiveValue of [query.email, 'client-secret', 'refresh-token']) {
+    expect(String(error)).not.toContain(sensitiveValue);
+  }
+};
+
 test('queries Sent and selects the newest exact-header message without body identity', async () => {
   const after = requestedAfter.getTime();
   const client = new FakeGmailClient(
@@ -292,6 +321,44 @@ test('polls at the configured interval until a bounded timeout with only a maske
   ]) {
     expect(String(error)).not.toContain(sensitiveValue);
   }
+});
+
+test('bounds a never-settling Gmail list request by the remaining deadline', async () => {
+  let signal: AbortSignal | undefined;
+  const client: GmailClient = {
+    listMessageIds: (_searchQuery, requestSignal) => {
+      signal = requestSignal;
+      return new Promise<readonly string[]>(() => undefined);
+    },
+    getMessage: () => Promise.reject(new Error('getMessage must not be called')),
+  };
+
+  const error = await settleWithin(
+    new GmailOtpProvider(client, { ...baseConfig, timeoutMs: 20 }, new FakeClock(0)).getOtp(query),
+    250,
+  );
+
+  expectSanitizedTimeout(error);
+  expect(signal?.aborted).toBe(true);
+});
+
+test('bounds never-settling Gmail message reads by one remaining deadline', async () => {
+  let signal: AbortSignal | undefined;
+  const client: GmailClient = {
+    listMessageIds: () => Promise.resolve(['message-1', 'message-2']),
+    getMessage: (_id, requestSignal) => {
+      signal = requestSignal;
+      return new Promise<GmailMessage>(() => undefined);
+    },
+  };
+
+  const error = await settleWithin(
+    new GmailOtpProvider(client, { ...baseConfig, timeoutMs: 20 }, new FakeClock(0)).getOtp(query),
+    250,
+  );
+
+  expectSanitizedTimeout(error);
+  expect(signal?.aborted).toBe(true);
 });
 
 for (const status of [401, 403] as const) {

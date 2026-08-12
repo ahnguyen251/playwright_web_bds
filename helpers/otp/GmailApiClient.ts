@@ -2,8 +2,8 @@ import type { GmailOtpConfig } from '../../types/otp.types';
 import type { GmailMessage, GmailMessageHeader, GmailMessagePart } from './GmailMessageParser';
 
 export interface GmailClient {
-  listMessageIds(query: string): Promise<readonly string[]>;
-  getMessage(id: string): Promise<GmailMessage>;
+  listMessageIds(query: string, signal?: AbortSignal): Promise<readonly string[]>;
+  getMessage(id: string, signal?: AbortSignal): Promise<GmailMessage>;
 }
 
 export class GmailApiError extends Error {
@@ -66,7 +66,7 @@ export class GmailApiClient implements GmailClient {
     private readonly fetchImpl: typeof fetch = fetch,
   ) {}
 
-  public async listMessageIds(query: string): Promise<readonly string[]> {
+  public async listMessageIds(query: string, signal?: AbortSignal): Promise<readonly string[]> {
     const ids: string[] = [];
     let pageToken: string | undefined;
 
@@ -76,7 +76,7 @@ export class GmailApiClient implements GmailClient {
       url.searchParams.set('maxResults', '100');
       if (pageToken !== undefined) url.searchParams.set('pageToken', pageToken);
 
-      const payload = await this.gmailGet(url);
+      const payload = await this.gmailGet(url, signal);
       if (!isRecord(payload)) {
         throw new GmailApiError('Gmail API returned an invalid message list.', 200);
       }
@@ -99,13 +99,13 @@ export class GmailApiClient implements GmailClient {
     return ids;
   }
 
-  public async getMessage(id: string): Promise<GmailMessage> {
+  public async getMessage(id: string, signal?: AbortSignal): Promise<GmailMessage> {
     const url = new URL(
       `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(id)}`,
     );
     url.searchParams.set('format', 'full');
 
-    const payload = await this.gmailGet(url);
+    const payload = await this.gmailGet(url, signal);
     if (
       !isRecord(payload) ||
       typeof payload.id !== 'string' ||
@@ -125,7 +125,7 @@ export class GmailApiClient implements GmailClient {
     };
   }
 
-  private async getAccessToken(): Promise<string> {
+  private async getAccessToken(signal?: AbortSignal): Promise<string> {
     if (this.accessToken !== undefined) return this.accessToken;
 
     const body = new URLSearchParams({
@@ -138,6 +138,7 @@ export class GmailApiClient implements GmailClient {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body,
+      ...(signal === undefined ? {} : { signal }),
     });
     if (!response.ok) {
       throw new GmailApiError('Gmail OAuth authentication failed.', response.status);
@@ -157,9 +158,10 @@ export class GmailApiClient implements GmailClient {
     return this.accessToken;
   }
 
-  private async gmailGet(url: URL): Promise<unknown> {
+  private async gmailGet(url: URL, signal?: AbortSignal): Promise<unknown> {
     const response = await this.fetchImpl(url, {
-      headers: { authorization: `Bearer ${await this.getAccessToken()}` },
+      headers: { authorization: `Bearer ${await this.getAccessToken(signal)}` },
+      ...(signal === undefined ? {} : { signal }),
     });
     if (response.status === 401) {
       throw new GmailApiError('Gmail API authentication failed with status 401.', 401);

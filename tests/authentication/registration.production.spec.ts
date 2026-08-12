@@ -15,18 +15,9 @@ const enabled =
   executionPolicy.productionMutationsApproved;
 const registrationConfig = enabled ? loadProductionRegistrationConfig() : undefined;
 
-test.use({
-  storageState: { cookies: [], origins: [] },
-  trace: 'retain-on-failure',
-});
-
 test.describe('production registration', () => {
   test.describe.configure({ mode: 'serial', retries: 0 });
   test.skip(!enabled, 'Set RUN_PRODUCTION_REGISTRATION_E2E=true to run real registration.');
-  test.skip(
-    ({ browserName }) => browserName !== 'chromium',
-    'Production registration runs once in Chromium only.',
-  );
 
   test(
     `registers and verifies a unique user ${TAGS.authentication}`,

@@ -120,24 +120,32 @@ Tests contain scenario intent and Playwright assertions only. The production tes
 
 Committed configuration contains placeholders only. Real values belong in local `.env` files or CI secret storage.
 
-Required when `RUN_PRODUCTION_REGISTRATION_E2E=true`:
+Production-registration-specific identity values:
 
 - `REGISTRATION_EMAIL_TEMPLATE`: a unique-address template containing exactly one `{unique}` token;
 - `REGISTRATION_FULL_NAME`;
-- `REGISTRATION_PASSWORD`;
+- `REGISTRATION_PASSWORD`.
+
+The production flow uses the shared hardened Gmail OTP contract; it does not define a second Gmail
+configuration object. When `RUN_OTP_E2E=true`, that shared contract requires:
+
 - `GMAIL_CLIENT_ID`;
 - `GMAIL_CLIENT_SECRET`;
 - `GMAIL_REFRESH_TOKEN`;
-- `GMAIL_OTP_PATTERN`: a JavaScript regular-expression source containing a named `otp` capture group.
-
-Optional only when the deployed email contract is stable and verified:
-
+- `OTP_MAILBOX_ADDRESS`;
 - `GMAIL_OTP_SENDER`;
 - `GMAIL_OTP_SUBJECT`;
-- `GMAIL_OTP_TIMEOUT_MS`;
-- `GMAIL_OTP_POLL_INTERVAL_MS`.
+- `GMAIL_OTP_PATTERN`: literal verified email text containing exactly one `{otp}` placeholder.
 
-The OTP pattern is mandatory because the framework must not guess OTP length or extract an arbitrary number. The exact production pattern is supplied from the verified email contract, not invented in source code.
+The shared polling controls are:
+
+- `OTP_TIMEOUT_MS`;
+- `OTP_POLL_INTERVAL_MS`.
+
+The OTP pattern is mandatory because the framework must not guess OTP length or extract an arbitrary
+number. It is parsed as literal text around the `{otp}` placeholder and never compiled as an
+environment-provided regular expression. The exact production pattern is supplied from the verified
+email contract, not invented in source code.
 
 The unique email generator replaces `{unique}` with a collision-resistant run value. It does not assume Gmail plus-addressing or a particular domain; the configured template defines the application's valid identity format.
 
@@ -246,7 +254,9 @@ The production test:
 
 - is skipped by default;
 - runs only with `RUN_PRODUCTION_REGISTRATION_E2E=true` and valid configuration;
-- runs serially with `retries: 0`;
+- is discovered only by the unauthenticated `production-registration-chromium` project;
+- runs serially with one worker and `retries: 0`;
+- disables screenshot, video, and trace artifacts;
 - does not run concurrently with another real-account registration using the same mailbox/data;
 - creates a unique test identity when the configured application contract permits it;
 - asserts the OTP screen and the final authenticated identity separately;

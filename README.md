@@ -129,6 +129,20 @@ flags default to disabled.
 trong project `mutating-chromium`, ở chế độ serial, một worker. Screenshot, video và trace bị tắt
 trong project này để tránh ghi mật khẩu hoặc OTP vào artifact.
 
+Kịch bản đăng ký production chạy riêng trong project `production-registration-chromium`, không dùng
+storage state đã đăng nhập, không retry, chạy serial với một worker và tắt screenshot, video, trace.
+Ngoài các cổng thực thi ở trên, kịch bản này chỉ có ba biến cấu hình riêng:
+
+```dotenv
+REGISTRATION_EMAIL_TEMPLATE=replace-with-registration+{unique}@example.test
+REGISTRATION_FULL_NAME=replace-with-registration-full-name
+REGISTRATION_PASSWORD=replace-with-registration-password
+```
+
+Email template phải chứa đúng một `{unique}`. Production registration dùng chính cấu hình Gmail/OTP
+chia sẻ ở phần dưới, bao gồm `OTP_MAILBOX_ADDRESS`, sender, subject, pattern, timeout và poll interval;
+không có bộ biến `GMAIL_OTP_TIMEOUT_MS` hoặc `GMAIL_OTP_POLL_INTERVAL_MS` riêng.
+
 Chỉ bật mutating trên môi trường kiểm thử được phép. Không dùng tài khoản cá nhân. Cấu hình một tài
 khoản automation chuyên dụng, có thể khôi phục qua Gmail, bằng:
 

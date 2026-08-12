@@ -7,15 +7,6 @@ const config = {
   fullName: 'Registration Automation',
   emailTemplate: 'registration+{unique}@example.test',
   password: 'StrongPassword1',
-  gmail: {
-    clientId: 'client-id',
-    clientSecret: 'client-secret',
-    refreshToken: 'refresh-token',
-    otpPattern: 'Mã OTP: {otp}',
-    subject: 'Verify registration',
-    timeoutMs: 60_000,
-    pollIntervalMs: 2_000,
-  },
 } satisfies ProductionRegistrationConfig;
 
 test('creates immutable registration data from the explicit unique token', () => {
