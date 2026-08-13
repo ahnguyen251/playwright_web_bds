@@ -10,12 +10,16 @@ export interface AuthResponseSnapshot {
   body: unknown;
 }
 
+export interface AuthStatusSnapshot {
+  readonly status: number;
+}
+
 type ActionOutcome = { type: 'completed' } | { type: 'failed'; error: unknown };
-type ResponseOutcome =
-  | { type: 'snapshot'; snapshot: AuthResponseSnapshot }
-  | { type: 'invalidJson' }
-  | { type: 'cancelled' };
-type TimeoutOutcome = { type: 'timedOut' };
+type ResponseOutcome<TSnapshot> =
+  { type: 'snapshot'; snapshot: TSnapshot } | { type: 'invalidResponse' } | { type: 'cancelled' };
+interface TimeoutOutcome {
+  type: 'timedOut';
+}
 
 export class AuthRequestObserver {
   public constructor(
@@ -47,9 +51,35 @@ export class AuthRequestObserver {
     operation: AuthOperation,
     action: () => Promise<unknown>,
   ): Promise<AuthResponseSnapshot> {
-    let settleResponse: (outcome: ResponseOutcome) => void = () => undefined;
+    return this.waitForObservedResponse(
+      operation,
+      action,
+      (response) => response.json().then((body: unknown) => ({ status: response.status(), body })),
+      `Unable to parse authentication response for ${operation}.`,
+    );
+  }
+
+  public async waitForStatus(
+    operation: AuthOperation,
+    action: () => Promise<unknown>,
+  ): Promise<AuthStatusSnapshot> {
+    return this.waitForObservedResponse(
+      operation,
+      action,
+      (response) => Promise.resolve(Object.freeze({ status: response.status() })),
+      `Unable to observe authentication response for ${operation}.`,
+    );
+  }
+
+  private async waitForObservedResponse<TSnapshot>(
+    operation: AuthOperation,
+    action: () => Promise<unknown>,
+    createSnapshot: (response: Response) => Promise<TSnapshot>,
+    invalidResponseMessage: string,
+  ): Promise<TSnapshot> {
+    let settleResponse: (outcome: ResponseOutcome<TSnapshot>) => void = () => undefined;
     let responseHandled = false;
-    const responseOutcome = new Promise<ResponseOutcome>((resolve) => {
+    const responseOutcome = new Promise<ResponseOutcome<TSnapshot>>((resolve) => {
       settleResponse = resolve;
     });
     const listener = (response: Response): void => {
@@ -57,22 +87,19 @@ export class AuthRequestObserver {
         return;
       }
       responseHandled = true;
-      void response
-        .json()
+      void Promise.resolve()
+        .then(() => createSnapshot(response))
         .then(
-          (body: unknown) => {
+          (snapshot) => {
             settleResponse({
               type: 'snapshot',
-              snapshot: { status: response.status(), body },
+              snapshot,
             });
           },
           () => {
-            settleResponse({ type: 'invalidJson' });
+            settleResponse({ type: 'invalidResponse' });
           },
-        )
-        .catch(() => {
-          settleResponse({ type: 'invalidJson' });
-        });
+        );
     };
     const actionOutcome = Promise.resolve()
       .then(action)
@@ -102,8 +129,8 @@ export class AuthRequestObserver {
         settleResponse({ type: 'cancelled' });
         throw this.createTimeoutError(operation);
       }
-      if (responseResult.type === 'invalidJson') {
-        throw new Error(`Unable to parse authentication response for ${operation}.`);
+      if (responseResult.type === 'invalidResponse') {
+        throw new Error(invalidResponseMessage);
       }
       if (responseResult.type === 'cancelled') {
         throw this.createTimeoutError(operation);
@@ -123,6 +150,8 @@ export class AuthRequestObserver {
   }
 
   private createTimeoutError(operation: AuthOperation): Error {
-    return new Error(`Timed out waiting for ${operation} response at ${AUTH_API_PATHS[operation]}.`);
+    return new Error(
+      `Timed out waiting for ${operation} response at ${AUTH_API_PATHS[operation]}.`,
+    );
   }
 }

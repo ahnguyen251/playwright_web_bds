@@ -35,7 +35,7 @@ test.describe('production registration', () => {
 
       const data = RegistrationDataFactory.create(registrationConfig);
       let submission: RegistrationSubmission | undefined;
-      const registrationResponse = await authRequestObserver.waitForResponse(
+      const registrationStatus = await authRequestObserver.waitForStatus(
         'registration',
         async () => {
           submission = await registrationWorkflow.submitRegistration(data);
@@ -45,7 +45,7 @@ test.describe('production registration', () => {
         throw new Error('Registration workflow completed without a submission result.');
       }
 
-      requireAcceptedRegistrationTransport(registrationResponse, submission.submitState);
+      requireAcceptedRegistrationTransport(registrationStatus, submission.submitState);
 
       await registrationWorkflow.verifyRegistration(submission);
 

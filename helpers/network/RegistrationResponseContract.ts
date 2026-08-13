@@ -1,4 +1,4 @@
-import type { AuthResponseSnapshot } from './AuthRequestObserver';
+import type { AuthStatusSnapshot } from './AuthRequestObserver';
 
 interface RegistrationSubmitObservation {
   readonly disabledObserved: boolean;
@@ -11,7 +11,7 @@ export interface AcceptedRegistrationTransport {
 }
 
 export const requireAcceptedRegistrationTransport = (
-  response: AuthResponseSnapshot,
+  response: AuthStatusSnapshot,
   submitState: RegistrationSubmitObservation,
 ): AcceptedRegistrationTransport => {
   if (response.status < 200 || response.status >= 300) {
