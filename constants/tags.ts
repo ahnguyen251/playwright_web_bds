@@ -3,6 +3,7 @@ export const TAGS = Object.freeze({
   regression: '@regression',
   authentication: '@authentication',
   otp: '@otp',
+  external: '@external',
   mutating: '@mutating',
   profile: '@profile',
   listings: '@listings',

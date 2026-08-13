@@ -55,6 +55,14 @@ export const loadEnvironmentConfig = (
         })
       : undefined;
 
+  const lockedUser =
+    parsed.data.LOCKED_USER_EMAIL && parsed.data.LOCKED_USER_PASSWORD
+      ? Object.freeze({
+          email: parsed.data.LOCKED_USER_EMAIL,
+          password: parsed.data.LOCKED_USER_PASSWORD,
+        })
+      : undefined;
+
   return Object.freeze({
     environment: parsed.data.TEST_ENV,
     baseUrl: baseUrls[parsed.data.TEST_ENV],
@@ -71,6 +79,7 @@ export const loadEnvironmentConfig = (
     runProductionMutatingE2e: parsed.data.RUN_PRODUCTION_MUTATING_E2E,
     ...(gmail === undefined ? {} : { gmail }),
     ...(mutatingUser === undefined ? {} : { mutatingUser }),
+    ...(lockedUser === undefined ? {} : { lockedUser }),
     otpPollIntervalMs: parsed.data.OTP_POLL_INTERVAL_MS,
     otpTimeoutMs: parsed.data.OTP_TIMEOUT_MS,
     allowMutatingE2E: parsed.data.ALLOW_MUTATING_E2E,

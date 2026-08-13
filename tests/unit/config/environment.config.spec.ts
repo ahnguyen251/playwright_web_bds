@@ -125,6 +125,53 @@ test('reports a missing credential key without exposing another secret', () => {
   }
 });
 
+test('loads the Locked account only when both credentials are configured', () => {
+  const config = loadEnvironmentConfig({
+    ...validEnvironment,
+    LOCKED_USER_EMAIL: 'locked-user@example.test',
+    LOCKED_USER_PASSWORD: 'locked-test-password',
+  });
+
+  expect(config.lockedUser).toEqual({
+    email: 'locked-user@example.test',
+    password: 'locked-test-password',
+  });
+});
+
+test('keeps the optional Locked account absent when neither credential is configured', () => {
+  expect(loadEnvironmentConfig(validEnvironment).lockedUser).toBeUndefined();
+});
+
+test('rejects an incomplete Locked account without exposing its configured value', () => {
+  const incompleteEnvironment = {
+    ...validEnvironment,
+    LOCKED_USER_EMAIL: 'locked-user@example.test',
+  };
+
+  expect(() => loadEnvironmentConfig(incompleteEnvironment)).toThrow(/LOCKED_USER_PASSWORD/);
+
+  try {
+    loadEnvironmentConfig(incompleteEnvironment);
+  } catch (error) {
+    expect(String(error)).not.toContain('locked-user@example.test');
+  }
+});
+
+test('rejects a Locked password without its email and exposes only the missing key name', () => {
+  const incompleteEnvironment = {
+    ...validEnvironment,
+    LOCKED_USER_PASSWORD: 'locked-test-password',
+  };
+
+  expect(() => loadEnvironmentConfig(incompleteEnvironment)).toThrow(/LOCKED_USER_EMAIL/);
+
+  try {
+    loadEnvironmentConfig(incompleteEnvironment);
+  } catch (error) {
+    expect(String(error)).not.toContain('locked-test-password');
+  }
+});
+
 test('keeps Gmail integration disabled when optional values are absent', () => {
   const config = loadEnvironmentConfig(validEnvironment);
 
@@ -244,6 +291,10 @@ test('documents one parseable runtime contract using placeholder-only identities
     email: 'replace-with-mutating-user@example.test',
     baselinePassword: 'replace-with-mutating-baseline-password',
     baselineName: 'replace-with-mutating-baseline-name',
+  });
+  expect(config.lockedUser).toEqual({
+    email: 'replace-with-locked-user@example.test',
+    password: 'replace-with-locked-user-password',
   });
   expect(loadProductionRegistrationConfig(exampleEnvironment)).toEqual({
     fullName: 'replace-with-registration-full-name',

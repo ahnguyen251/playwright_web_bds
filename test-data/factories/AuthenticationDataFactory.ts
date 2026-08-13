@@ -4,10 +4,18 @@ import { RandomDataGenerator } from '../../utils/RandomDataGenerator';
 
 export interface AuthenticationValidationData {
   readonly validPassword: string;
-  readonly belowMinimumPassword: string;
-  readonly invalidEmails: readonly string[];
+  readonly invalidRegistrationEmails: readonly string[];
+  readonly invalidRegistrationPasswords: readonly string[];
   readonly unicodeFullName: string;
   readonly mismatchedPassword: string;
+  readonly expectedMessages: Readonly<{
+    readonly invalidEmail: string;
+    readonly duplicateEmail: string;
+    readonly invalidPassword: string;
+    readonly mismatchedPassword: string;
+    readonly invalidCredentials: string;
+    readonly lockedAccount: string;
+  }>;
 }
 
 export interface RegistrationDataOverrides {
@@ -41,10 +49,11 @@ export class AuthenticationDataFactory {
   public static getValidationData(): AuthenticationValidationData {
     return Object.freeze({
       validPassword: authentication.validPassword,
-      belowMinimumPassword: authentication.belowMinimumPassword,
-      invalidEmails: Object.freeze([...authentication.invalidEmails]),
+      invalidRegistrationEmails: Object.freeze([...authentication.invalidRegistrationEmails]),
+      invalidRegistrationPasswords: Object.freeze([...authentication.invalidRegistrationPasswords]),
       unicodeFullName: authentication.unicodeFullName,
       mismatchedPassword: authentication.mismatchedPassword,
+      expectedMessages: Object.freeze({ ...authentication.expectedMessages }),
     });
   }
 

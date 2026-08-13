@@ -13,5 +13,10 @@
     "displayName": "Mutating Propify User",
     "emailEnvironmentKey": "MUTATING_USER_EMAIL",
     "passwordEnvironmentKey": "MUTATING_USER_BASELINE_PASSWORD"
+  },
+  "lockedUser": {
+    "displayName": "Locked Propify User",
+    "emailEnvironmentKey": "LOCKED_USER_EMAIL",
+    "passwordEnvironmentKey": "LOCKED_USER_PASSWORD"
   }
 }

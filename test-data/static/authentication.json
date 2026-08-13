@@ -1,7 +1,15 @@
 {
-  "validPassword": "Automation1!",
-  "belowMinimumPassword": "Abc123!",
-  "invalidEmails": ["plain-address", "@missing-local.test", "missing-domain@"],
+  "validPassword": "Admin@123",
+  "mismatchedPassword": "Admin@1234",
+  "invalidRegistrationEmails": ["auto_reg@gmail", "auto_reg", "auto@.com"],
+  "invalidRegistrationPasswords": ["1234567", "admin123", "ADMIN123", "AdminAsdf"],
   "unicodeFullName": "Nguyễn Kiểm Thử",
-  "mismatchedPassword": "Different1!"
+  "expectedMessages": {
+    "invalidEmail": "Email không hợp lệ",
+    "duplicateEmail": "Email đã tồn tại",
+    "invalidPassword": "Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường và số",
+    "mismatchedPassword": "Phải trùng khớp với mật khẩu đã nhập",
+    "invalidCredentials": "Thông tin tài khoản hoặc mật khẩu không chính xác",
+    "lockedAccount": "Tài khoản của bạn đã bị khóa"
+  }
 }

@@ -1,4 +1,4 @@
-export type UserAlias = 'defaultUser' | 'secondaryUser' | 'mutatingUser';
+export type UserAlias = 'defaultUser' | 'secondaryUser' | 'mutatingUser' | 'lockedUser';
 
 export interface UserRecord {
   readonly alias: UserAlias;

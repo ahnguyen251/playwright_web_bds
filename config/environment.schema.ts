@@ -34,6 +34,8 @@ export const environmentSchema = z
     API_BASE_URL: absoluteUrl.optional(),
     DEFAULT_USER_EMAIL: z.string().trim().pipe(z.email()),
     DEFAULT_USER_PASSWORD: z.string().min(1),
+    LOCKED_USER_EMAIL: z.string().trim().pipe(z.email()).optional(),
+    LOCKED_USER_PASSWORD: z.string().min(1).optional(),
     APPOINTMENT_LISTING_ID: optionalPositiveInteger,
     CI: booleanFlag,
     RUN_OTP_E2E: booleanFlag,
@@ -55,6 +57,22 @@ export const environmentSchema = z
     OTP_TIMEOUT_MS: z.coerce.number().int().min(5_000).default(60_000),
   })
   .superRefine((environment, context) => {
+    if (environment.LOCKED_USER_EMAIL && !environment.LOCKED_USER_PASSWORD) {
+      context.addIssue({
+        code: 'custom',
+        path: ['LOCKED_USER_PASSWORD'],
+        message: 'LOCKED_USER_PASSWORD is required when LOCKED_USER_EMAIL is configured',
+      });
+    }
+
+    if (environment.LOCKED_USER_PASSWORD && !environment.LOCKED_USER_EMAIL) {
+      context.addIssue({
+        code: 'custom',
+        path: ['LOCKED_USER_EMAIL'],
+        message: 'LOCKED_USER_EMAIL is required when LOCKED_USER_PASSWORD is configured',
+      });
+    }
+
     if (environment.RUN_OTP_E2E) {
       const gmailKeys = [
         ['GMAIL_CLIENT_ID', environment.GMAIL_CLIENT_ID],

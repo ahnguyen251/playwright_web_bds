@@ -16,6 +16,11 @@ export interface MutatingUserConfig {
   readonly baselineName: string;
 }
 
+export interface LockedUserConfig {
+  readonly email: string;
+  readonly password: string;
+}
+
 export interface EnvironmentConfig {
   readonly environment: TestEnvironment;
   readonly baseUrl: string;
@@ -30,6 +35,7 @@ export interface EnvironmentConfig {
   readonly runProductionMutatingE2e: boolean;
   readonly gmail?: GmailConfig;
   readonly mutatingUser?: MutatingUserConfig;
+  readonly lockedUser?: LockedUserConfig;
   readonly otpPollIntervalMs: number;
   readonly otpTimeoutMs: number;
   readonly allowMutatingE2E: boolean;
