@@ -1,6 +1,7 @@
 import type { Page, Request, Response } from '@playwright/test';
 
 import { AUTH_API_PATHS } from '../../constants/authentication';
+import { TIMEOUTS } from '../../constants/timeouts';
 
 export type AuthOperation = 'registration' | 'login' | 'forgotPassword';
 
@@ -9,8 +10,18 @@ export interface AuthResponseSnapshot {
   body: unknown;
 }
 
+type ActionOutcome = { type: 'completed' } | { type: 'failed'; error: unknown };
+type ResponseOutcome =
+  | { type: 'snapshot'; snapshot: AuthResponseSnapshot }
+  | { type: 'invalidJson' }
+  | { type: 'cancelled' };
+type TimeoutOutcome = { type: 'timedOut' };
+
 export class AuthRequestObserver {
-  public constructor(private readonly page: Page) {}
+  public constructor(
+    private readonly page: Page,
+    private readonly responseTimeoutMs: number = TIMEOUTS.assertion,
+  ) {}
 
   public async countDuring(
     operation: AuthOperation,
@@ -36,26 +47,73 @@ export class AuthRequestObserver {
     operation: AuthOperation,
     action: () => Promise<unknown>,
   ): Promise<AuthResponseSnapshot> {
-    let settleResponse: (snapshot: AuthResponseSnapshot) => void = () => undefined;
-    let rejectResponse: (reason: unknown) => void = () => undefined;
+    let settleResponse: (outcome: ResponseOutcome) => void = () => undefined;
     let responseHandled = false;
-    const responseSnapshot = new Promise<AuthResponseSnapshot>((resolve, reject) => {
+    const responseOutcome = new Promise<ResponseOutcome>((resolve) => {
       settleResponse = resolve;
-      rejectResponse = reject;
     });
     const listener = (response: Response): void => {
       if (responseHandled || !this.isOperationRequest(response.url(), operation)) {
         return;
       }
       responseHandled = true;
-      void this.captureResponse(response, settleResponse, rejectResponse);
+      void response
+        .json()
+        .then(
+          (body: unknown) => {
+            settleResponse({
+              type: 'snapshot',
+              snapshot: { status: response.status(), body },
+            });
+          },
+          () => {
+            settleResponse({ type: 'invalidJson' });
+          },
+        )
+        .catch(() => {
+          settleResponse({ type: 'invalidJson' });
+        });
     };
+    const actionOutcome = Promise.resolve()
+      .then(action)
+      .then(
+        (): ActionOutcome => ({ type: 'completed' }),
+        (error: unknown): ActionOutcome => ({ type: 'failed', error }),
+      );
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const timeoutOutcome = new Promise<TimeoutOutcome>((resolve) => {
+      timeoutId = setTimeout(() => resolve({ type: 'timedOut' }), this.responseTimeoutMs);
+    });
 
     this.page.on('response', listener);
     try {
-      await action();
-      return await responseSnapshot;
+      const actionResult = await Promise.race([actionOutcome, timeoutOutcome]);
+      if (actionResult.type === 'timedOut') {
+        settleResponse({ type: 'cancelled' });
+        throw this.createTimeoutError(operation);
+      }
+      if (actionResult.type === 'failed') {
+        settleResponse({ type: 'cancelled' });
+        throw actionResult.error;
+      }
+
+      const responseResult = await Promise.race([responseOutcome, timeoutOutcome]);
+      if (responseResult.type === 'timedOut') {
+        settleResponse({ type: 'cancelled' });
+        throw this.createTimeoutError(operation);
+      }
+      if (responseResult.type === 'invalidJson') {
+        throw new Error(`Unable to parse authentication response for ${operation}.`);
+      }
+      if (responseResult.type === 'cancelled') {
+        throw this.createTimeoutError(operation);
+      }
+
+      return responseResult.snapshot;
     } finally {
+      if (timeoutId !== undefined) {
+        clearTimeout(timeoutId);
+      }
       this.page.off('response', listener);
     }
   }
@@ -64,16 +122,7 @@ export class AuthRequestObserver {
     return new URL(url).pathname === AUTH_API_PATHS[operation];
   }
 
-  private async captureResponse(
-    response: Response,
-    resolve: (snapshot: AuthResponseSnapshot) => void,
-    reject: (reason: unknown) => void,
-  ): Promise<void> {
-    try {
-      const body: unknown = await response.json();
-      resolve({ status: response.status(), body });
-    } catch (error: unknown) {
-      reject(error);
-    }
+  private createTimeoutError(operation: AuthOperation): Error {
+    return new Error(`Timed out waiting for ${operation} response at ${AUTH_API_PATHS[operation]}.`);
   }
 }
