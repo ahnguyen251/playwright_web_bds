@@ -1,4 +1,4 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 import type { PasswordResetData } from '../../types/user.types';
 import { BasePage } from '../base/BasePage';
@@ -54,7 +54,7 @@ export class ForgotPasswordPage extends BasePage {
       name: '← Quay lại đăng nhập',
       exact: true,
     });
-    this.feedbackMessage = page.getByRole('alert');
+    this.feedbackMessage = this.emailHeading.locator('..').getByRole('alert');
   }
 
   public async requestReset(email: string): Promise<void> {
@@ -104,6 +104,14 @@ export class ForgotPasswordPage extends BasePage {
     await this.resendOtpButton.click();
   }
 
+  public async isResendEnabled(): Promise<boolean> {
+    return this.resendOtpButton.isEnabled();
+  }
+
+  public async waitForResendEnabled(): Promise<void> {
+    await expect(this.resendOtpButton).toBeEnabled();
+  }
+
   public async fillNewPassword(
     data: Pick<PasswordResetData, 'newPassword' | 'passwordConfirmation'>,
   ): Promise<void> {
@@ -148,7 +156,7 @@ export class ForgotPasswordPage extends BasePage {
       return (await this.successHeading.textContent()) ?? '';
     }
 
-    return (await this.feedbackMessage.textContent()) ?? '';
+    return (await this.feedbackMessage.textContent())?.trim() ?? '';
   }
 
   public async isOpen(): Promise<boolean> {

@@ -228,3 +228,96 @@ test('rejects an invalid OTP format before evaluating the accessibility contract
     'OTP must contain exactly six digits.',
   );
 });
+
+test('fills and blurs each registration field without exposing form locators', async ({ page }) => {
+  await page.setContent(`
+    <section>
+      <input placeholder="Họ và tên" onblur="document.body.dataset.fullName = this.value" />
+      <input placeholder="Email của bạn" onblur="document.body.dataset.email = this.value" />
+      <input placeholder="Mật khẩu" type="password" onblur="document.body.dataset.password = this.value" />
+      <input placeholder="Nhập lại mật khẩu" type="password" onblur="document.body.dataset.passwordConfirmation = this.value" />
+      <button>Tạo tài khoản</button>
+    </section>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  await registerPage.fillFullName('Registration Automation');
+  await registerPage.blurFullName();
+  await registerPage.fillEmail('registration@example.test');
+  await registerPage.blurEmail();
+  await registerPage.fillPassword('StrongPassword1');
+  await registerPage.blurPassword();
+  await registerPage.fillPasswordConfirmation('StrongPassword1');
+  await registerPage.blurPasswordConfirmation();
+
+  await expect
+    .poll(() => page.evaluate(() => ({ ...document.body.dataset })))
+    .toEqual({
+      email: 'registration@example.test',
+      fullName: 'Registration Automation',
+      password: 'StrongPassword1',
+      passwordConfirmation: 'StrongPassword1',
+    });
+});
+
+test('returns scoped registration validation and server feedback exactly', async ({ page }) => {
+  await page.setContent(`
+    <p role="alert">Unrelated page alert</p>
+    <section>
+      <input placeholder="Họ và tên" />
+      <input placeholder="Email của bạn" />
+      <input placeholder="Mật khẩu" type="password" />
+      <input placeholder="Nhập lại mật khẩu" type="password" />
+      <p>Email không hợp lệ</p>
+      <p class="text-red-500 text-xs mb-3 flex items-center gap-1">Email đã tồn tại</p>
+      <button>Tạo tài khoản</button>
+    </section>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  expect(await registerPage.fieldValidationMessages()).toEqual(['Email không hợp lệ']);
+  expect(await registerPage.serverMessage()).toBe('Email đã tồn tại');
+});
+
+test('observes the transient disabled loading state before submitting registration', async ({ page }) => {
+  await page.setContent(`
+    <section>
+      <button id="submit-registration">Tạo tài khoản</button>
+    </section>
+    <script>
+      document.querySelector('#submit-registration').onclick = (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        button.textContent = 'Đang xử lý...';
+        queueMicrotask(() => {
+          button.disabled = false;
+          button.textContent = 'Tạo tài khoản';
+        });
+      };
+    </script>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  expect(await registerPage.submitAndObserveTransition()).toEqual({
+    disabledObserved: true,
+    loadingTextObserved: true,
+  });
+});
+
+test('waits web-first for registration OTP resend to become enabled', async ({ page }) => {
+  await page.setContent(`
+    <section>
+      <button>Xác nhận OTP</button>
+      <button id="resend" disabled>Gửi lại</button>
+    </section>
+    <script>
+      queueMicrotask(() => {
+        document.querySelector('#resend').disabled = false;
+      });
+    </script>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  await registerPage.waitForResendEnabled();
+  await expect.poll(async () => registerPage.isResendEnabled()).toBe(true);
+});

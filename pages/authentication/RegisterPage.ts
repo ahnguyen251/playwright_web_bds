@@ -1,9 +1,14 @@
-import type { Locator, Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 
 import { ROUTES } from '../../constants/routes';
 import type { RegistrationData } from '../../types/user.types';
 import { BasePage } from '../base/BasePage';
 import { HeaderComponent } from '../components/HeaderComponent';
+
+export interface RegistrationSubmitTransition {
+  readonly disabledObserved: boolean;
+  readonly loadingTextObserved: boolean;
+}
 
 export class RegisterPage extends BasePage {
   public readonly otpHeading: Locator;
@@ -15,10 +20,13 @@ export class RegisterPage extends BasePage {
   private readonly passwordInput: Locator;
   private readonly confirmPasswordInput: Locator;
   private readonly submitButton: Locator;
+  private readonly registrationForm: Locator;
   private readonly validationMessageLocators: readonly Locator[];
+  private readonly serverFeedbackMessage: Locator;
   private readonly completeRegistrationButton: Locator;
   private readonly otpInputs: readonly Locator[];
   private readonly verifyOtpButton: Locator;
+  private readonly resendOtpButton: Locator;
 
   public constructor(page: Page) {
     super(page);
@@ -32,11 +40,16 @@ export class RegisterPage extends BasePage {
     this.passwordInput = page.getByPlaceholder('Mật khẩu', { exact: true });
     this.confirmPasswordInput = page.getByPlaceholder('Nhập lại mật khẩu', { exact: true });
     this.submitButton = page.getByRole('button', { name: 'Tạo tài khoản', exact: true });
+    this.registrationForm = this.submitButton.locator('..');
     this.validationMessageLocators = [
-      page.getByText('Vui lòng nhập email hợp lệ', { exact: true }),
-      page.getByText('Mật khẩu phải có ít nhất 8 ký tự', { exact: true }),
-      page.getByText('Mật khẩu xác nhận không khớp', { exact: true }),
+      this.registrationForm.getByText('Email không hợp lệ', { exact: true }),
+      this.registrationForm.getByText('Vui lòng nhập email hợp lệ', { exact: true }),
+      this.registrationForm.getByText('Mật khẩu phải có ít nhất 8 ký tự', { exact: true }),
+      this.registrationForm.getByText('Mật khẩu xác nhận không khớp', { exact: true }),
     ];
+    this.serverFeedbackMessage = this.registrationForm.locator(
+      'p.text-red-500.text-xs.mb-3.flex.items-center.gap-1',
+    );
     this.otpHeading = page.getByRole('heading', { name: 'Xác thực email', exact: true });
     this.registrationSuccessHeading = page.getByRole('heading', {
       name: 'Đăng ký thành công!',
@@ -50,6 +63,7 @@ export class RegisterPage extends BasePage {
       page.getByRole('textbox', { name: `Mã OTP ${String(index + 1)}`, exact: true }),
     );
     this.verifyOtpButton = page.getByRole('button', { name: 'Xác nhận', exact: true });
+    this.resendOtpButton = page.getByRole('button', { name: 'Gửi lại', exact: true });
   }
 
   public async openHome(): Promise<void> {
@@ -63,17 +77,49 @@ export class RegisterPage extends BasePage {
   }
 
   public async fillRegistration(data: RegistrationData): Promise<void> {
-    await this.fullNameInput.fill(data.fullName);
-    await this.emailInput.fill(data.email);
-    await this.passwordInput.fill(data.password);
-    await this.confirmPasswordInput.fill(data.passwordConfirmation);
+    await this.fillFullName(data.fullName);
+    await this.fillEmail(data.email);
+    await this.fillPassword(data.password);
+    await this.fillPasswordConfirmation(data.passwordConfirmation);
+  }
+
+  public async fillFullName(fullName: string): Promise<void> {
+    await this.fullNameInput.fill(fullName);
+  }
+
+  public async blurFullName(): Promise<void> {
+    await this.fullNameInput.blur();
+  }
+
+  public async fillEmail(email: string): Promise<void> {
+    await this.emailInput.fill(email);
+  }
+
+  public async blurEmail(): Promise<void> {
+    await this.emailInput.blur();
+  }
+
+  public async fillPassword(password: string): Promise<void> {
+    await this.passwordInput.fill(password);
+  }
+
+  public async blurPassword(): Promise<void> {
+    await this.passwordInput.blur();
+  }
+
+  public async fillPasswordConfirmation(passwordConfirmation: string): Promise<void> {
+    await this.confirmPasswordInput.fill(passwordConfirmation);
+  }
+
+  public async blurPasswordConfirmation(): Promise<void> {
+    await this.confirmPasswordInput.blur();
   }
 
   public async blurAllFields(): Promise<void> {
-    await this.fullNameInput.blur();
-    await this.emailInput.blur();
-    await this.passwordInput.blur();
-    await this.confirmPasswordInput.blur();
+    await this.blurFullName();
+    await this.blurEmail();
+    await this.blurPassword();
+    await this.blurPasswordConfirmation();
   }
 
   public async submit(): Promise<void> {
@@ -94,8 +140,86 @@ export class RegisterPage extends BasePage {
     return this.visibleValidationMessages();
   }
 
+  public async fieldValidationMessages(): Promise<string[]> {
+    return this.visibleValidationMessages();
+  }
+
+  public async serverMessage(): Promise<string> {
+    return (await this.serverFeedbackMessage.textContent())?.trim() ?? '';
+  }
+
+  public async submitAndObserveTransition(): Promise<RegistrationSubmitTransition> {
+    const submitButtonHandle = await this.submitButton.elementHandle();
+
+    if (submitButtonHandle === null) {
+      throw new Error('Registration submit button is not attached to the DOM.');
+    }
+
+    try {
+      const observation = this.page.evaluate((button) => {
+        return new Promise<RegistrationSubmitTransition>((resolve) => {
+          const submitButton = button as HTMLButtonElement;
+          const initialTextObserved = submitButton.textContent?.trim() === 'Tạo tài khoản';
+          let disabledObserved = initialTextObserved && submitButton.disabled;
+          let loadingTextObserved = initialTextObserved && submitButton.textContent?.trim() === 'Đang xử lý...';
+          let settled = false;
+          let timeoutId: number | undefined;
+          let cancel: () => void;
+
+          const finish = (): void => {
+            if (settled) return;
+
+            settled = true;
+            observer.disconnect();
+            button.removeEventListener('auth-transition-observation-cancel', cancel);
+            if (timeoutId !== undefined) window.clearTimeout(timeoutId);
+            resolve({ disabledObserved, loadingTextObserved });
+          };
+          const capture = (): void => {
+            disabledObserved ||= initialTextObserved && submitButton.disabled;
+            loadingTextObserved ||= initialTextObserved && submitButton.textContent?.trim() === 'Đang xử lý...';
+            if (disabledObserved && loadingTextObserved) finish();
+          };
+          const observer = new MutationObserver(capture);
+          cancel = (): void => finish();
+
+          observer.observe(button, {
+            attributes: true,
+            characterData: true,
+            childList: true,
+            subtree: true,
+          });
+          button.addEventListener('auth-transition-observation-cancel', cancel, { once: true });
+          capture();
+          timeoutId = window.setTimeout(finish, 1_000);
+        });
+      }, submitButtonHandle);
+
+      try {
+        await this.submitButton.click();
+      } catch (error) {
+        await this.page.evaluate((button) => {
+          button.dispatchEvent(new Event('auth-transition-observation-cancel'));
+        }, submitButtonHandle);
+        await observation;
+        throw error;
+      }
+      return await observation;
+    } finally {
+      await submitButtonHandle.dispose();
+    }
+  }
+
   public async isSubmitEnabled(): Promise<boolean> {
     return this.submitButton.isEnabled();
+  }
+
+  public async isResendEnabled(): Promise<boolean> {
+    return this.resendOtpButton.isEnabled();
+  }
+
+  public async waitForResendEnabled(): Promise<void> {
+    await expect(this.resendOtpButton).toBeEnabled();
   }
 
   public async waitForOtpScreen(): Promise<void> {

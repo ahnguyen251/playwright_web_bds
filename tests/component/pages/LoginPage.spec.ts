@@ -131,3 +131,42 @@ test('exposes invalid-email feedback without submitting credentials', async ({ p
   expect(await page.evaluate(() => document.body.dataset.validationTriggered)).toBe('true');
   expect(await page.evaluate(() => document.body.dataset.submitted)).toBeUndefined();
 });
+
+test('fills empty login fields separately and returns the exact scoped server feedback', async ({
+  page,
+}) => {
+  await page.setContent(`
+    <button aria-label="Đăng nhập">Đăng nhập</button>
+    <section role="dialog" hidden>
+      <h1>Xin chào,</h1>
+      <input placeholder="Email của bạn" value="prefilled@example.test" onblur="document.body.dataset.email = this.value" />
+      <input placeholder="Mật khẩu" type="password" value="prefilled-password" onblur="document.body.dataset.password = this.value" />
+      <p class="text-red-500 text-xs mb-3 flex items-center gap-1">Tài khoản của bạn đã bị khóa</p>
+      <button>Quên mật khẩu?</button>
+      <button>Tiếp tục</button>
+    </section>
+    <script type="text/javascript">
+      const navigation = document.createElement('nav');
+      const logo = document.createElement('a');
+      logo.href = '/';
+      logo.setAttribute('aria-label', 'Propify');
+      const login = document.querySelector('[aria-label="Đăng nhập"]');
+      login.before(navigation);
+      navigation.append(logo, login);
+      login.onclick = () => { document.querySelector('[role="dialog"]').hidden = false; };
+    </script>
+  `);
+  const loginPage = new LoginPage(page);
+
+  await loginPage.open();
+  await loginPage.fillEmail('');
+  await loginPage.blurEmail();
+  await loginPage.fillPassword('');
+  await loginPage.blurPassword();
+
+  await expect.poll(() => page.evaluate(() => ({ ...document.body.dataset }))).toEqual({
+    email: '',
+    password: '',
+  });
+  expect(await loginPage.serverMessage()).toBe('Tài khoản của bạn đã bị khóa');
+});

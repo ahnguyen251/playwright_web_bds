@@ -54,12 +54,24 @@ export class LoginPage extends BasePage {
   public async fillCredentials(
     credentials: Pick<UserCredentials, 'email' | 'password'>,
   ): Promise<void> {
-    await this.emailInput.fill(credentials.email);
-    await this.passwordInput.fill(credentials.password);
+    await this.fillEmail(credentials.email);
+    await this.fillPassword(credentials.password);
+  }
+
+  public async fillEmail(email: string): Promise<void> {
+    await this.emailInput.fill(email);
+  }
+
+  public async fillPassword(password: string): Promise<void> {
+    await this.passwordInput.fill(password);
   }
 
   public async blurEmail(): Promise<void> {
     await this.emailInput.blur();
+  }
+
+  public async blurPassword(): Promise<void> {
+    await this.passwordInput.blur();
   }
 
   public async submit(): Promise<void> {
@@ -80,7 +92,7 @@ export class LoginPage extends BasePage {
   }
 
   public async serverMessage(): Promise<string> {
-    return (await this.serverFeedbackMessage.textContent()) ?? '';
+    return (await this.serverFeedbackMessage.textContent())?.trim() ?? '';
   }
 
   public async isSubmitEnabled(): Promise<boolean> {

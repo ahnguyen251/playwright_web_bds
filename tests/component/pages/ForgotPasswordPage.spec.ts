@@ -213,3 +213,52 @@ test('completes OTP verification and submits a new password', async ({ page }) =
   await forgotPasswordPage.backToLogin();
   expect(await page.evaluate(() => document.body.dataset.returnedToLogin)).toBe('true');
 });
+
+test('returns exact email-stage feedback without leaking an unrelated alert', async ({ page }) => {
+  await page.setContent(`
+    <p role="alert">Unrelated page alert</p>
+    <section>
+      <h1>Quên mật khẩu?</h1>
+      <input placeholder="Email của bạn" />
+      <p role="alert">Không tìm thấy tài khoản với email này</p>
+      <button>Gửi mã OTP</button>
+    </section>
+  `);
+  const forgotPasswordPage = new ForgotPasswordPage(page);
+
+  expect(await forgotPasswordPage.visibleMessage()).toBe('Không tìm thấy tài khoản với email này');
+});
+
+test('preserves labelled OTP input state while waiting for resend to become enabled', async ({ page }) => {
+  await page.setContent(`
+    <section data-stage="otp">
+      <h1>Xác nhận OTP</h1>
+      <input aria-label="Mã OTP 1" type="text" inputmode="numeric" maxlength="1" />
+      <input aria-label="Mã OTP 2" type="text" inputmode="numeric" maxlength="1" />
+      <input aria-label="Mã OTP 3" type="text" inputmode="numeric" maxlength="1" />
+      <input aria-label="Mã OTP 4" type="text" inputmode="numeric" maxlength="1" />
+      <input aria-label="Mã OTP 5" type="text" inputmode="numeric" maxlength="1" />
+      <input aria-label="Mã OTP 6" type="text" inputmode="numeric" maxlength="1" />
+      <button>Xác nhận OTP</button>
+      <button id="resend" disabled>Gửi lại</button>
+    </section>
+    <script>
+      queueMicrotask(() => {
+        document.querySelector('#resend').disabled = false;
+      });
+    </script>
+  `);
+  const forgotPasswordPage = new ForgotPasswordPage(page);
+
+  await forgotPasswordPage.enterOtp('123456');
+  await forgotPasswordPage.waitForResendEnabled();
+
+  await expect.poll(async () => forgotPasswordPage.isResendEnabled()).toBe(true);
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        Array.from(document.querySelectorAll('input')).map((input) => (input as HTMLInputElement).value),
+      ),
+    )
+    .toEqual(['1', '2', '3', '4', '5', '6']);
+});
