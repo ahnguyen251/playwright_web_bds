@@ -159,12 +159,12 @@ export class RegisterPage extends BasePage {
       const observation = this.page.evaluate((button) => {
         return new Promise<RegistrationSubmitTransition>((resolve) => {
           const submitButton = button as HTMLButtonElement;
-          const initialTextObserved = submitButton.textContent?.trim() === 'Tạo tài khoản';
-          let disabledObserved = initialTextObserved && submitButton.disabled;
-          let loadingTextObserved = initialTextObserved && submitButton.textContent?.trim() === 'Đang xử lý...';
+          let transitionArmed = false;
+          let transitionObserved = false;
           let settled = false;
           let timeoutId: number | undefined;
           let cancel: () => void;
+          let arm: () => void;
 
           const finish = (): void => {
             if (settled) return;
@@ -172,16 +172,29 @@ export class RegisterPage extends BasePage {
             settled = true;
             observer.disconnect();
             button.removeEventListener('auth-transition-observation-cancel', cancel);
+            button.removeEventListener('click', arm, true);
             if (timeoutId !== undefined) window.clearTimeout(timeoutId);
-            resolve({ disabledObserved, loadingTextObserved });
+            resolve({
+              disabledObserved: transitionObserved,
+              loadingTextObserved: transitionObserved,
+            });
           };
           const capture = (): void => {
-            disabledObserved ||= initialTextObserved && submitButton.disabled;
-            loadingTextObserved ||= initialTextObserved && submitButton.textContent?.trim() === 'Đang xử lý...';
-            if (disabledObserved && loadingTextObserved) finish();
+            if (
+              transitionArmed &&
+              submitButton.disabled &&
+              submitButton.textContent?.trim() === 'Đang xử lý...'
+            ) {
+              transitionObserved = true;
+              finish();
+            }
           };
           const observer = new MutationObserver(capture);
           cancel = (): void => finish();
+          arm = (): void => {
+            transitionArmed = submitButton.textContent?.trim() === 'Tạo tài khoản';
+            timeoutId = window.setTimeout(finish, 1_000);
+          };
 
           observer.observe(button, {
             attributes: true,
@@ -190,8 +203,7 @@ export class RegisterPage extends BasePage {
             subtree: true,
           });
           button.addEventListener('auth-transition-observation-cancel', cancel, { once: true });
-          capture();
-          timeoutId = window.setTimeout(finish, 1_000);
+          button.addEventListener('click', arm, true);
         });
       }, submitButtonHandle);
 

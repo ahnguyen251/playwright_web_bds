@@ -304,6 +304,107 @@ test('observes the transient disabled loading state before submitting registrati
   });
 });
 
+test('ignores an unrelated pre-click loading mutation before the registration submit event', async ({
+  page,
+}) => {
+  await page.setContent(`
+    <section>
+      <button id="submit-registration">Tạo tài khoản</button>
+    </section>
+    <script>
+      const button = document.querySelector('#submit-registration');
+      button.addEventListener('mousedown', () => {
+        button.disabled = true;
+        button.textContent = 'Đang xử lý...';
+        queueMicrotask(() => {
+          button.disabled = false;
+          button.textContent = 'Tạo tài khoản';
+        });
+      });
+      button.addEventListener('click', () => {
+        document.body.dataset.submitted = 'true';
+      });
+    </script>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  expect(await registerPage.submitAndObserveTransition()).toEqual({
+    disabledObserved: false,
+    loadingTextObserved: false,
+  });
+  await expect.poll(() => page.evaluate(() => document.body.dataset.submitted)).toBe('true');
+});
+
+test('does not combine non-overlapping registration loading states into a transition', async ({
+  page,
+}) => {
+  await page.setContent(`
+    <section>
+      <button id="submit-registration">Tạo tài khoản</button>
+    </section>
+    <script>
+      document.querySelector('#submit-registration').onclick = (event) => {
+        const button = event.currentTarget;
+        button.disabled = true;
+        requestAnimationFrame(() => {
+          button.disabled = false;
+          button.textContent = 'Đang xử lý...';
+          requestAnimationFrame(() => {
+            button.textContent = 'Tạo tài khoản';
+          });
+        });
+      };
+    </script>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  expect(await registerPage.submitAndObserveTransition()).toEqual({
+    disabledObserved: false,
+    loadingTextObserved: false,
+  });
+});
+
+test('returns a safe false transition observation when submit never enters loading', async ({ page }) => {
+  await page.setContent('<button>Tạo tài khoản</button>');
+  const registerPage = new RegisterPage(page);
+
+  expect(await registerPage.submitAndObserveTransition()).toEqual({
+    disabledObserved: false,
+    loadingTextObserved: false,
+  });
+});
+
+test('cancels transition observation when the submit click loses its target', async ({ page }) => {
+  page.setDefaultTimeout(250);
+  await page.setContent(`
+    <button id="submit-registration">Tạo tài khoản</button>
+    <div id="click-blocker" style="position: fixed; inset: 0"></div>
+    <script>
+      const button = document.querySelector('#submit-registration');
+      button.addEventListener('auth-transition-observation-cancel', () => {
+        document.body.dataset.observationCancelled = 'true';
+      });
+      const NativeMutationObserver = window.MutationObserver;
+      window.MutationObserver = class extends NativeMutationObserver {
+        constructor(callback) {
+          super(callback);
+          document.body.dataset.observationInstalled = 'true';
+        }
+      };
+    </script>
+  `);
+  const registerPage = new RegisterPage(page);
+  const transition = registerPage.submitAndObserveTransition();
+
+  await expect.poll(() => page.evaluate(() => document.body.dataset.observationInstalled)).toBe('true');
+  await page.evaluate(() => document.querySelector('#submit-registration')?.remove());
+
+  await expect(transition).rejects.toThrow();
+  await expect
+    .poll(() => page.evaluate(() => document.body.dataset.observationCancelled))
+    .toBe('true');
+});
+
 test('waits web-first for registration OTP resend to become enabled', async ({ page }) => {
   await page.setContent(`
     <section>
