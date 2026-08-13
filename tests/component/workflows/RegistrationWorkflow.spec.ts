@@ -38,11 +38,14 @@ class StatefulRegistrationPage implements RegistrationPageActions {
     return Promise.resolve();
   }
 
-  public submit(): Promise<void> {
+  public submitAndObserveTransition(): Promise<{
+    readonly disabledObserved: boolean;
+    readonly loadingTextObserved: boolean;
+  }> {
     if (this.filledData === undefined)
       return Promise.reject(new Error('Registration data missing.'));
     this.screen = 'otp';
-    return Promise.resolve();
+    return Promise.resolve({ disabledObserved: true, loadingTextObserved: true });
   }
 
   public waitForOtpScreen(): Promise<void> {
@@ -119,7 +122,11 @@ test('submits registration and correlates OTP from immediately before submit', a
 
   const context = await workflow.submitRegistration(data);
 
-  expect(context).toEqual({ email: data.email, requestedAfter });
+  expect(context).toEqual({
+    email: data.email,
+    requestedAfter,
+    submitState: { disabledObserved: true, loadingTextObserved: true },
+  });
   expect(Object.isFrozen(context)).toBe(true);
   expect(registrationPage.screen).toBe('otp');
   expect(registrationPage.filledData).toBe(data);
@@ -166,5 +173,5 @@ test('propagates the real RegisterPage accessibility blocker after OTP retrieval
   await expect(workflow.verifyRegistration(context)).rejects.toThrow(
     'OTP entry is blocked: Propify must expose six unique accessible textbox names: "Mã OTP 1" through "Mã OTP 6".',
   );
-  expect(otpProvider.lastQuery).toBe(context);
+  expect(otpProvider.lastQuery).toEqual(context);
 });

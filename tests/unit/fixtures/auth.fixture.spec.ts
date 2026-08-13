@@ -1,9 +1,21 @@
 import { expect, test } from '@playwright/test';
 
 import {
+  authTest,
   createExecutionPolicy,
   genericRegistrationSkipReason,
 } from '../../../fixtures/auth.fixture';
+
+authTest(
+  'provides a page-bound authentication request observer',
+  async ({ authRequestObserver, page }) => {
+    const requestCount = await authRequestObserver.countDuring('registration', async () => {
+      await page.goto('http://127.0.0.1:1/api/v1/auth/register').catch(() => undefined);
+    });
+
+    expect(requestCount).toBe(1);
+  },
+);
 
 const mutatingPolicy = {
   RUN_OTP_E2E: 'true',

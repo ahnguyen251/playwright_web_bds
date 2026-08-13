@@ -1,18 +1,109 @@
-import { TAGS } from '../../constants/tags';
+import { ROUTES } from '../../constants/routes';
 import {
   expect,
   genericRegistrationTest as test,
 } from '../../fixtures/generic-registration.fixture';
+import { test as blockedTest } from '../../fixtures/test.fixture';
+import {
+  invalidOrExpiredRegistrationOtpTestCase,
+  registrationOtpResendCountdownTestCase,
+  registrationSuccessTestCase,
+} from '../../test-cases/authentication/registration.test-cases';
+import { BrowserHelper } from '../../utils/BrowserHelper';
+import type { RegistrationSubmission } from '../../workflows/authentication/RegistrationWorkflow';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 test.describe.configure({ mode: 'serial' });
 
-test(
-  'AUTH-REGISTER-OTP-001 registers a fresh Gmail alias and verifies its OTP',
-  { tag: [TAGS.regression, TAGS.authentication, TAGS.otp, TAGS.mutating] },
-  async ({ registrationWorkflow, authenticationWorkflow, authenticationData }) => {
-    await registrationWorkflow.registerAndVerify(authenticationData.registration);
+const hasJsonObjectBody = (body: unknown): boolean =>
+  typeof body === 'object' && body !== null && !Array.isArray(body);
 
-    expect(await authenticationWorkflow.isAuthenticated()).toBe(true);
+const deriveIncorrectOtp = (otp: string): string => {
+  if (!/^\d{6}$/.test(otp)) {
+    throw new Error('OTP provider returned a value outside the six-digit contract.');
+  }
+
+  const changedFirstDigit = String((Number(otp.charAt(0)) + 1) % 10);
+  return `${changedFirstDigit}${otp.slice(1)}`;
+};
+
+test(
+  `${registrationSuccessTestCase.id} ${registrationSuccessTestCase.title}`,
+  { tag: [...registrationSuccessTestCase.tags] },
+  async ({
+    authRequestObserver,
+    authenticationData,
+    authenticationWorkflow,
+    page,
+    registrationWorkflow,
+  }) => {
+    let submission: RegistrationSubmission | undefined;
+    const registrationResponse = await authRequestObserver.waitForResponse(
+      'registration',
+      async () => {
+        submission = await registrationWorkflow.submitRegistration(authenticationData.registration);
+      },
+    );
+    if (submission === undefined) {
+      throw new Error('Registration workflow completed without a submission result.');
+    }
+
+    expect(submission.submitState).toEqual({
+      disabledObserved: true,
+      loadingTextObserved: true,
+    });
+    expect(registrationResponse.status).toBeGreaterThanOrEqual(200);
+    expect(registrationResponse.status).toBeLessThan(300);
+    expect(hasJsonObjectBody(registrationResponse.body)).toBe(true);
+
+    await registrationWorkflow.verifyRegistration(submission);
+
+    await expect.poll(async () => authenticationWorkflow.isAuthenticated()).toBe(true);
+    await expect(page).toHaveURL((url) => url.pathname === ROUTES.home);
+    expect(await BrowserHelper.hasAuthenticationCookies(page.context())).toBe(true);
+  },
+);
+
+test(
+  `${invalidOrExpiredRegistrationOtpTestCase.id} - OTP sai`,
+  { tag: [...invalidOrExpiredRegistrationOtpTestCase.tags] },
+  async ({ authenticationData, otpProvider, registerPage, registrationWorkflow }) => {
+    const submission = await registrationWorkflow.submitRegistration(
+      authenticationData.registration,
+    );
+    const deliveredOtp = await otpProvider.getOtp({
+      email: submission.email,
+      requestedAfter: submission.requestedAfter,
+    });
+
+    await registerPage.enterOtp(deriveIncorrectOtp(deliveredOtp));
+
+    await expect(registerPage.otpHeading).toBeVisible();
+    await expect
+      .poll(async () => registerPage.serverMessage())
+      .toMatch(/(?:OTP|mã xác thực).*(?:sai|không (?:đúng|hợp lệ)|invalid|incorrect)/i);
+  },
+);
+
+blockedTest(
+  `${invalidOrExpiredRegistrationOtpTestCase.id} - OTP hết hạn`,
+  { tag: [...invalidOrExpiredRegistrationOtpTestCase.tags] },
+  () => {
+    blockedTest.skip(
+      true,
+      'BLOCKED: no server clock, TTL override, expired-OTP seed, or fault injection.',
+    );
+  },
+);
+
+test(
+  `${registrationOtpResendCountdownTestCase.id} ${registrationOtpResendCountdownTestCase.title}`,
+  { tag: [...registrationOtpResendCountdownTestCase.tags] },
+  async ({ authenticationData, registerPage, registrationWorkflow }) => {
+    await registrationWorkflow.submitRegistration(authenticationData.registration);
+
+    expect(await registerPage.isResendEnabled()).toBe(false);
+    await registerPage.waitForResendEnabled();
+    expect(await registerPage.isResendEnabled()).toBe(true);
   },
 );

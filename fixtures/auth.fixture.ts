@@ -3,6 +3,7 @@ import { test as base, type BrowserContext } from '@playwright/test';
 
 import { AuthenticationDataFactory } from '../test-data/factories/AuthenticationDataFactory';
 import { UserDataFactory } from '../test-data/factories/UserDataFactory';
+import { AuthRequestObserver } from '../helpers/network/AuthRequestObserver';
 import type { OtpProvider, OtpQuery } from '../types/otp.types';
 import type { TestEnvironment } from '../types/environment.types';
 import type { RegistrationData, UserCredentials } from '../types/user.types';
@@ -147,6 +148,7 @@ const createMutatingUser = (): MutatingUserFixture => {
 };
 
 export interface AuthFixtures {
+  readonly authRequestObserver: AuthRequestObserver;
   readonly defaultUser: UserCredentials;
   readonly contextForUser: (alias: string) => Promise<BrowserContext>;
   readonly executionPolicy: ExecutionPolicy;
@@ -156,6 +158,7 @@ export interface AuthFixtures {
 }
 
 export const authTest = base.extend<AuthFixtures>({
+  authRequestObserver: async ({ page }, use) => use(new AuthRequestObserver(page)),
   defaultUser: async ({}, use) => {
     await use(UserDataFactory.getCredentials('defaultUser'));
   },
