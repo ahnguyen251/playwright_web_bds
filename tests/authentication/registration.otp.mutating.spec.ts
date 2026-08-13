@@ -1,4 +1,5 @@
 import { ROUTES } from '../../constants/routes';
+import { TIMEOUTS } from '../../constants/timeouts';
 import {
   expect,
   genericRegistrationTest as test,
@@ -10,13 +11,11 @@ import {
   registrationSuccessTestCase,
 } from '../../test-cases/authentication/registration.test-cases';
 import { BrowserHelper } from '../../utils/BrowserHelper';
+import { requireAcceptedRegistrationTransport } from '../../helpers/network/RegistrationResponseContract';
 import type { RegistrationSubmission } from '../../workflows/authentication/RegistrationWorkflow';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 test.describe.configure({ mode: 'serial' });
-
-const hasJsonObjectBody = (body: unknown): boolean =>
-  typeof body === 'object' && body !== null && !Array.isArray(body);
 
 const deriveIncorrectOtp = (otp: string): string => {
   if (!/^\d{6}$/.test(otp)) {
@@ -48,13 +47,7 @@ test(
       throw new Error('Registration workflow completed without a submission result.');
     }
 
-    expect(submission.submitState).toEqual({
-      disabledObserved: true,
-      loadingTextObserved: true,
-    });
-    expect(registrationResponse.status).toBeGreaterThanOrEqual(200);
-    expect(registrationResponse.status).toBeLessThan(300);
-    expect(hasJsonObjectBody(registrationResponse.body)).toBe(true);
+    requireAcceptedRegistrationTransport(registrationResponse, submission.submitState);
 
     await registrationWorkflow.verifyRegistration(submission);
 
@@ -100,6 +93,7 @@ test(
   `${registrationOtpResendCountdownTestCase.id} ${registrationOtpResendCountdownTestCase.title}`,
   { tag: [...registrationOtpResendCountdownTestCase.tags] },
   async ({ authenticationData, registerPage, registrationWorkflow }) => {
+    test.setTimeout(TIMEOUTS.registrationOtpResendTest);
     await registrationWorkflow.submitRegistration(authenticationData.registration);
 
     expect(await registerPage.isResendEnabled()).toBe(false);

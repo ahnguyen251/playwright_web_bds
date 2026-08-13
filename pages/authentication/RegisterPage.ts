@@ -1,6 +1,7 @@
 import { expect, type Locator, type Page } from '@playwright/test';
 
 import { ROUTES } from '../../constants/routes';
+import { TIMEOUTS } from '../../constants/timeouts';
 import type { RegistrationData } from '../../types/user.types';
 import { BasePage } from '../base/BasePage';
 import { HeaderComponent } from '../components/HeaderComponent';
@@ -9,6 +10,12 @@ export interface RegistrationSubmitTransition {
   readonly disabledObserved: boolean;
   readonly loadingTextObserved: boolean;
 }
+
+export interface RegistrationPageTiming {
+  readonly resendEnabledMs?: number;
+}
+
+export type RegistrationSubmitActivation = 'activated' | 'blocked';
 
 export class RegisterPage extends BasePage {
   public readonly otpHeading: Locator;
@@ -27,9 +34,11 @@ export class RegisterPage extends BasePage {
   private readonly otpInputs: readonly Locator[];
   private readonly verifyOtpButton: Locator;
   private readonly resendOtpButton: Locator;
+  private readonly resendEnabledMs: number;
 
-  public constructor(page: Page) {
+  public constructor(page: Page, timing: RegistrationPageTiming = {}) {
     super(page);
+    this.resendEnabledMs = timing.resendEnabledMs ?? TIMEOUTS.registrationOtpResend;
     this.header = new HeaderComponent(page);
     this.openRegistrationButton = page.getByRole('button', {
       name: 'Đăng ký ngay',
@@ -42,10 +51,15 @@ export class RegisterPage extends BasePage {
     this.submitButton = page.getByRole('button', { name: 'Tạo tài khoản', exact: true });
     this.registrationForm = this.submitButton.locator('..');
     this.validationMessageLocators = [
+      this.registrationForm.getByText('Vui lòng nhập họ và tên', { exact: true }),
       this.registrationForm.getByText('Email không hợp lệ', { exact: true }),
       this.registrationForm.getByText('Vui lòng nhập email hợp lệ', { exact: true }),
       this.registrationForm.getByText('Mật khẩu phải có ít nhất 8 ký tự', { exact: true }),
+      this.registrationForm.getByText('Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường và số', {
+        exact: true,
+      }),
       this.registrationForm.getByText('Mật khẩu xác nhận không khớp', { exact: true }),
+      this.registrationForm.getByText('Phải trùng khớp với mật khẩu đã nhập', { exact: true }),
     ];
     this.serverFeedbackMessage = this.registrationForm.locator(
       'p.text-red-500.text-xs.mb-3.flex.items-center.gap-1',
@@ -126,6 +140,15 @@ export class RegisterPage extends BasePage {
     await this.submitButton.click();
   }
 
+  public async activateSubmit(): Promise<RegistrationSubmitActivation> {
+    if (!(await this.submitButton.isEnabled())) {
+      return 'blocked';
+    }
+
+    await this.submitButton.click();
+    return 'activated';
+  }
+
   public async visibleValidationMessages(): Promise<string[]> {
     const visibleMessages: string[] = [];
     for (const message of this.validationMessageLocators) {
@@ -151,10 +174,6 @@ export class RegisterPage extends BasePage {
   public async submitAndObserveTransition(): Promise<RegistrationSubmitTransition> {
     const submitButtonHandle = await this.submitButton.elementHandle();
 
-    if (submitButtonHandle === null) {
-      throw new Error('Registration submit button is not attached to the DOM.');
-    }
-
     try {
       const observation = this.page.evaluate((button) => {
         return new Promise<RegistrationSubmitTransition>((resolve) => {
@@ -163,8 +182,6 @@ export class RegisterPage extends BasePage {
           let transitionObserved = false;
           let settled = false;
           let timeoutId: number | undefined;
-          let cancel: () => void;
-          let arm: () => void;
 
           const finish = (): void => {
             if (settled) return;
@@ -183,16 +200,16 @@ export class RegisterPage extends BasePage {
             if (
               transitionArmed &&
               submitButton.disabled &&
-              submitButton.textContent?.trim() === 'Đang xử lý...'
+              submitButton.textContent.trim() === 'Đang xử lý...'
             ) {
               transitionObserved = true;
               finish();
             }
           };
           const observer = new MutationObserver(capture);
-          cancel = (): void => finish();
-          arm = (): void => {
-            transitionArmed = submitButton.textContent?.trim() === 'Tạo tài khoản';
+          const cancel = (): void => finish();
+          const arm = (): void => {
+            transitionArmed = submitButton.textContent.trim() === 'Tạo tài khoản';
             timeoutId = window.setTimeout(finish, 1_000);
           };
 
@@ -231,7 +248,7 @@ export class RegisterPage extends BasePage {
   }
 
   public async waitForResendEnabled(): Promise<void> {
-    await expect(this.resendOtpButton).toBeEnabled();
+    await expect(this.resendOtpButton).toBeEnabled({ timeout: this.resendEnabledMs });
   }
 
   public async waitForOtpScreen(): Promise<void> {

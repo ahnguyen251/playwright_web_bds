@@ -229,6 +229,32 @@ test('rejects an invalid OTP format before evaluating the accessibility contract
   );
 });
 
+test('reports when disabled registration submit prevents user activation', async ({ page }) => {
+  await page.setContent(`
+    <section>
+      <input placeholder="Nhập lại mật khẩu" />
+      <button disabled onclick="document.body.dataset.submitted = 'true'">Tạo tài khoản</button>
+    </section>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  await expect(registerPage.activateSubmit()).resolves.toBe('blocked');
+  await expect.poll(() => page.evaluate(() => document.body.dataset.submitted)).toBeUndefined();
+});
+
+test('activates enabled registration submit through the Page Object', async ({ page }) => {
+  await page.setContent(`
+    <section>
+      <input placeholder="Nhập lại mật khẩu" />
+      <button onclick="document.body.dataset.submitted = 'true'">Tạo tài khoản</button>
+    </section>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  await expect(registerPage.activateSubmit()).resolves.toBe('activated');
+  await expect.poll(() => page.evaluate(() => document.body.dataset.submitted)).toBe('true');
+});
+
 test('fills and blurs each registration field without exposing form locators', async ({ page }) => {
   await page.setContent(`
     <section>
@@ -251,7 +277,7 @@ test('fills and blurs each registration field without exposing form locators', a
   await registerPage.blurPasswordConfirmation();
 
   await expect
-    .poll(() => page.evaluate(() => ({ ...document.body.dataset })))
+    .poll(() => page.evaluate(() => Object.fromEntries(Object.entries(document.body.dataset))))
     .toEqual({
       email: 'registration@example.test',
       fullName: 'Registration Automation',
@@ -268,18 +294,28 @@ test('returns scoped registration validation and server feedback exactly', async
       <input placeholder="Email của bạn" />
       <input placeholder="Mật khẩu" type="password" />
       <input placeholder="Nhập lại mật khẩu" type="password" />
+      <p>Vui lòng nhập họ và tên</p>
       <p>Email không hợp lệ</p>
+      <p>Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường và số</p>
+      <p>Phải trùng khớp với mật khẩu đã nhập</p>
       <p class="text-red-500 text-xs mb-3 flex items-center gap-1">Email đã tồn tại</p>
       <button>Tạo tài khoản</button>
     </section>
   `);
   const registerPage = new RegisterPage(page);
 
-  expect(await registerPage.fieldValidationMessages()).toEqual(['Email không hợp lệ']);
+  expect(await registerPage.fieldValidationMessages()).toEqual([
+    'Vui lòng nhập họ và tên',
+    'Email không hợp lệ',
+    'Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường và số',
+    'Phải trùng khớp với mật khẩu đã nhập',
+  ]);
   expect(await registerPage.serverMessage()).toBe('Email đã tồn tại');
 });
 
-test('observes the transient disabled loading state before submitting registration', async ({ page }) => {
+test('observes the transient disabled loading state before submitting registration', async ({
+  page,
+}) => {
   await page.setContent(`
     <section>
       <button id="submit-registration">Tạo tài khoản</button>
@@ -364,7 +400,9 @@ test('does not combine non-overlapping registration loading states into a transi
   });
 });
 
-test('returns a safe false transition observation when submit never enters loading', async ({ page }) => {
+test('returns a safe false transition observation when submit never enters loading', async ({
+  page,
+}) => {
   await page.setContent('<button>Tạo tài khoản</button>');
   const registerPage = new RegisterPage(page);
 
@@ -396,7 +434,9 @@ test('cancels transition observation when the submit click loses its target', as
   const registerPage = new RegisterPage(page);
   const transition = registerPage.submitAndObserveTransition();
 
-  await expect.poll(() => page.evaluate(() => document.body.dataset.observationInstalled)).toBe('true');
+  await expect
+    .poll(() => page.evaluate(() => document.body.dataset.observationInstalled))
+    .toBe('true');
   await page.evaluate(() => document.querySelector('#submit-registration')?.remove());
 
   await expect(transition).rejects.toThrow();
@@ -417,8 +457,20 @@ test('waits web-first for registration OTP resend to become enabled', async ({ p
       });
     </script>
   `);
-  const registerPage = new RegisterPage(page);
+  const registerPage = new RegisterPage(page, { resendEnabledMs: 1_000 });
 
   await registerPage.waitForResendEnabled();
   await expect.poll(async () => registerPage.isResendEnabled()).toBe(true);
+});
+
+test('uses the configured web-first registration resend timeout', async ({ page }) => {
+  await page.setContent(`
+    <section>
+      <button>Xác nhận OTP</button>
+      <button disabled>Gửi lại</button>
+    </section>
+  `);
+  const registerPage = new RegisterPage(page, { resendEnabledMs: 5 });
+
+  await expect(registerPage.waitForResendEnabled()).rejects.toThrow(/5ms/);
 });

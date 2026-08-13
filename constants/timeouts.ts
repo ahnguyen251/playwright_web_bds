@@ -5,4 +5,6 @@ export const TIMEOUTS = Object.freeze({
   test: 60_000,
   otpPoll: 2_000,
   otp: 60_000,
+  registrationOtpResend: 70_000,
+  registrationOtpResendTest: 90_000,
 });
