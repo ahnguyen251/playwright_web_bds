@@ -164,9 +164,49 @@ test('fills empty login fields separately and returns the exact scoped server fe
   await loginPage.fillPassword('');
   await loginPage.blurPassword();
 
-  await expect.poll(() => page.evaluate(() => ({ ...document.body.dataset }))).toEqual({
-    email: '',
-    password: '',
-  });
+  await expect
+    .poll(() =>
+      page.evaluate(() => ({
+        email: document.body.dataset.email,
+        password: document.body.dataset.password,
+      })),
+    )
+    .toEqual({
+      email: '',
+      password: '',
+    });
   expect(await loginPage.serverMessage()).toBe('Tài khoản của bạn đã bị khóa');
+});
+
+test('submits the login form by pressing Enter from the password field', async ({ page }) => {
+  await page.setContent(`
+    <nav>
+      <a href="/" aria-label="Propify">Propify</a>
+      <button type="button">Đăng nhập</button>
+    </nav>
+    <section hidden>
+      <h1>Xin chào,</h1>
+      <form>
+        <input placeholder="Email của bạn" />
+        <input placeholder="Mật khẩu" type="password" />
+        <button type="button">Quên mật khẩu?</button>
+        <button type="submit">Tiếp tục</button>
+      </form>
+    </section>
+    <script type="text/javascript">
+      const section = document.querySelector('section');
+      document.querySelector('nav button').onclick = () => { section.hidden = false; };
+      document.querySelector('form').onsubmit = (event) => {
+        event.preventDefault();
+        document.body.dataset.submittedFromForm = 'true';
+      };
+    </script>
+  `);
+  const loginPage = new LoginPage(page);
+
+  await loginPage.open();
+  await loginPage.fillPassword('non-sensitive-test-value');
+  await loginPage.submitFromPasswordField();
+
+  expect(await page.evaluate(() => document.body.dataset.submittedFromForm)).toBe('true');
 });

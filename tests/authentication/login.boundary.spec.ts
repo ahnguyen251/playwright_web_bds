@@ -30,19 +30,27 @@ for (const variant of missingFieldVariants) {
       }
 
       const submitEnabled = await loginPage.isSubmitEnabled();
-      test.skip(
-        !submitEnabled,
-        `BLOCKED: deployed login UI disables Continue for the ${variant} variant, so a real user submit activation cannot be exercised.`,
-      );
+      if (variant === 'email-or-phone') {
+        const loginRequestCount = await authRequestObserver.countDuring('login', () =>
+          loginPage.submitFromPasswordField(),
+        );
 
-      const loginRequestCount = await authRequestObserver.countDuring('login', () =>
-        loginPage.submit(),
-      );
+        expect(submitEnabled).toBe(false);
+        expect(loginRequestCount).toBe(0);
+        return;
+      }
+
+      const loginRequestCount = await authRequestObserver.countDuring('login', async () => {
+        if (submitEnabled) {
+          await loginPage.submit();
+        }
+      });
 
       test.skip(
-        loginRequestCount !== 0,
-        `BLOCKED: deployed login UI emitted ${String(loginRequestCount)} login POST for the ${variant} missing-field variant instead of blocking submission.`,
+        submitEnabled && loginRequestCount === 1,
+        'BLOCKED: deployed login UI keeps Continue enabled and emitted exactly one login POST for the missing-password variant.',
       );
+      expect(submitEnabled).toBe(true);
       expect(loginRequestCount).toBe(0);
     },
   );

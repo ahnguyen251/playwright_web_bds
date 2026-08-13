@@ -15,10 +15,6 @@ test(
       loginPage.submitCredentials(defaultUser),
     );
 
-    test.skip(
-      loginStatus.status === 500,
-      'BLOCKED: deployed login endpoint returned HTTP 500 for the configured Active account.',
-    );
     expect(loginStatus.status).toBe(200);
     await header.waitForAuthenticated();
     await expect(page).toHaveURL((url) => url.pathname === ROUTES.home && url.search === '');

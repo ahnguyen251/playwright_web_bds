@@ -78,6 +78,10 @@ export class LoginPage extends BasePage {
     await this.continueButton.click();
   }
 
+  public async submitFromPasswordField(): Promise<void> {
+    await this.passwordInput.press('Enter');
+  }
+
   public async openForgotPassword(): Promise<ForgotPasswordPage> {
     await this.forgotPasswordButton.click();
     return new ForgotPasswordPage(this.page);
