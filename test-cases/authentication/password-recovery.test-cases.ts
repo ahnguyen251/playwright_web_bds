@@ -3,14 +3,19 @@ import { AuthenticationDataFactory } from '../../test-data/factories/Authenticat
 import type { TestCaseDefinition } from '../../types/test-case.types';
 
 interface PasswordRecoveryTestCase extends TestCaseDefinition {
-  readonly expectedMessage?: string;
-  readonly email?: string;
-  readonly expectedRequestEnabled?: boolean;
+  readonly newPassword?: string;
+  readonly emailSource?: 'unique-unregistered';
+  readonly otpConditions?: readonly ('incorrect' | 'expired')[];
 }
 
-const validationData = AuthenticationDataFactory.getValidationData();
 const recoveryTags = Object.freeze([TAGS.regression, TAGS.authentication]);
-const externalRecoveryTags = Object.freeze([...recoveryTags, TAGS.external, TAGS.otp, TAGS.mutating]);
+const externalRecoveryTags = Object.freeze([
+  ...recoveryTags,
+  TAGS.external,
+  TAGS.otp,
+  TAGS.mutating,
+]);
+const validationData = AuthenticationDataFactory.getValidationData();
 
 export const successfulPasswordRecoveryTestCase: PasswordRecoveryTestCase = Object.freeze({
   id: 'TC-AUTH-FORGOT-001',
@@ -19,7 +24,8 @@ export const successfulPasswordRecoveryTestCase: PasswordRecoveryTestCase = Obje
   priority: 'critical',
   tags: externalRecoveryTags,
   preconditions: Object.freeze(['An active account and its test mailbox are configured.']),
-  expectedResult: 'Password recovery succeeds and redirects the user to login.',
+  expectedResult: 'Khôi phục mật khẩu thành công và điều hướng về trang Đăng nhập.',
+  newPassword: validationData.passwordRecoveryNewPassword,
 });
 
 export const nonexistentEmailPasswordRecoveryTestCase: PasswordRecoveryTestCase = Object.freeze({
@@ -29,7 +35,8 @@ export const nonexistentEmailPasswordRecoveryTestCase: PasswordRecoveryTestCase 
   priority: 'high',
   tags: recoveryTags,
   preconditions: Object.freeze(['The visitor is signed out.']),
-  expectedResult: 'An error is displayed and no OTP is sent.',
+  expectedResult: 'Hiển thị lỗi, dừng luồng và không gửi OTP.',
+  emailSource: validationData.nonexistentEmailSource,
 });
 
 export const invalidOrExpiredPasswordRecoveryOtpTestCase: PasswordRecoveryTestCase = Object.freeze({
@@ -39,7 +46,8 @@ export const invalidOrExpiredPasswordRecoveryOtpTestCase: PasswordRecoveryTestCa
   priority: 'high',
   tags: externalRecoveryTags,
   preconditions: Object.freeze(['A valid password-reset OTP was sent.']),
-  expectedResult: 'Invalid OTP can be retried; expired OTP requires a new OTP request.',
+  expectedResult: 'OTP sai hiển thị lỗi và cho nhập lại; OTP hết hạn yêu cầu gửi lại OTP.',
+  otpConditions: Object.freeze(['incorrect', 'expired'] as const),
 });
 
 export const passwordRecoveryTestCases = Object.freeze([
@@ -48,14 +56,16 @@ export const passwordRecoveryTestCases = Object.freeze([
   invalidOrExpiredPasswordRecoveryOtpTestCase,
 ]);
 
-// Compatibility metadata for pre-unified executable tests. It is replaced in Task 6.
 export const invalidEmailPasswordRecoveryTestCase = Object.freeze({
   id: 'AUTH-RECOVERY-001',
   title: 'Password recovery disables OTP request for an invalid email',
   module: 'Authentication Password Recovery',
   priority: 'high',
   tags: recoveryTags,
-  preconditions: Object.freeze(['The visitor is signed out.']),
+  preconditions: Object.freeze([
+    'The visitor is signed out.',
+    'No password-reset request may be submitted by this scenario.',
+  ]),
   expectedResult: 'The OTP request remains disabled until the email is valid.',
   email: validationData.invalidRegistrationEmails[0] ?? 'auto_reg@gmail',
   expectedRequestEnabled: false,

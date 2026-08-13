@@ -1,8 +1,22 @@
 {
   "validPassword": "Admin@123",
   "mismatchedPassword": "Admin@1234",
+  "registrationSuccessCredentials": {
+    "email": "auto_reg@gmail.com",
+    "password": "Admin@123",
+    "passwordConfirmation": "Admin@123"
+  },
   "invalidRegistrationEmails": ["auto_reg@gmail", "auto_reg", "auto@.com"],
   "invalidRegistrationPasswords": ["1234567", "admin123", "ADMIN123", "AdminAsdf"],
+  "passwordRecoveryNewPassword": "NewAdmin@123",
+  "nonexistentEmailSource": "unique-unregistered",
+  "googleOAuthExecutionMode": "mock-only",
+  "googleOAuthExpectedOutcome": {
+    "receivesAccessToken": true,
+    "createsAccountWhenMissing": true,
+    "issuesJwt": true,
+    "redirectsTo": "home"
+  },
   "unicodeFullName": "Nguyễn Kiểm Thử",
   "expectedMessages": {
     "invalidEmail": "Email không hợp lệ",

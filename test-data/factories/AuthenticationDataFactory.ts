@@ -4,8 +4,22 @@ import { RandomDataGenerator } from '../../utils/RandomDataGenerator';
 
 export interface AuthenticationValidationData {
   readonly validPassword: string;
+  readonly registrationSuccessCredentials: Readonly<{
+    readonly email: string;
+    readonly password: string;
+    readonly passwordConfirmation: string;
+  }>;
   readonly invalidRegistrationEmails: readonly string[];
   readonly invalidRegistrationPasswords: readonly string[];
+  readonly passwordRecoveryNewPassword: string;
+  readonly nonexistentEmailSource: 'unique-unregistered';
+  readonly googleOAuthExecutionMode: 'mock-only';
+  readonly googleOAuthExpectedOutcome: Readonly<{
+    readonly receivesAccessToken: boolean;
+    readonly createsAccountWhenMissing: boolean;
+    readonly issuesJwt: boolean;
+    readonly redirectsTo: 'home';
+  }>;
   readonly unicodeFullName: string;
   readonly mismatchedPassword: string;
   readonly expectedMessages: Readonly<{
@@ -45,12 +59,45 @@ const getGmailLocalPart = (mailbox: string): string => {
   return localPart;
 };
 
+const getNonexistentEmailSource = (): 'unique-unregistered' => {
+  if (authentication.nonexistentEmailSource !== 'unique-unregistered') {
+    throw new Error('Unsupported nonexistent-email data source');
+  }
+  return authentication.nonexistentEmailSource;
+};
+
+const getGoogleOAuthExecutionMode = (): 'mock-only' => {
+  if (authentication.googleOAuthExecutionMode !== 'mock-only') {
+    throw new Error('Unsupported Google OAuth execution mode');
+  }
+  return authentication.googleOAuthExecutionMode;
+};
+
+const getGoogleOAuthExpectedOutcome = (): AuthenticationValidationData['googleOAuthExpectedOutcome'] => {
+  if (authentication.googleOAuthExpectedOutcome.redirectsTo !== 'home') {
+    throw new Error('Unsupported Google OAuth redirect target');
+  }
+  return Object.freeze({
+    receivesAccessToken: authentication.googleOAuthExpectedOutcome.receivesAccessToken,
+    createsAccountWhenMissing: authentication.googleOAuthExpectedOutcome.createsAccountWhenMissing,
+    issuesJwt: authentication.googleOAuthExpectedOutcome.issuesJwt,
+    redirectsTo: 'home',
+  });
+};
+
 export class AuthenticationDataFactory {
   public static getValidationData(): AuthenticationValidationData {
     return Object.freeze({
       validPassword: authentication.validPassword,
+      registrationSuccessCredentials: Object.freeze({
+        ...authentication.registrationSuccessCredentials,
+      }),
       invalidRegistrationEmails: Object.freeze([...authentication.invalidRegistrationEmails]),
       invalidRegistrationPasswords: Object.freeze([...authentication.invalidRegistrationPasswords]),
+      passwordRecoveryNewPassword: authentication.passwordRecoveryNewPassword,
+      nonexistentEmailSource: getNonexistentEmailSource(),
+      googleOAuthExecutionMode: getGoogleOAuthExecutionMode(),
+      googleOAuthExpectedOutcome: getGoogleOAuthExpectedOutcome(),
       unicodeFullName: authentication.unicodeFullName,
       mismatchedPassword: authentication.mismatchedPassword,
       expectedMessages: Object.freeze({ ...authentication.expectedMessages }),
