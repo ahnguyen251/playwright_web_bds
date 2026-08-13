@@ -1,11 +1,12 @@
 import { join } from 'node:path';
 import { test as base, type BrowserContext } from '@playwright/test';
 
+import { loadEnvironmentConfig } from '../config/environment.config';
 import { AuthenticationDataFactory } from '../test-data/factories/AuthenticationDataFactory';
 import { UserDataFactory } from '../test-data/factories/UserDataFactory';
 import { AuthRequestObserver } from '../helpers/network/AuthRequestObserver';
 import type { OtpProvider, OtpQuery } from '../types/otp.types';
-import type { TestEnvironment } from '../types/environment.types';
+import type { EnvironmentConfig, TestEnvironment } from '../types/environment.types';
 import type { RegistrationData, UserCredentials } from '../types/user.types';
 
 const disabledOtpMessage =
@@ -147,9 +148,24 @@ const createMutatingUser = (): MutatingUserFixture => {
   return Object.freeze({ ...credentials, baselineName });
 };
 
+export const createLockedUserFixture = (
+  configuration: Pick<EnvironmentConfig, 'lockedUser'>,
+): UserCredentials | undefined => {
+  if (configuration.lockedUser === undefined) {
+    return undefined;
+  }
+
+  return Object.freeze({
+    alias: 'lockedUser',
+    email: configuration.lockedUser.email,
+    password: configuration.lockedUser.password,
+  });
+};
+
 export interface AuthFixtures {
   readonly authRequestObserver: AuthRequestObserver;
   readonly defaultUser: UserCredentials;
+  readonly lockedUser: UserCredentials | undefined;
   readonly contextForUser: (alias: string) => Promise<BrowserContext>;
   readonly executionPolicy: ExecutionPolicy;
   readonly otpProvider: OtpProvider;
@@ -161,6 +177,9 @@ export const authTest = base.extend<AuthFixtures>({
   authRequestObserver: async ({ page }, use) => use(new AuthRequestObserver(page)),
   defaultUser: async ({}, use) => {
     await use(UserDataFactory.getCredentials('defaultUser'));
+  },
+  lockedUser: async ({}, use) => {
+    await use(createLockedUserFixture(loadEnvironmentConfig()));
   },
   contextForUser: async ({ browser }, use) => {
     const contexts: BrowserContext[] = [];

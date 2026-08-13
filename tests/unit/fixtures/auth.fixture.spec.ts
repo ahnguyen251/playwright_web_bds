@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import {
   authTest,
+  createLockedUserFixture,
   createExecutionPolicy,
   genericRegistrationSkipReason,
 } from '../../../fixtures/auth.fixture';
@@ -16,6 +17,22 @@ authTest(
     expect(requestCount).toBe(1);
   },
 );
+
+test('constructs the optional Locked account fixture from validated environment config', () => {
+  expect(
+    createLockedUserFixture({
+      lockedUser: {
+        email: 'locked-user@example.test',
+        password: 'locked-test-password',
+      },
+    }),
+  ).toEqual({
+    alias: 'lockedUser',
+    email: 'locked-user@example.test',
+    password: 'locked-test-password',
+  });
+  expect(createLockedUserFixture({})).toBeUndefined();
+});
 
 const mutatingPolicy = {
   RUN_OTP_E2E: 'true',
