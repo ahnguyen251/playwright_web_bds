@@ -5,6 +5,7 @@ import {
   invalidOrExpiredPasswordRecoveryOtpTestCase,
   successfulPasswordRecoveryTestCase,
 } from '../../test-cases/authentication/password-recovery.test-cases';
+import { AuthenticationDataFactory } from '../../test-data/factories/AuthenticationDataFactory';
 import type { ForgotPasswordPage } from '../../pages/authentication/ForgotPasswordPage';
 import type { LoginPage } from '../../pages/authentication/LoginPage';
 import type { OtpProvider } from '../../types/otp.types';
@@ -13,15 +14,6 @@ import type { PasswordRecoveryWorkflow } from '../../workflows/authentication/Pa
 
 test.use({ storageState: { cookies: [], origins: [] } });
 test.describe.configure({ mode: 'serial' });
-
-const deriveIncorrectOtp = (otp: string): string => {
-  if (!/^\d{6}$/.test(otp)) {
-    throw new Error('OTP provider returned a value outside the six-digit contract.');
-  }
-
-  const changedFirstDigit = String((Number(otp.charAt(0)) + 1) % 10);
-  return `${changedFirstDigit}${otp.slice(1)}`;
-};
 
 const setPasswordAndAssertSuccess = async (
   passwordRecoveryWorkflow: PasswordRecoveryWorkflow,
@@ -118,7 +110,9 @@ test.describe('gated password-recovery OTP scenarios', () => {
       const otpQuery = await passwordRecoveryWorkflow.beginPasswordRecovery(mutatingUser.email);
       const deliveredOtp = await otpProvider.getOtp(otpQuery);
 
-      await passwordRecoveryWorkflow.submitOtp(deriveIncorrectOtp(deliveredOtp));
+      await passwordRecoveryWorkflow.submitOtp(
+        AuthenticationDataFactory.createIncorrectOtp(deliveredOtp),
+      );
 
       await expect.poll(async () => forgotPasswordPage.currentStage()).toBe('otp');
       await expect

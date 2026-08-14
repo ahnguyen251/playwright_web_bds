@@ -161,7 +161,7 @@ export class RegisterPage extends BasePage {
     return 'activated';
   }
 
-  public async visibleValidationMessages(): Promise<string[]> {
+  public async validationMessages(): Promise<string[]> {
     const visibleMessages: string[] = [];
     for (const message of this.validationMessageLocators) {
       if (await message.isVisible()) {
@@ -169,14 +169,6 @@ export class RegisterPage extends BasePage {
       }
     }
     return visibleMessages;
-  }
-
-  public async validationMessages(): Promise<string[]> {
-    return this.visibleValidationMessages();
-  }
-
-  public async fieldValidationMessages(): Promise<string[]> {
-    return this.visibleValidationMessages();
   }
 
   public async serverMessage(): Promise<string> {

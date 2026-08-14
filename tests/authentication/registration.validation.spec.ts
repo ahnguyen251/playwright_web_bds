@@ -30,7 +30,7 @@ test(
       async () => {
         await registerPage.fillRegistration(requiredData);
         expect(await registerPage.activateSubmit()).toBe('activated');
-        expect(await registerPage.fieldValidationMessages()).toEqual([
+        expect(await registerPage.validationMessages()).toEqual([
           'Vui lòng nhập họ và tên',
           'Vui lòng nhập email hợp lệ',
           'Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường và số',
@@ -65,7 +65,7 @@ test(
         await registerPage.fillEmail(email);
         await registerPage.blurEmail();
 
-        expect(await registerPage.fieldValidationMessages()).toContain(invalidEmailMessage);
+        expect(await registerPage.validationMessages()).toContain(invalidEmailMessage);
         expect(await registerPage.isSubmitEnabled()).toBe(false);
       });
     }
@@ -124,7 +124,7 @@ test(
         await registerPage.fillPasswordConfirmation(password);
         await registerPage.blurPassword();
 
-        expect(await registerPage.fieldValidationMessages()).toContain(invalidPasswordMessage);
+        expect(await registerPage.validationMessages()).toContain(invalidPasswordMessage);
         expect(await registerPage.isSubmitEnabled()).toBe(false);
       });
     }
@@ -150,7 +150,7 @@ test(
     await registerPage.fillRegistration(mismatchData);
     await registerPage.blurPasswordConfirmation();
 
-    expect(await registerPage.fieldValidationMessages()).toContain(mismatchMessage);
+    expect(await registerPage.validationMessages()).toContain(mismatchMessage);
     expect(await registerPage.isSubmitEnabled()).toBe(false);
   },
 );

@@ -10,21 +10,13 @@ import {
   registrationOtpResendCountdownTestCase,
   registrationSuccessTestCase,
 } from '../../test-cases/authentication/registration.test-cases';
+import { AuthenticationDataFactory } from '../../test-data/factories/AuthenticationDataFactory';
 import { BrowserHelper } from '../../utils/BrowserHelper';
 import { requireAcceptedRegistrationTransport } from '../../helpers/network/RegistrationResponseContract';
 import type { RegistrationSubmission } from '../../workflows/authentication/RegistrationWorkflow';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 test.describe.configure({ mode: 'serial' });
-
-const deriveIncorrectOtp = (otp: string): string => {
-  if (!/^\d{6}$/.test(otp)) {
-    throw new Error('OTP provider returned a value outside the six-digit contract.');
-  }
-
-  const changedFirstDigit = String((Number(otp.charAt(0)) + 1) % 10);
-  return `${changedFirstDigit}${otp.slice(1)}`;
-};
 
 test(
   `${registrationSuccessTestCase.id} ${registrationSuccessTestCase.title}`,
@@ -73,7 +65,7 @@ test(
       requestedAfter: submission.requestedAfter,
     });
 
-    await registerPage.enterOtp(deriveIncorrectOtp(deliveredOtp));
+    await registerPage.enterOtp(AuthenticationDataFactory.createIncorrectOtp(deliveredOtp));
 
     await expect(registerPage.otpHeading).toBeVisible();
     await expect

@@ -73,17 +73,19 @@ const getGoogleOAuthExecutionMode = (): 'mock-only' => {
   return authentication.googleOAuthExecutionMode;
 };
 
-const getGoogleOAuthExpectedOutcome = (): AuthenticationValidationData['googleOAuthExpectedOutcome'] => {
-  if (authentication.googleOAuthExpectedOutcome.redirectsTo !== 'home') {
-    throw new Error('Unsupported Google OAuth redirect target');
-  }
-  return Object.freeze({
-    receivesAccessToken: authentication.googleOAuthExpectedOutcome.receivesAccessToken,
-    createsAccountWhenMissing: authentication.googleOAuthExpectedOutcome.createsAccountWhenMissing,
-    issuesJwt: authentication.googleOAuthExpectedOutcome.issuesJwt,
-    redirectsTo: 'home',
-  });
-};
+const getGoogleOAuthExpectedOutcome =
+  (): AuthenticationValidationData['googleOAuthExpectedOutcome'] => {
+    if (authentication.googleOAuthExpectedOutcome.redirectsTo !== 'home') {
+      throw new Error('Unsupported Google OAuth redirect target');
+    }
+    return Object.freeze({
+      receivesAccessToken: authentication.googleOAuthExpectedOutcome.receivesAccessToken,
+      createsAccountWhenMissing:
+        authentication.googleOAuthExpectedOutcome.createsAccountWhenMissing,
+      issuesJwt: authentication.googleOAuthExpectedOutcome.issuesJwt,
+      redirectsTo: 'home',
+    });
+  };
 
 export class AuthenticationDataFactory {
   public static getValidationData(): AuthenticationValidationData {
@@ -125,5 +127,14 @@ export class AuthenticationDataFactory {
   public static createNonexistentGmailEmail(): string {
     const uniqueId = sanitizeUniqueId(RandomDataGenerator.string('forgotpassword'));
     return `propify.forgot.${uniqueId}@gmail.com`;
+  }
+
+  public static createIncorrectOtp(deliveredOtp: string): string {
+    if (!/^\d{6}$/.test(deliveredOtp)) {
+      throw new Error('OTP provider returned a value outside the six-digit contract.');
+    }
+
+    const changedFirstDigit = String((Number(deliveredOtp.charAt(0)) + 1) % 10);
+    return `${changedFirstDigit}${deliveredOtp.slice(1)}`;
   }
 }

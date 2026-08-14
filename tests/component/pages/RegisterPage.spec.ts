@@ -29,7 +29,7 @@ test('preserves validation feedback without submitting invalid registration data
   });
   await registerPage.blurAllFields();
 
-  expect(await registerPage.visibleValidationMessages()).toEqual([
+  expect(await registerPage.validationMessages()).toEqual([
     'Mật khẩu phải có ít nhất 8 ký tự',
     'Mật khẩu xác nhận không khớp',
   ]);
@@ -304,7 +304,7 @@ test('returns scoped registration validation and server feedback exactly', async
   `);
   const registerPage = new RegisterPage(page);
 
-  expect(await registerPage.fieldValidationMessages()).toEqual([
+  expect(await registerPage.validationMessages()).toEqual([
     'Vui lòng nhập họ và tên',
     'Email không hợp lệ',
     'Tối thiểu 8 ký tự, bao gồm chữ hoa, chữ thường và số',
@@ -490,6 +490,14 @@ test('returns scoped registration OTP rejection feedback', async ({ page }) => {
   expect(await registerPage.otpRejectionMessage()).toBe(
     'M\u00e3 x\u00e1c th\u1ef1c kh\u00f4ng h\u1ee3p l\u1ec7',
   );
+});
+
+test('exposes one registration validation-message API', ({ page }) => {
+  const registerPage = new RegisterPage(page);
+
+  expect('visibleValidationMessages' in registerPage).toBe(false);
+  expect('fieldValidationMessages' in registerPage).toBe(false);
+  expect('validationMessages' in registerPage).toBe(true);
 });
 
 test('recognizes scoped registration OTP inaccurate feedback', async ({ page }) => {
