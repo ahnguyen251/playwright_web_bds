@@ -74,19 +74,77 @@ export class ListingFormComponent {
 
   public async fill(data: ListingData): Promise<void> {
     await this.titleInput.fill(data.title);
-    await this.transactionTypeSelect.selectOption(data.transactionType);
-    await this.propertyTypeSelect.selectOption({ label: data.propertyType });
+    
+    // Xử lý Loại giao dịch (Nhu cầu của bạn)
+    try {
+      const transactionLabel = data.transactionType === 'sale' ? 'Mua bán' : 'Cho thuê';
+      await this.page.getByRole('button', { name: transactionLabel, exact: true }).click({ timeout: 1000 });
+    } catch {
+      await this.transactionTypeSelect.selectOption(data.transactionType);
+    }
+
+    // Xử lý Loại bất động sản (Loại nhà đất)
+    try {
+      await this.page.getByText(/Loại nhà đất/i).locator('xpath=..').getByRole('button').first().click({ timeout: 1000 });
+      await this.page.getByText(data.propertyType, { exact: true }).last().click();
+    } catch {
+      await this.propertyTypeSelect.selectOption({ label: data.propertyType });
+    }
+
     await this.descriptionInput.fill(data.description);
     await this.priceInput.fill(String(data.price));
     await this.setCheckbox(this.negotiableCheckbox, data.negotiable);
     await this.areaInput.fill(String(data.area));
-    await this.provinceSelect.selectOption({ label: data.location.province });
-    await this.wardSelect.selectOption({ label: data.location.ward });
+    
+    // Tỉnh/Thành phố
+    try {
+      // Nhấp vào combobox UI thật
+      await this.page.getByText(/Tỉnh \/ Thành phố/i).locator('xpath=..').getByRole('combobox').click({ timeout: 1000 });
+      await this.page.getByRole('option', { name: data.location.province, exact: true }).click();
+    } catch {
+      await this.provinceSelect.selectOption({ label: data.location.province });
+      await this.provinceSelect.evaluate((el) => {
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+
+    // Phường/Xã
+    try {
+      await this.page.getByText(/Phường \/ Xã/i).locator('xpath=..').getByRole('combobox').click({ timeout: 1000 });
+      await this.page.getByRole('option', { name: data.location.ward, exact: true }).click();
+    } catch {
+      await this.wardSelect.selectOption({ label: data.location.ward });
+      await this.wardSelect.evaluate((el) => {
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+        el.dispatchEvent(new Event('change', { bubbles: true }));
+      });
+    }
+
     await this.streetInput.fill(data.location.street);
     await this.addressLineInput.fill(data.location.addressLine);
-    await this.bedroomInput.fill(String(data.bedrooms));
-    await this.bathroomInput.fill(String(data.bathrooms));
-    await this.contactRoleSelect.selectOption(data.contact.role);
+    
+    // Xử lý Số phòng ngủ
+    try {
+      await this.page.getByText(/Số phòng ngủ|Phòng ngủ/i).locator('xpath=..').locator('xpath=following-sibling::*').getByRole('button', { name: String(data.bedrooms), exact: true }).click({ timeout: 1000 });
+    } catch {
+      await this.bedroomInput.fill(String(data.bedrooms));
+    }
+
+    // Xử lý Số phòng tắm/Vệ sinh
+    try {
+      await this.page.getByText(/Số phòng tắm|Phòng tắm|Nhà vệ sinh/i).locator('xpath=..').locator('xpath=following-sibling::*').getByRole('button', { name: String(data.bathrooms), exact: true }).click({ timeout: 1000 });
+    } catch {
+      await this.bathroomInput.fill(String(data.bathrooms));
+    }
+
+    // Xử lý Vai trò liên hệ (Người đăng)
+    try {
+      const roleLabel = data.contact.role === 'owner' ? 'Chủ nhà' : 'Môi giới';
+      await this.page.getByRole('button', { name: roleLabel, exact: true }).click({ timeout: 1000 });
+    } catch {
+      await this.contactRoleSelect.selectOption(data.contact.role);
+    }
     await this.contactNameInput.fill(data.contact.fullName);
     await this.contactPhoneInput.fill(data.contact.phone);
     await this.contactEmailInput.fill(data.contact.email);
@@ -199,7 +257,19 @@ export class ListingFormComponent {
   private async selectOptional(label: RegExp, value: string | undefined): Promise<void> {
     if (value === undefined) return;
     const locator = this.page.getByLabel(label).first();
-    if ((await locator.count()) > 0) await locator.selectOption({ label: value });
+    try {
+      if ((await locator.count()) > 0) {
+        await locator.selectOption({ label: value }, { timeout: 1000 });
+        return;
+      }
+    } catch {}
+
+    // Fallback cho UI custom (ví dụ: Hướng nhà, Hướng ban công)
+    const container = this.page.getByText(label).locator('xpath=..').first();
+    if ((await container.count()) > 0) {
+      await container.getByRole('button').first().click();
+      await this.page.getByText(value, { exact: true }).last().click();
+    }
   }
 
   private async mediaCount(previews: Locator, input: Locator): Promise<number> {

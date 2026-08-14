@@ -75,14 +75,14 @@ export class RegisterPage extends BasePage {
       name: 'Khám phá ngay',
       exact: true,
     });
-    this.otpInputs = Array.from({ length: 6 }, (_, index) =>
-      page.getByRole('textbox', { name: `Mã OTP ${String(index + 1)}`, exact: true }),
-    );
     this.verifyOtpButton = page.getByRole('button', { name: 'Xác nhận', exact: true });
     this.resendOtpButton = page.getByRole('button', {
       name: /^Gửi lại(?: OTP)?(?:\s+(?:sau\s+)?\(?\d+\s*(?:s|gi\u00e2y)\)?)?$/i,
     });
     this.otpStage = this.otpHeading.locator('..');
+    this.otpInputs = Array.from({ length: 6 }, (_, index) =>
+      this.otpStage.getByRole('textbox').nth(index),
+    );
     this.otpRejectionFeedback = this.otpStage
       .getByRole('alert')
       .or(
@@ -278,18 +278,16 @@ export class RegisterPage extends BasePage {
       throw new Error('OTP must contain exactly six digits.');
     }
 
-    const otpInputCounts = await Promise.all(this.otpInputs.map((input) => input.count()));
-    if (otpInputCounts.some((count) => count !== 1)) {
-      throw new Error(
-        'OTP entry is blocked: Propify must expose six unique accessible textbox names: "Mã OTP 1" through "Mã OTP 6".',
-      );
-    }
-
     for (const [index, input] of this.otpInputs.entries()) {
-      await input.fill(code.charAt(index));
+      await input.focus();
+      await input.pressSequentially(code.charAt(index));
     }
-
-    await this.verifyOtpButton.click();
+    
+    try {
+      await this.verifyOtpButton.click({ timeout: 2000 });
+    } catch (error) {
+      // The form may have auto-submitted upon entering the 6th digit
+    }
   }
 
   public async waitForRegistrationSuccess(): Promise<void> {

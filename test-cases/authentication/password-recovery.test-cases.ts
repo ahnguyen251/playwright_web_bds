@@ -56,20 +56,4 @@ export const passwordRecoveryTestCases = Object.freeze([
   invalidOrExpiredPasswordRecoveryOtpTestCase,
 ]);
 
-export const invalidEmailPasswordRecoveryTestCase = Object.freeze({
-  id: 'AUTH-RECOVERY-001',
-  title: 'Password recovery disables OTP request for an invalid email',
-  module: 'Authentication Password Recovery',
-  priority: 'high',
-  tags: recoveryTags,
-  preconditions: Object.freeze([
-    'The visitor is signed out.',
-    'No password-reset request may be submitted by this scenario.',
-  ]),
-  expectedResult: 'The OTP request remains disabled until the email is valid.',
-  email: validationData.invalidRegistrationEmails[0] ?? 'auto_reg@gmail',
-  expectedRequestEnabled: false,
-}) satisfies TestCaseDefinition & {
-  readonly email: string;
-  readonly expectedRequestEnabled: boolean;
-};
+

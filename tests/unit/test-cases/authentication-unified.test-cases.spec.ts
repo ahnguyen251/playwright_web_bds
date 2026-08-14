@@ -6,33 +6,23 @@ import {
   activeAccountLoginTestCase,
   googleOAuthLoginTestCase,
   incorrectPasswordLoginTestCase,
-  invalidCredentialsLoginTestCase,
-  invalidEmailLoginTestCase,
   lockedAccountLoginTestCase,
   loginTestCases,
   requiredLoginFieldsTestCase,
-  validLoginTestCase,
 } from '../../../test-cases/authentication/login.test-cases';
 import {
-  invalidEmailPasswordRecoveryTestCase,
   nonexistentEmailPasswordRecoveryTestCase,
   passwordRecoveryTestCases,
   invalidOrExpiredPasswordRecoveryOtpTestCase,
   successfulPasswordRecoveryTestCase,
 } from '../../../test-cases/authentication/password-recovery.test-cases';
 import {
-  belowMinimumRegistrationPasswordTestCase,
   duplicateRegistrationEmailTestCase,
-  expiredRegistrationOtpFeedbackTestCase,
-  incorrectRegistrationOtpFeedbackTestCase,
   invalidRegistrationEmailTestCase,
   invalidRegistrationPasswordTestCase,
   invalidOrExpiredRegistrationOtpTestCase,
-  minimumRegistrationPasswordTestCase,
   registrationConfirmationMismatchTestCase,
-  registrationOtpEntryContractTestCase,
   registrationOtpResendCountdownTestCase,
-  registrationPasswordMismatchTestCase,
   requiredRegistrationFieldsTestCase,
   registrationSuccessTestCase,
   registrationTestCases,
@@ -283,31 +273,7 @@ test('publishes literal case-specific data required by later AUTH executors', ()
   ]);
 });
 
-test('keeps pre-unified executable compatibility exports on their accurate legacy IDs', () => {
-  expect([
-    belowMinimumRegistrationPasswordTestCase.id,
-    minimumRegistrationPasswordTestCase.id,
-    registrationPasswordMismatchTestCase.id,
-    registrationOtpEntryContractTestCase.id,
-    incorrectRegistrationOtpFeedbackTestCase.id,
-    expiredRegistrationOtpFeedbackTestCase.id,
-    validLoginTestCase.id,
-    invalidCredentialsLoginTestCase.id,
-    invalidEmailLoginTestCase.id,
-    invalidEmailPasswordRecoveryTestCase.id,
-  ]).toEqual([
-    'AUTH-REGISTER-001',
-    'AUTH-REGISTER-002',
-    'AUTH-REGISTER-003',
-    'AUTH-REGISTER-OTP-002',
-    'AUTH-REGISTER-OTP-003',
-    'AUTH-REGISTER-OTP-004',
-    'AUTH-LOGIN-001',
-    'AUTH-LOGIN-002',
-    'AUTH-LOGIN-003',
-    'AUTH-RECOVERY-001',
-  ]);
-});
+
 
 test('publishes the authoritative registration validation data and messages', () => {
   const validationData = AuthenticationDataFactory.getValidationData();

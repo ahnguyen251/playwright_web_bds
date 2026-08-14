@@ -46,11 +46,7 @@ for (const variant of missingFieldVariants) {
         }
       });
 
-      test.skip(
-        submitEnabled && loginRequestCount === 1,
-        'BLOCKED: deployed login UI keeps Continue enabled and emitted exactly one login POST for the missing-password variant.',
-      );
-      expect(submitEnabled).toBe(true);
+      expect(submitEnabled).toBe(false);
       expect(loginRequestCount).toBe(0);
     },
   );

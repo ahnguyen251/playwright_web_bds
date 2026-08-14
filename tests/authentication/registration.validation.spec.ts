@@ -13,10 +13,6 @@ test(
   `${requiredRegistrationFieldsTestCase.id} ${requiredRegistrationFieldsTestCase.title}`,
   { tag: [...requiredRegistrationFieldsTestCase.tags] },
   async ({ authRequestObserver, registerPage }) => {
-    test.skip(
-      true,
-      'BLOCKED: deployed empty form disables submit before its validation handler can expose all required-field errors.',
-    );
     if (requiredRegistrationFieldsTestCase.data === undefined) {
       throw new Error('Required registration case is missing its authoritative data.');
     }
@@ -47,10 +43,6 @@ test(
   `${invalidRegistrationEmailTestCase.id} ${invalidRegistrationEmailTestCase.title}`,
   { tag: [...invalidRegistrationEmailTestCase.tags] },
   async ({ registerPage }) => {
-    test.skip(
-      true,
-      'BLOCKED: deployed registration UI still exposes legacy invalid-email feedback instead of the authoritative contract.',
-    );
     const invalidEmails = invalidRegistrationEmailTestCase.invalidEmails;
     const invalidEmailMessage = invalidRegistrationEmailTestCase.expectedMessages?.[0];
     if (invalidEmails === undefined || invalidEmailMessage === undefined) {
@@ -76,10 +68,6 @@ test(
   `${duplicateRegistrationEmailTestCase.id} ${duplicateRegistrationEmailTestCase.title}`,
   { tag: [...duplicateRegistrationEmailTestCase.tags] },
   async ({ defaultUser, registerPage }) => {
-    test.skip(
-      true,
-      'BLOCKED: deployed registration UI exposes field-specific and generic duplicate-email copy outside the authoritative Page Object contract.',
-    );
     const duplicateEmailMessage = duplicateRegistrationEmailTestCase.expectedMessages?.[0];
     if (duplicateEmailMessage === undefined) {
       throw new Error('Duplicate-email registration case is missing its expected feedback.');
@@ -103,10 +91,6 @@ test(
   `${invalidRegistrationPasswordTestCase.id} ${invalidRegistrationPasswordTestCase.title}`,
   { tag: [...invalidRegistrationPasswordTestCase.tags] },
   async ({ registerPage }) => {
-    test.skip(
-      true,
-      'BLOCKED: deployed registration UI validates only password length and does not expose the authoritative complexity feedback.',
-    );
     const invalidPasswords = invalidRegistrationPasswordTestCase.invalidPasswords;
     const invalidPasswordMessage = invalidRegistrationPasswordTestCase.expectedMessages?.[0];
     if (invalidPasswords === undefined || invalidPasswordMessage === undefined) {
@@ -135,10 +119,6 @@ test(
   `${registrationConfirmationMismatchTestCase.id} ${registrationConfirmationMismatchTestCase.title}`,
   { tag: [...registrationConfirmationMismatchTestCase.tags] },
   async ({ registerPage }) => {
-    test.skip(
-      true,
-      'BLOCKED: deployed registration UI still exposes legacy password-confirmation feedback instead of the authoritative contract.',
-    );
     const mismatchData = registrationConfirmationMismatchTestCase.data;
     const mismatchMessage = registrationConfirmationMismatchTestCase.expectedMessages?.[0];
     if (mismatchData === undefined || mismatchMessage === undefined) {

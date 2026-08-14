@@ -14,7 +14,7 @@ test(listingCaseTitle('LIST-UC10-001'), async ({ listingWorkflow, controlledList
 });
 
 test(listingCaseTitle('LIST-UC10-002'), async ({ listingDetailPage }) => {
-  await listingDetailPage.open('999999999999999');
+  await listingDetailPage.open('25');
 
   expect(await listingDetailPage.notFoundMessage()).not.toBe('');
   expect(await listingDetailPage.isContentVisible()).toBe(false);

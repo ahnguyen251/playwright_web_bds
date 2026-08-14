@@ -99,13 +99,7 @@ test(
 
     expect(await registerPage.isResendEnabled()).toBe(false);
     const initialCountdown = await registerPage.resendCountdownSeconds();
-    test.skip(
-      initialCountdown === undefined,
-      'PARTIAL/BLOCKED: the deployed registration OTP view exposes no observable countdown text.',
-    );
-    if (initialCountdown === undefined) {
-      return;
-    }
+    expect(initialCountdown).toBeDefined();
     expect(initialCountdown).toBeGreaterThan(0);
     await expect
       .poll(

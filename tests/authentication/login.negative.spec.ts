@@ -32,14 +32,6 @@ test(
     const serverMessage = await loginPage.serverMessage();
     expect(loginPage.currentUrl()).toBe(loginUrl);
     await expect.poll(async () => loginWorkflow.isAuthenticated()).toBe(false);
-    test.skip(
-      loginStatus.status === 500 && serverMessage === 'Lỗi hệ thống',
-      'BLOCKED: deployed login endpoint returned HTTP 500 with system-error feedback for the invalid-password request.',
-    );
-    test.skip(
-      serverMessage === DEPLOYED_LEGACY_INVALID_CREDENTIALS_MESSAGE,
-      'BLOCKED: deployed login UI returns legacy invalid-credentials copy instead of the authoritative message.',
-    );
     expect(serverMessage).toBe('Thông tin tài khoản hoặc mật khẩu không chính xác');
   },
 );

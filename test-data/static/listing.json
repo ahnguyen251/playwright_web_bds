@@ -8,7 +8,7 @@
   "area": 75,
   "location": {
     "province": "Thành phố Hồ Chí Minh",
-    "ward": "Phường Bến Nghé",
+    "ward": "Phường Bến Thành",
     "street": "Đường Lê Lợi",
     "addressLine": "Số 1"
   },
@@ -30,6 +30,10 @@
     "email": "listing.automation@example.com"
   },
   "media": {
-    "imagePaths": ["listing-images/property.png"]
+    "imagePaths": [
+      "listing-images/property.png",
+      "listing-images/property.png",
+      "listing-images/property.png"
+    ]
   }
 }

@@ -22,10 +22,7 @@ test(
     const visibleMessage = await forgotPasswordPage.visibleMessage();
 
     expect(await forgotPasswordPage.currentStage()).toBe('email');
-    test.skip(
-      visibleMessage === 'Email này chưa được đăng ký.',
-      'BLOCKED: deployed feedback is "Email này chưa được đăng ký." instead of the authoritative message.',
-    );
+    
     expect(visibleMessage).toBe('Không tìm thấy tài khoản với email này');
   },
 );

@@ -6,24 +6,24 @@ import { loadEnvironmentConfig } from '../../../config/environment.config';
 import { loadProductionRegistrationConfig } from '../../../config/registration.config';
 
 const validEnvironment = {
-  TEST_ENV: 'dev',
-  DEV_BASE_URL: 'https://dev.example.test',
-  STAGING_BASE_URL: 'https://staging.example.test',
-  PRODUCTION_BASE_URL: 'https://production.example.test',
-  DEFAULT_USER_EMAIL: 'user@example.test',
-  DEFAULT_USER_PASSWORD: 'secret-value',
+  TEST_ENV: 'production',
+  DEV_BASE_URL: 'https://propifyy.duckdns.org/',
+  STAGING_BASE_URL: 'https://propifyy.duckdns.org/',
+  PRODUCTION_BASE_URL: 'https://propifyy.duckdns.org/',
+  DEFAULT_USER_EMAIL: 'ngocanh25102004@gmail.com',
+  DEFAULT_USER_PASSWORD: 'Anh!12345',
 };
 
 const validOtpEnvironment = {
   ...validEnvironment,
   RUN_OTP_E2E: 'true',
-  GMAIL_CLIENT_ID: 'test-client-id',
-  GMAIL_CLIENT_SECRET: 'test-client-secret',
-  GMAIL_REFRESH_TOKEN: 'test-refresh-token',
-  OTP_MAILBOX_ADDRESS: 'automation@gmail.com',
-  GMAIL_OTP_SENDER: 'mailer@example.test',
-  GMAIL_OTP_SUBJECT: 'Account security code',
-  GMAIL_OTP_PATTERN: 'Use {otp} to continue.',
+  GMAIL_CLIENT_ID: 'test',
+  GMAIL_CLIENT_SECRET: 'GOCSPX-test-GF',
+  GMAIL_REFRESH_TOKEN: '1//test-test',
+  OTP_MAILBOX_ADDRESS: 'test@gmail.com',
+  GMAIL_OTP_SENDER: 'no-test@test.test.org',
+  GMAIL_OTP_SUBJECT: 'Xác thực test khoản RentHouse — Mã OTP của bạn',
+  GMAIL_OTP_PATTERN: 'hoàn tất xác thực:[\s\S]*?(?<otp>\d{6})',
 };
 
 test('selects the base URL for the requested environment', () => {
@@ -128,13 +128,13 @@ test('reports a missing credential key without exposing another secret', () => {
 test('loads the Locked account only when both credentials are configured', () => {
   const config = loadEnvironmentConfig({
     ...validEnvironment,
-    LOCKED_USER_EMAIL: 'locked-user@example.test',
-    LOCKED_USER_PASSWORD: 'locked-test-password',
+    LOCKED_USER_EMAIL: 'anh5@example.test',
+    LOCKED_USER_PASSWORD: 'Anh!12345',
   });
 
   expect(config.lockedUser).toEqual({
-    email: 'locked-user@example.test',
-    password: 'locked-test-password',
+    email: 'anh5@example.test',
+    password: 'Anh!12345',
   });
 });
 
@@ -210,7 +210,7 @@ test('rejects an unsafe OTP pattern instead of compiling arbitrary regular expre
   expect(() =>
     loadEnvironmentConfig({
       ...validOtpEnvironment,
-      GMAIL_OTP_PATTERN: '(\\d+)+',
+      GMAIL_OTP_PATTERN: 'hoàn tất xác thực:[\\s\\S]*?{otp}',
     }),
   ).toThrow(/GMAIL_OTP_PATTERN/);
 });
