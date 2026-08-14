@@ -120,10 +120,11 @@ RUN_OTP_E2E=true
 RUN_MUTATING_E2E=true
 ```
 
-When `TEST_ENV=production`, authentication mutations additionally require the legacy-compatible
-`RUN_PRODUCTION_REGISTRATION_E2E=true` or the unified `RUN_PRODUCTION_MUTATING_E2E=true` approval.
-Listings mutations always require `RUN_PRODUCTION_MUTATING_E2E=true`. Both production approval
-flags default to disabled.
+When `TEST_ENV=production`, the two approvals are deliberately separate:
+`RUN_PRODUCTION_REGISTRATION_E2E=true` authorizes only the dedicated production-registration
+project. Password recovery, change-password, profile mutation, and Listings mutation require
+`RUN_PRODUCTION_MUTATING_E2E=true`; the registration approval never authorizes an existing-account
+mutation. Both production approval flags default to disabled.
 
 `RUN_MUTATING_E2E=true` nhưng `RUN_OTP_E2E=false` bị schema và fixture từ chối. Các kịch bản này chạy
 trong project `mutating-chromium`, ở chế độ serial, một worker. Screenshot, video và trace bị tắt

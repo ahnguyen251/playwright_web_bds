@@ -10,7 +10,9 @@ export class ForgotPasswordPage extends BasePage {
   private readonly legacyEmailHeading: Locator;
   private readonly emailInput: Locator;
   private readonly requestResetButton: Locator;
+  private readonly otpStage: Locator;
   private readonly otpInputs: Locator;
+  private readonly otpRejectionFeedback: Locator;
   private readonly submitOtpButton: Locator;
   private readonly resendOtpButton: Locator;
   private readonly newPasswordInput: Locator;
@@ -58,6 +60,14 @@ export class ForgotPasswordPage extends BasePage {
     this.feedbackMessage = emailStage
       .getByRole('alert')
       .or(emailStage.locator('p.text-red-500.text-xs.mb-3.flex.items-center.gap-1'));
+    this.otpStage = this.submitOtpButton.locator('..');
+    this.otpRejectionFeedback = this.otpStage
+      .getByRole('alert')
+      .or(
+        this.otpStage.getByText(
+          /(?:OTP|m\u00e3 x\u00e1c th\u1ef1c).*(?:sai|kh\u00f4ng (?:\u0111\u00fang|h\u1ee3p l\u1ec7|ch\u00ednh x\u00e1c)|invalid|incorrect)/i,
+        ),
+      );
   }
 
   public async requestReset(email: string): Promise<void> {
@@ -113,6 +123,10 @@ export class ForgotPasswordPage extends BasePage {
 
   public async waitForResendEnabled(): Promise<void> {
     await expect(this.resendOtpButton).toBeEnabled();
+  }
+
+  public async otpRejectionMessage(): Promise<string> {
+    return (await this.otpRejectionFeedback.textContent())?.trim() ?? '';
   }
 
   public async fillNewPassword(

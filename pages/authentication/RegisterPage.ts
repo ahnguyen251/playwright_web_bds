@@ -31,7 +31,9 @@ export class RegisterPage extends BasePage {
   private readonly validationMessageLocators: readonly Locator[];
   private readonly serverFeedbackMessage: Locator;
   private readonly completeRegistrationButton: Locator;
+  private readonly otpStage: Locator;
   private readonly otpInputs: readonly Locator[];
+  private readonly otpRejectionFeedback: Locator;
   private readonly verifyOtpButton: Locator;
   private readonly resendOtpButton: Locator;
   private readonly resendEnabledMs: number;
@@ -77,7 +79,17 @@ export class RegisterPage extends BasePage {
       page.getByRole('textbox', { name: `Mã OTP ${String(index + 1)}`, exact: true }),
     );
     this.verifyOtpButton = page.getByRole('button', { name: 'Xác nhận', exact: true });
-    this.resendOtpButton = page.getByRole('button', { name: 'Gửi lại', exact: true });
+    this.resendOtpButton = page.getByRole('button', {
+      name: /^Gửi lại(?: OTP)?(?:\s+(?:sau\s+)?\(?\d+\s*(?:s|gi\u00e2y)\)?)?$/i,
+    });
+    this.otpStage = this.otpHeading.locator('..');
+    this.otpRejectionFeedback = this.otpStage
+      .getByRole('alert')
+      .or(
+        this.otpStage.getByText(
+          /(?:OTP|m\u00e3 x\u00e1c th\u1ef1c).*(?:sai|kh\u00f4ng (?:\u0111\u00fang|h\u1ee3p l\u1ec7|ch\u00ednh x\u00e1c)|invalid|incorrect)/i,
+        ),
+      );
   }
 
   public async openHome(): Promise<void> {
@@ -245,6 +257,20 @@ export class RegisterPage extends BasePage {
 
   public async isResendEnabled(): Promise<boolean> {
     return this.resendOtpButton.isEnabled();
+  }
+
+  public async otpRejectionMessage(): Promise<string> {
+    return (await this.otpRejectionFeedback.textContent())?.trim() ?? '';
+  }
+
+  public async resendCountdownSeconds(): Promise<number | undefined> {
+    const otpStageText = await this.otpStage.innerText();
+    const countdown = /(\d+)\s*(?:s|gi\u00e2y)\b/i.exec(otpStageText)?.[1];
+    if (countdown === undefined) {
+      return undefined;
+    }
+
+    return Number(countdown);
   }
 
   public async waitForResendEnabled(): Promise<void> {

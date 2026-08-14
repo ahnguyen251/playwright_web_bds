@@ -16,7 +16,7 @@ const enabled =
   isProductionRegistrationEnabled() &&
   executionPolicy.runOtpE2e &&
   executionPolicy.runMutatingE2e &&
-  executionPolicy.productionMutationsApproved;
+  executionPolicy.productionRegistrationApproved;
 const registrationConfig = enabled ? loadProductionRegistrationConfig() : undefined;
 
 test.describe('production registration', () => {

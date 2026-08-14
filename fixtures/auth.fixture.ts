@@ -18,6 +18,7 @@ export interface ExecutionPolicy {
   readonly runMutatingE2e: boolean;
   readonly runProductionRegistrationE2e: boolean;
   readonly runProductionMutatingE2e: boolean;
+  readonly productionRegistrationApproved: boolean;
   readonly productionMutationsApproved: boolean;
   readonly genericRegistrationAllowed: boolean;
 }
@@ -37,6 +38,14 @@ export const genericRegistrationSkipReason = (
   }
   return undefined;
 };
+
+export const passwordRecoveryConfigurationSkipReason = (
+  baselinePassword: string,
+  authoritativeNewPassword: string,
+): string | undefined =>
+  baselinePassword === authoritativeNewPassword
+    ? 'BLOCKED: the dedicated password-recovery baseline password must differ from the authoritative new password.'
+    : undefined;
 
 export interface MutatingUserFixture extends UserCredentials {
   readonly baselineName: string;
@@ -78,17 +87,23 @@ export const createExecutionPolicy = (source: NodeJS.ProcessEnv = process.env): 
   const runMutatingE2e = readExecutionFlag('RUN_MUTATING_E2E', source);
   const runProductionRegistrationE2e = readExecutionFlag('RUN_PRODUCTION_REGISTRATION_E2E', source);
   const runProductionMutatingE2e = readExecutionFlag('RUN_PRODUCTION_MUTATING_E2E', source);
-  const productionMutationsApproved =
-    environment !== 'production' || runProductionRegistrationE2e || runProductionMutatingE2e;
+  const productionRegistrationApproved =
+    environment !== 'production' || runProductionRegistrationE2e;
+  const productionMutationsApproved = environment !== 'production' || runProductionMutatingE2e;
   const genericRegistrationAllowed = environment !== 'production' && runOtpE2e && runMutatingE2e;
   if (runMutatingE2e && !runOtpE2e) {
     throw new Error(
       'Invalid execution policy configuration: RUN_MUTATING_E2E requires RUN_OTP_E2E',
     );
   }
-  if (runMutatingE2e && !productionMutationsApproved) {
+  if (
+    runMutatingE2e &&
+    environment === 'production' &&
+    !runProductionRegistrationE2e &&
+    !runProductionMutatingE2e
+  ) {
     throw new Error(
-      'Invalid execution policy configuration: RUN_PRODUCTION_REGISTRATION_E2E or RUN_PRODUCTION_MUTATING_E2E is required for production mutations',
+      'Invalid execution policy configuration: a dedicated production registration or existing-account mutation approval is required',
     );
   }
   return Object.freeze({
@@ -97,6 +112,7 @@ export const createExecutionPolicy = (source: NodeJS.ProcessEnv = process.env): 
     runMutatingE2e,
     runProductionRegistrationE2e,
     runProductionMutatingE2e,
+    productionRegistrationApproved,
     productionMutationsApproved,
     genericRegistrationAllowed,
   });

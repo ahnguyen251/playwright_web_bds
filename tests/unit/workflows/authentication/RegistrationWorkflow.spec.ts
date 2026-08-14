@@ -134,3 +134,54 @@ test('returns the observed submission from register and registerAndVerify', asyn
   await expect(workflow.register(registration)).resolves.toEqual(expectedSubmission);
   await expect(workflow.registerAndVerify(registration)).resolves.toEqual(expectedSubmission);
 });
+
+test('retries registration with a supplied delivered OTP through the full completion contract', async () => {
+  const calls: string[] = [];
+  const registerPage = {
+    openHome: () => Promise.resolve(),
+    open: () => Promise.resolve(),
+    fillRegistration: () => Promise.resolve(),
+    submitAndObserveTransition: () =>
+      Promise.resolve({ disabledObserved: true, loadingTextObserved: true }),
+    waitForOtpScreen: () => Promise.resolve(),
+    enterOtp: (code: string) => {
+      calls.push(`enter ${code}`);
+      return Promise.resolve();
+    },
+    waitForRegistrationSuccess: () => {
+      calls.push('wait for success');
+      return Promise.resolve();
+    },
+    completeRegistration: () => {
+      calls.push('complete registration');
+      return Promise.resolve();
+    },
+  };
+  const header = {
+    openAccountMenu: () => {
+      calls.push('open account menu');
+      return Promise.resolve();
+    },
+    waitForAccountEmail: (email: string) => {
+      calls.push(`wait for ${email}`);
+      return Promise.resolve();
+    },
+  };
+  const otpProvider = {
+    getOtp: () => Promise.reject(new Error('Provider must not be called for a supplied OTP retry')),
+  };
+  const workflow = new RegistrationWorkflow(registerPage, header, otpProvider, () => requestTime);
+
+  await workflow.verifyRegistrationWithOtp(
+    { email: registration.email, requestedAfter: requestTime },
+    '654321',
+  );
+
+  expect(calls).toEqual([
+    'enter 654321',
+    'wait for success',
+    'complete registration',
+    'open account menu',
+    `wait for ${registration.email}`,
+  ]);
+});

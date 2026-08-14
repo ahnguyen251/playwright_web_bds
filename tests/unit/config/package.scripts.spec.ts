@@ -19,7 +19,7 @@ const authoritativeAuthenticationStatuses = Object.freeze({
   'TC-AUTH-REGISTER-005': 'BLOCKED',
   'TC-AUTH-REGISTER-006': 'BLOCKED',
   'TC-AUTH-REGISTER-007': 'Partial',
-  'TC-AUTH-REGISTER-008': 'Automated',
+  'TC-AUTH-REGISTER-008': 'Partial',
   'TC-AUTH-LOGIN-001': 'Automated',
   'TC-AUTH-LOGIN-002': 'BLOCKED',
   'TC-AUTH-LOGIN-003': 'BLOCKED',

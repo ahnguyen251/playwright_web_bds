@@ -1,5 +1,6 @@
 import { expect, test } from '../../fixtures/test.fixture';
 import { test as blockedTest } from '../../fixtures/test.fixture';
+import { passwordRecoveryConfigurationSkipReason } from '../../fixtures/auth.fixture';
 import {
   invalidOrExpiredPasswordRecoveryOtpTestCase,
   successfulPasswordRecoveryTestCase,
@@ -69,8 +70,12 @@ test.describe('gated password-recovery OTP scenarios', () => {
       if (catalogPassword === undefined) {
         throw new Error('Successful password recovery test data requires a new password.');
       }
-      const passwordUnderTest =
-        catalogPassword === mutatingUser.password ? `${catalogPassword}A` : catalogPassword;
+      const configurationBlocker = passwordRecoveryConfigurationSkipReason(
+        mutatingUser.password,
+        catalogPassword,
+      );
+      test.skip(configurationBlocker !== undefined, configurationBlocker);
+      const passwordUnderTest = catalogPassword;
       const baselineReset = {
         email: mutatingUser.email,
         newPassword: mutatingUser.password,
@@ -116,6 +121,9 @@ test.describe('gated password-recovery OTP scenarios', () => {
       await passwordRecoveryWorkflow.submitOtp(deriveIncorrectOtp(deliveredOtp));
 
       await expect.poll(async () => forgotPasswordPage.currentStage()).toBe('otp');
+      await expect
+        .poll(async () => forgotPasswordPage.otpRejectionMessage())
+        .toMatch(/(?:OTP|mã xác thực).*(?:sai|không (?:đúng|hợp lệ|chính xác)|invalid|incorrect)/i);
       await passwordRecoveryWorkflow.submitOtp(deliveredOtp);
       await expect.poll(async () => forgotPasswordPage.currentStage()).toBe('newPassword');
     },

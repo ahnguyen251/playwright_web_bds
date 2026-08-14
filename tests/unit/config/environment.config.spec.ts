@@ -229,7 +229,7 @@ test('requires explicit approval before mutating authentication state in product
   ).toThrow(/RUN_PRODUCTION_REGISTRATION_E2E/);
 });
 
-test('permits production authentication mutation only with the explicit approval flag', () => {
+test('loads registration-only production approval without enabling the mutation approval flag', () => {
   const config = loadEnvironmentConfig({
     ...validOtpEnvironment,
     TEST_ENV: 'production',
@@ -241,6 +241,7 @@ test('permits production authentication mutation only with the explicit approval
   });
 
   expect(config.runProductionRegistrationE2e).toBe(true);
+  expect(config.runProductionMutatingE2e).toBe(false);
 });
 
 test('permits production authentication mutation with the unified approval flag', () => {

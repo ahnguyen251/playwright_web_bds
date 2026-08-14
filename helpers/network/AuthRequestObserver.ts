@@ -33,7 +33,7 @@ export class AuthRequestObserver {
   ): Promise<number> {
     let count = 0;
     const listener = (request: Request): void => {
-      if (this.isOperationRequest(request.url(), operation)) {
+      if (this.isOperationRequest(request.url(), request.method(), operation)) {
         count += 1;
       }
     };
@@ -83,7 +83,10 @@ export class AuthRequestObserver {
       settleResponse = resolve;
     });
     const listener = (response: Response): void => {
-      if (responseHandled || !this.isOperationRequest(response.url(), operation)) {
+      if (
+        responseHandled ||
+        !this.isOperationRequest(response.url(), response.request().method(), operation)
+      ) {
         return;
       }
       responseHandled = true;
@@ -145,8 +148,8 @@ export class AuthRequestObserver {
     }
   }
 
-  private isOperationRequest(url: string, operation: AuthOperation): boolean {
-    return new URL(url).pathname === AUTH_API_PATHS[operation];
+  private isOperationRequest(url: string, method: string, operation: AuthOperation): boolean {
+    return method === 'POST' && new URL(url).pathname === AUTH_API_PATHS[operation];
   }
 
   private createTimeoutError(operation: AuthOperation): Error {

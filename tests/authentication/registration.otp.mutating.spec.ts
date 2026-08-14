@@ -57,7 +57,14 @@ test(
 test(
   `${invalidOrExpiredRegistrationOtpTestCase.id} - OTP sai`,
   { tag: [...invalidOrExpiredRegistrationOtpTestCase.tags] },
-  async ({ authenticationData, otpProvider, registerPage, registrationWorkflow }) => {
+  async ({
+    authenticationData,
+    authenticationWorkflow,
+    otpProvider,
+    page,
+    registerPage,
+    registrationWorkflow,
+  }) => {
     const submission = await registrationWorkflow.submitRegistration(
       authenticationData.registration,
     );
@@ -70,8 +77,13 @@ test(
 
     await expect(registerPage.otpHeading).toBeVisible();
     await expect
-      .poll(async () => registerPage.serverMessage())
-      .toMatch(/(?:OTP|mã xác thực).*(?:sai|không (?:đúng|hợp lệ)|invalid|incorrect)/i);
+      .poll(async () => registerPage.otpRejectionMessage())
+      .toMatch(/(?:OTP|mã xác thực).*(?:sai|không (?:đúng|hợp lệ|chính xác)|invalid|incorrect)/i);
+
+    await registrationWorkflow.verifyRegistrationWithOtp(submission, deliveredOtp);
+    await expect.poll(async () => authenticationWorkflow.isAuthenticated()).toBe(true);
+    await expect(page).toHaveURL((url) => url.pathname === ROUTES.home);
+    expect(await BrowserHelper.hasAuthenticationCookies(page.context())).toBe(true);
   },
 );
 
@@ -94,6 +106,24 @@ test(
     await registrationWorkflow.submitRegistration(authenticationData.registration);
 
     expect(await registerPage.isResendEnabled()).toBe(false);
+    const initialCountdown = await registerPage.resendCountdownSeconds();
+    test.skip(
+      initialCountdown === undefined,
+      'PARTIAL/BLOCKED: the deployed registration OTP view exposes no observable countdown text.',
+    );
+    if (initialCountdown === undefined) {
+      return;
+    }
+    expect(initialCountdown).toBeGreaterThan(0);
+    await expect
+      .poll(
+        async () => {
+          const currentCountdown = await registerPage.resendCountdownSeconds();
+          return currentCountdown !== undefined && currentCountdown < initialCountdown;
+        },
+        { timeout: TIMEOUTS.assertion },
+      )
+      .toBe(true);
     await registerPage.waitForResendEnabled();
     expect(await registerPage.isResendEnabled()).toBe(true);
   },

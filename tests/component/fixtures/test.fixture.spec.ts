@@ -48,6 +48,7 @@ test('composes focused authentication dependencies', ({
   expect(typeof executionPolicy.runMutatingE2e).toBe('boolean');
   expect(executionPolicy.runProductionRegistrationE2e).toBe(false);
   expect(executionPolicy.runProductionMutatingE2e).toBe(false);
+  expect(executionPolicy.productionRegistrationApproved).toBe(false);
   expect(executionPolicy.productionMutationsApproved).toBe(false);
 });
 
@@ -98,7 +99,7 @@ registrationFixtureTest(
     await expect(registrationWorkflow.verifyRegistration(context)).rejects.toThrow(
       'OTP entry is blocked: Propify must expose six unique accessible textbox names: "Mã OTP 1" through "Mã OTP 6".',
     );
-    expect((otpProvider as RecordingOtpProvider).lastQuery).toBe(context);
+    expect((otpProvider as RecordingOtpProvider).lastQuery).toEqual(context);
   },
 );
 

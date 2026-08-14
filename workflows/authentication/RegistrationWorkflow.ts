@@ -64,6 +64,13 @@ export class RegistrationWorkflow {
       requestedAfter: context.requestedAfter,
     });
     const otp = await this.otpProvider.getOtp(correlation);
+    await this.verifyRegistrationWithOtp(context, otp);
+  }
+
+  public async verifyRegistrationWithOtp(
+    context: RegistrationCorrelation,
+    otp: string,
+  ): Promise<void> {
     await this.registerPage.enterOtp(otp);
     await this.registerPage.waitForRegistrationSuccess();
     await this.registerPage.completeRegistration();

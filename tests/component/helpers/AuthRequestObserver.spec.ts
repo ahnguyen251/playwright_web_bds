@@ -64,6 +64,25 @@ test('does not count a path that only contains the login path', async ({ page })
   expect(count).toBe(0);
 });
 
+test('counts only POST when GET and OPTIONS target the exact authentication path', async ({
+  page,
+}) => {
+  await page.route('**/api/v1/auth/login', async (route) => {
+    await route.fulfill({ status: 204 });
+  });
+  const observer = new AuthRequestObserver(page);
+
+  const count = await observer.countDuring('login', async () => {
+    await page.evaluate(async (url) => {
+      await fetch(url, { method: 'GET' }).catch(() => undefined);
+      await fetch(url, { method: 'OPTIONS' }).catch(() => undefined);
+      await fetch(url, { method: 'POST' }).catch(() => undefined);
+    }, loginUrl);
+  });
+
+  expect(count).toBe(1);
+});
+
 test('returns only the status and parsed body for an authentication response', async ({ page }) => {
   await page.route('**/api/v1/auth/login', async (route) => {
     await route.fulfill({
@@ -94,7 +113,7 @@ test('removes its response listener after returning a snapshot', async ({ page }
 
   await observer.waitForResponse('login', async () => {
     await page.evaluate(async (url) => {
-      await fetch(url).catch(() => undefined);
+      await fetch(url, { method: 'POST' }).catch(() => undefined);
     }, loginUrl);
   });
 
@@ -119,7 +138,7 @@ test('removes its response listener and preserves an action failure', async ({ p
     await expect(
       observer.waitForResponse('login', async () => {
         await page.evaluate(async (url) => {
-          await fetch(url).catch(() => undefined);
+          await fetch(url, { method: 'POST' }).catch(() => undefined);
         }, loginUrl);
         throw actionError;
       }),
@@ -172,12 +191,32 @@ test('rejects invalid JSON without exposing the response body', async ({ page })
   await expect(
     observer.waitForResponse('login', async () => {
       await page.evaluate(async (url) => {
-        await fetch(url).catch(() => undefined);
+        await fetch(url, { method: 'POST' }).catch(() => undefined);
       }, loginUrl);
     }),
   ).rejects.toThrow('Unable to parse authentication response for login.');
 
   expect(listenerCount(eventEmitterPage, 'response')).toBe(listenerCountBefore);
+});
+
+test('observes only the POST response when GET and OPTIONS use the exact authentication path', async ({
+  page,
+}) => {
+  await page.route('**/api/v1/auth/login', async (route) => {
+    const status = route.request().method() === 'POST' ? 401 : 204;
+    await route.fulfill({ status });
+  });
+  const observer = new AuthRequestObserver(page);
+
+  const response = await observer.waitForStatus('login', async () => {
+    await page.evaluate(async (url) => {
+      await fetch(url, { method: 'GET' }).catch(() => undefined);
+      await fetch(url, { method: 'OPTIONS' }).catch(() => undefined);
+      await fetch(url, { method: 'POST' }).catch(() => undefined);
+    }, loginUrl);
+  });
+
+  expect(response).toEqual({ status: 401 });
 });
 
 test('accepts empty and non-JSON registration responses through the status-only contract', async ({

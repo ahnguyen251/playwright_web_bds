@@ -5,13 +5,18 @@ import {
   createLockedUserFixture,
   createExecutionPolicy,
   genericRegistrationSkipReason,
+  passwordRecoveryConfigurationSkipReason,
 } from '../../../fixtures/auth.fixture';
 
 authTest(
   'provides a page-bound authentication request observer',
   async ({ authRequestObserver, page }) => {
     const requestCount = await authRequestObserver.countDuring('registration', async () => {
-      await page.goto('http://127.0.0.1:1/api/v1/auth/register').catch(() => undefined);
+      await page.evaluate(async () => {
+        await fetch('http://127.0.0.1:1/api/v1/auth/register', { method: 'POST' }).catch(
+          () => undefined,
+        );
+      });
     });
 
     expect(requestCount).toBe(1);
@@ -50,7 +55,7 @@ test('unified-only approval authorizes production authentication mutations', () 
   expect(policy.productionMutationsApproved).toBe(true);
 });
 
-test('legacy-only approval remains valid for production authentication mutations', () => {
+test('registration-only approval cannot authorize production password recovery or profile mutations', () => {
   const policy = createExecutionPolicy({
     ...mutatingPolicy,
     TEST_ENV: 'production',
@@ -58,7 +63,8 @@ test('legacy-only approval remains valid for production authentication mutations
     RUN_PRODUCTION_MUTATING_E2E: 'false',
   });
 
-  expect(policy.productionMutationsApproved).toBe(true);
+  expect(policy.productionRegistrationApproved).toBe(true);
+  expect(policy.productionMutationsApproved).toBe(false);
 });
 
 test('non-production authentication mutations do not require a production approval flag', () => {
@@ -113,4 +119,13 @@ test('generic OTP registration follows the normal OTP and mutation gates outside
     expect(policy.genericRegistrationAllowed).toBe(scenario.expected);
     expect(genericRegistrationSkipReason(policy) === undefined).toBe(scenario.expected);
   }
+});
+
+test('blocks password recovery when the baseline already equals the authoritative new password', () => {
+  expect(passwordRecoveryConfigurationSkipReason('same-password', 'same-password')).toContain(
+    'baseline password must differ',
+  );
+  expect(
+    passwordRecoveryConfigurationSkipReason('baseline-password', 'new-password'),
+  ).toBeUndefined();
 });

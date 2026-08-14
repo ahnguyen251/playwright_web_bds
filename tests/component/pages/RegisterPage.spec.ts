@@ -474,3 +474,70 @@ test('uses the configured web-first registration resend timeout', async ({ page 
 
   await expect(registerPage.waitForResendEnabled()).rejects.toThrow(/5ms/);
 });
+
+test('returns scoped registration OTP rejection feedback', async ({ page }) => {
+  await page.setContent(`
+    <p role="alert">Unrelated page alert</p>
+    <section>
+      <h1>X&#225;c th&#7921;c email</h1>
+      <p role="alert">M&#227; x&#225;c th&#7921;c kh&#244;ng h&#7907;p l&#7879;</p>
+      <button>X&#225;c nh&#7853;n</button>
+      <button disabled>G&#7917;i l&#7841;i</button>
+    </section>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  expect(await registerPage.otpRejectionMessage()).toBe(
+    'M\u00e3 x\u00e1c th\u1ef1c kh\u00f4ng h\u1ee3p l\u1ec7',
+  );
+});
+
+test('recognizes scoped registration OTP inaccurate feedback', async ({ page }) => {
+  await page.setContent(`
+    <section>
+      <h1>X&#225;c th&#7921;c email</h1>
+      <p role="alert">M&#227; OTP kh&#244;ng ch&#237;nh x&#225;c</p>
+      <button>X&#225;c nh&#7853;n</button>
+      <button disabled>G&#7917;i l&#7841;i</button>
+    </section>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  expect(await registerPage.otpRejectionMessage()).toBe(
+    'M\u00e3 OTP kh\u00f4ng ch\u00ednh x\u00e1c',
+  );
+});
+
+test('exposes the displayed registration resend countdown value', async ({ page }) => {
+  await page.setContent(`
+    <section>
+      <h1>X&#225;c th&#7921;c email</h1>
+      <p>G&#7917;i l&#7841;i sau 3s</p>
+      <button>X&#225;c nh&#7853;n</button>
+      <button disabled>G&#7917;i l&#7841;i</button>
+    </section>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  expect(await registerPage.resendCountdownSeconds()).toBe(3);
+  await page.evaluate(() => {
+    const countdown = document.querySelector('section p');
+    if (countdown === null) throw new Error('Expected countdown text.');
+    countdown.textContent = 'Resend after 2s';
+  });
+  await expect.poll(async () => registerPage.resendCountdownSeconds()).toBe(2);
+});
+
+test('observes countdown text rendered inside the registration resend button', async ({ page }) => {
+  await page.setContent(`
+    <section>
+      <h1>X&#225;c th&#7921;c email</h1>
+      <button>X&#225;c nh&#7853;n</button>
+      <button disabled>G&#7917;i l&#7841;i (3s)</button>
+    </section>
+  `);
+  const registerPage = new RegisterPage(page);
+
+  expect(await registerPage.isResendEnabled()).toBe(false);
+  expect(await registerPage.resendCountdownSeconds()).toBe(3);
+});

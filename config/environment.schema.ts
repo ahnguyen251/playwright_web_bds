@@ -113,7 +113,7 @@ export const environmentSchema = z
           code: 'custom',
           path: ['RUN_PRODUCTION_REGISTRATION_E2E'],
           message:
-            'RUN_PRODUCTION_REGISTRATION_E2E=true is required for authentication mutations in production',
+            'A flow-specific production registration or existing-account mutation approval is required',
         });
       }
 

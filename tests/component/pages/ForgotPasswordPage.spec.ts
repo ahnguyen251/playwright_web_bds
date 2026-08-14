@@ -246,7 +246,9 @@ test('returns deployed email-stage feedback without requiring an alert role', as
   expect(await forgotPasswordPage.visibleMessage()).toBe('Email này chưa được đăng ký.');
 });
 
-test('preserves labelled OTP input state while waiting for resend to become enabled', async ({ page }) => {
+test('preserves labelled OTP input state while waiting for resend to become enabled', async ({
+  page,
+}) => {
   await page.setContent(`
     <section data-stage="otp">
       <h1>Xác nhận OTP</h1>
@@ -278,4 +280,21 @@ test('preserves labelled OTP input state while waiting for resend to become enab
       ),
     )
     .toEqual(['1', '2', '3', '4', '5', '6']);
+});
+
+test('returns scoped password-recovery OTP rejection feedback', async ({ page }) => {
+  await page.setContent(`
+    <p role="alert">Unrelated page alert</p>
+    <section data-stage="otp">
+      <h1>X&#225;c nh&#7853;n OTP</h1>
+      <p role="alert">M&#227; OTP kh&#244;ng ch&#237;nh x&#225;c</p>
+      <button>X&#225;c nh&#7853;n OTP</button>
+      <button>G&#7917;i l&#7841;i</button>
+    </section>
+  `);
+  const forgotPasswordPage = new ForgotPasswordPage(page);
+
+  expect(await forgotPasswordPage.otpRejectionMessage()).toBe(
+    'M\u00e3 OTP kh\u00f4ng ch\u00ednh x\u00e1c',
+  );
 });
