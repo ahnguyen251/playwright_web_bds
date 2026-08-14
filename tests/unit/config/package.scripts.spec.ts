@@ -31,18 +31,6 @@ const authoritativeAuthenticationStatuses = Object.freeze({
 } as const);
 
 const authenticationSupportPaths = Object.freeze({
-  'TC-AUTH-REGISTER-001': [
-    'pages/authentication/RegisterPage.ts',
-    'workflows/authentication/RegistrationWorkflow.ts',
-    'fixtures/auth.fixture.ts',
-    'fixtures/generic-registration.fixture.ts',
-    'helpers/network/AuthRequestObserver.ts',
-    'helpers/network/RegistrationResponseContract.ts',
-    'helpers/otp/GmailOtpProvider.ts',
-    'test-data/factories/AuthenticationDataFactory.ts',
-    'test-data/factories/RegistrationDataFactory.ts',
-    'utils/BrowserHelper.ts',
-  ],
   'TC-AUTH-REGISTER-002': [
     'pages/authentication/RegisterPage.ts',
     'helpers/network/AuthRequestObserver.ts',
@@ -124,6 +112,33 @@ const authenticationSupportPaths = Object.freeze({
   ],
 } as const);
 
+const registrationSuccessBranchSupport = Object.freeze({
+  Generic: [
+    'pages/authentication/RegisterPage.ts',
+    'workflows/authentication/RegistrationWorkflow.ts',
+    'fixtures/generic-registration.fixture.ts',
+    'fixtures/test.fixture.ts',
+    'fixtures/auth.fixture.ts',
+    'helpers/network/AuthRequestObserver.ts',
+    'helpers/network/RegistrationResponseContract.ts',
+    'helpers/otp/GmailOtpProvider.ts',
+    'test-data/factories/AuthenticationDataFactory.ts',
+    'utils/BrowserHelper.ts',
+  ],
+  Production: [
+    'pages/authentication/RegisterPage.ts',
+    'workflows/authentication/RegistrationWorkflow.ts',
+    'fixtures/test.fixture.ts',
+    'fixtures/auth.fixture.ts',
+    'helpers/network/AuthRequestObserver.ts',
+    'helpers/network/RegistrationResponseContract.ts',
+    'helpers/otp/GmailOtpProvider.ts',
+    'config/registration.config.ts',
+    'test-data/factories/RegistrationDataFactory.ts',
+    'utils/BrowserHelper.ts',
+  ],
+} as const);
+
 const parseMarkdownRows = (markdown: string): readonly (readonly string[])[] =>
   markdown
     .split(/\r?\n/)
@@ -176,10 +191,33 @@ test('maps every unified authentication row to existing repository support paths
   }
 
   const registrationSuccess = rows.find((cells) => cells[1] === '`TC-AUTH-REGISTER-001`');
+  expect(registrationSuccess, 'TC-AUTH-REGISTER-001').toBeDefined();
   expect(registrationSuccess?.[3]).toContain('Generic:');
   expect(registrationSuccess?.[3]).toContain('Production:');
-  expect(registrationSuccess?.[4]).toContain('Generic:');
-  expect(registrationSuccess?.[4]).toContain('Production:');
+  const registrationSuccessSupport = registrationSuccess?.[4] ?? '';
+  const genericStart = registrationSuccessSupport.indexOf('Generic:');
+  const productionStart = registrationSuccessSupport.indexOf('Production:');
+  expect(genericStart).toBeGreaterThanOrEqual(0);
+  expect(productionStart).toBeGreaterThan(genericStart);
+  const branchSupport = {
+    Generic: registrationSuccessSupport.slice(genericStart, productionStart),
+    Production: registrationSuccessSupport.slice(productionStart),
+  } as const;
+
+  for (const branch of ['Generic', 'Production'] as const) {
+    const supportPaths = registrationSuccessBranchSupport[branch];
+    for (const supportPath of supportPaths) {
+      expect(branchSupport[branch], `${branch}: ${supportPath}`).toContain(`\`${supportPath}\``);
+      expect(existsSync(resolve(process.cwd(), supportPath)), supportPath).toBe(true);
+    }
+  }
+
+  expect(branchSupport.Generic).not.toContain('`config/registration.config.ts`');
+  expect(branchSupport.Generic).not.toContain('`test-data/factories/RegistrationDataFactory.ts`');
+  expect(branchSupport.Production).not.toContain('`fixtures/generic-registration.fixture.ts`');
+  expect(branchSupport.Production).not.toContain(
+    '`test-data/factories/AuthenticationDataFactory.ts`',
+  );
 
   for (const id of ['TC-AUTH-REGISTER-007', 'TC-AUTH-FORGOT-003']) {
     const row = rows.find((cells) => cells[1] === `\`${id}\``);
