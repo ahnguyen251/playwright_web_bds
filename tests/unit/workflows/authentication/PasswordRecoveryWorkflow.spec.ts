@@ -11,10 +11,8 @@ const passwordReset: PasswordResetData = {
 };
 const requestTime = new Date('2026-08-05T02:03:04.000Z');
 
-test('orchestrates password recovery through OTP and returns to Login', async () => {
-  const calls: string[] = [];
-  let lastQuery: OtpQuery | undefined;
-  const loginPage = {
+const createDependencies = (calls: string[]) => ({
+  loginPage: {
     openHome: () => {
       calls.push('open home');
       return Promise.resolve();
@@ -27,8 +25,8 @@ test('orchestrates password recovery through OTP and returns to Login', async ()
       calls.push('open password recovery');
       return Promise.resolve(undefined);
     },
-  };
-  const forgotPasswordPage = {
+  },
+  forgotPasswordPage: {
     requestReset: (email: string) => {
       calls.push(`request reset ${email}`);
       return Promise.resolve();
@@ -57,25 +55,34 @@ test('orchestrates password recovery through OTP and returns to Login', async ()
       calls.push('return to Login');
       return Promise.resolve();
     },
-  };
-  const otpProvider = {
+  },
+  otpProvider: {
     getOtp: (query: OtpQuery) => {
-      lastQuery = query;
-      calls.push('wait for password recovery OTP');
+      calls.push(`wait for password recovery OTP after ${query.requestedAfter.toISOString()}`);
       return Promise.resolve('654321');
     },
-  };
-  const clock = {
+  },
+  clock: {
     now: () => {
       calls.push('capture request time');
       return requestTime;
     },
-  };
-  const workflow = new PasswordRecoveryWorkflow(loginPage, forgotPasswordPage, otpProvider, clock);
+  },
+});
 
-  await workflow.resetPassword(passwordReset);
+test('begins password recovery with a query timestamp captured immediately before the request', async () => {
+  const calls: string[] = [];
+  const dependencies = createDependencies(calls);
+  const workflow = new PasswordRecoveryWorkflow(
+    dependencies.loginPage,
+    dependencies.forgotPasswordPage,
+    dependencies.otpProvider,
+    dependencies.clock,
+  );
 
-  expect(lastQuery).toEqual({
+  const query = await workflow.beginPasswordRecovery(passwordReset.email);
+
+  expect(query).toEqual({
     email: passwordReset.email,
     purpose: 'passwordRecovery',
     requestedAfter: requestTime,
@@ -86,9 +93,55 @@ test('orchestrates password recovery through OTP and returns to Login', async ()
     'open password recovery',
     'capture request time',
     `request reset ${passwordReset.email}`,
-    'wait for password recovery OTP',
-    'enter OTP 654321',
-    'verify OTP',
+  ]);
+});
+
+test('submits the supplied OTP through the password recovery page', async () => {
+  const calls: string[] = [];
+  const dependencies = createDependencies(calls);
+  const workflow = new PasswordRecoveryWorkflow(
+    dependencies.loginPage,
+    dependencies.forgotPasswordPage,
+    dependencies.otpProvider,
+    dependencies.clock,
+  );
+
+  await workflow.submitOtp('654321');
+
+  expect(calls).toEqual(['enter OTP 654321', 'verify OTP']);
+});
+
+test('composes password recovery steps before setting the password and returning to Login', async () => {
+  const calls: string[] = [];
+  const dependencies = createDependencies(calls);
+  class ComposedPasswordRecoveryWorkflow extends PasswordRecoveryWorkflow {
+    public override beginPasswordRecovery(email: string): Promise<OtpQuery> {
+      calls.push(`begin password recovery ${email}`);
+      return Promise.resolve({
+        email,
+        purpose: 'passwordRecovery',
+        requestedAfter: requestTime,
+      });
+    }
+
+    public override submitOtp(code: string): Promise<void> {
+      calls.push(`submit OTP ${code}`);
+      return Promise.resolve();
+    }
+  }
+  const workflow = new ComposedPasswordRecoveryWorkflow(
+    dependencies.loginPage,
+    dependencies.forgotPasswordPage,
+    dependencies.otpProvider,
+    dependencies.clock,
+  );
+
+  await workflow.resetPassword(passwordReset);
+
+  expect(calls).toEqual([
+    `begin password recovery ${passwordReset.email}`,
+    `wait for password recovery OTP after ${requestTime.toISOString()}`,
+    'submit OTP 654321',
     'fill new password',
     'set new password',
     'return to Login',

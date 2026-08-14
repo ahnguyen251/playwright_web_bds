@@ -54,7 +54,10 @@ export class ForgotPasswordPage extends BasePage {
       name: '← Quay lại đăng nhập',
       exact: true,
     });
-    this.feedbackMessage = this.emailHeading.locator('..').getByRole('alert');
+    const emailStage = this.emailHeading.locator('..');
+    this.feedbackMessage = emailStage
+      .getByRole('alert')
+      .or(emailStage.locator('p.text-red-500.text-xs.mb-3.flex.items-center.gap-1'));
   }
 
   public async requestReset(email: string): Promise<void> {

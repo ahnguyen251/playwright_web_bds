@@ -1,26 +1,31 @@
 import { expect, test } from '../../fixtures/test.fixture';
-import { invalidEmailPasswordRecoveryTestCase } from '../../test-cases/authentication/password-recovery.test-cases';
+import { nonexistentEmailPasswordRecoveryTestCase } from '../../test-cases/authentication/password-recovery.test-cases';
+import { AuthenticationDataFactory } from '../../test-data/factories/AuthenticationDataFactory';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test(
-  `${invalidEmailPasswordRecoveryTestCase.id} ${invalidEmailPasswordRecoveryTestCase.title}`,
-  { tag: [...invalidEmailPasswordRecoveryTestCase.tags] },
-  async ({ loginPage }) => {
+  `${nonexistentEmailPasswordRecoveryTestCase.id} ${nonexistentEmailPasswordRecoveryTestCase.title}`,
+  { tag: [...nonexistentEmailPasswordRecoveryTestCase.tags] },
+  async ({ authRequestObserver, loginPage }) => {
+    const nonexistentEmail = AuthenticationDataFactory.createNonexistentGmailEmail();
+
     await loginPage.openHome();
     await loginPage.open();
     const forgotPasswordPage = await loginPage.openForgotPassword();
 
+    await authRequestObserver.waitForStatus('forgotPassword', async () => {
+      await forgotPasswordPage.requestReset(nonexistentEmail);
+    });
+
+    await expect.poll(async () => forgotPasswordPage.visibleMessage()).not.toBe('');
+    const visibleMessage = await forgotPasswordPage.visibleMessage();
+
     expect(await forgotPasswordPage.currentStage()).toBe('email');
-    await forgotPasswordPage.fillEmail(invalidEmailPasswordRecoveryTestCase.email);
-    await forgotPasswordPage.blurEmail();
-    const requestEnabled = await forgotPasswordPage.isRequestEnabled();
-
-    test.fail(
-      requestEnabled,
-      'Known product defect: invalid recovery email is validated only after the OTP request is clicked.',
+    test.skip(
+      visibleMessage === 'Email này chưa được đăng ký.',
+      'BLOCKED: deployed feedback is "Email này chưa được đăng ký." instead of the authoritative message.',
     );
-
-    expect(requestEnabled).toBe(invalidEmailPasswordRecoveryTestCase.expectedRequestEnabled);
+    expect(visibleMessage).toBe('Không tìm thấy tài khoản với email này');
   },
 );

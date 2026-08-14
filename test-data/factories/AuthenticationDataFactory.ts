@@ -121,4 +121,9 @@ export class AuthenticationDataFactory {
       passwordConfirmation: overrides.passwordConfirmation ?? password,
     });
   }
+
+  public static createNonexistentGmailEmail(): string {
+    const uniqueId = sanitizeUniqueId(RandomDataGenerator.string('forgotpassword'));
+    return `propify.forgot.${uniqueId}@gmail.com`;
+  }
 }

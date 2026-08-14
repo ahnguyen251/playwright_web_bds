@@ -1,6 +1,6 @@
 import type { ForgotPasswordPage } from '../../pages/authentication/ForgotPasswordPage';
 import type { LoginPage } from '../../pages/authentication/LoginPage';
-import type { OtpProvider } from '../../types/otp.types';
+import type { OtpProvider, OtpQuery } from '../../types/otp.types';
 import type { PasswordResetData } from '../../types/user.types';
 
 type PasswordRecoveryEntryPort = Pick<LoginPage, 'openHome' | 'open'> & {
@@ -24,25 +24,34 @@ export class PasswordRecoveryWorkflow {
   ) {}
 
   public async resetPassword(data: PasswordResetData): Promise<void> {
-    await this.loginPage.openHome();
-    await this.loginPage.open();
-    await this.loginPage.openForgotPassword();
+    const otpQuery = await this.beginPasswordRecovery(data.email);
+    const code = await this.otpProvider.getOtp(otpQuery);
+    await this.submitOtp(code);
 
-    const requestedAfter = this.clock.now();
-    await this.forgotPasswordPage.requestReset(data.email);
-    const code = await this.otpProvider.getOtp({
-      email: data.email,
-      purpose: 'passwordRecovery',
-      requestedAfter,
-    });
-
-    await this.forgotPasswordPage.enterOtp(code);
-    await this.forgotPasswordPage.submitOtp();
     await this.forgotPasswordPage.fillNewPassword({
       newPassword: data.newPassword,
       passwordConfirmation: data.passwordConfirmation,
     });
     await this.forgotPasswordPage.submitNewPassword();
     await this.forgotPasswordPage.backToLogin();
+  }
+
+  public async beginPasswordRecovery(email: string): Promise<OtpQuery> {
+    await this.loginPage.openHome();
+    await this.loginPage.open();
+    await this.loginPage.openForgotPassword();
+
+    const requestedAfter = this.clock.now();
+    await this.forgotPasswordPage.requestReset(email);
+    return Object.freeze({
+      email,
+      purpose: 'passwordRecovery',
+      requestedAfter,
+    });
+  }
+
+  public async submitOtp(code: string): Promise<void> {
+    await this.forgotPasswordPage.enterOtp(code);
+    await this.forgotPasswordPage.submitOtp();
   }
 }

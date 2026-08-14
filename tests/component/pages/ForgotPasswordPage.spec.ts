@@ -229,6 +229,23 @@ test('returns exact email-stage feedback without leaking an unrelated alert', as
   expect(await forgotPasswordPage.visibleMessage()).toBe('Không tìm thấy tài khoản với email này');
 });
 
+test('returns deployed email-stage feedback without requiring an alert role', async ({ page }) => {
+  await page.setContent(`
+    <p class="text-red-500 text-xs mb-3 flex items-center gap-1">Unrelated page feedback</p>
+    <section>
+      <h1>Quên mật khẩu?</h1>
+      <input placeholder="Email của bạn" />
+      <p class="text-red-500 text-xs mb-3 flex items-center gap-1">
+        Email này chưa được đăng ký.
+      </p>
+      <button>Gửi mã OTP</button>
+    </section>
+  `);
+  const forgotPasswordPage = new ForgotPasswordPage(page);
+
+  expect(await forgotPasswordPage.visibleMessage()).toBe('Email này chưa được đăng ký.');
+});
+
 test('preserves labelled OTP input state while waiting for resend to become enabled', async ({ page }) => {
   await page.setContent(`
     <section data-stage="otp">
@@ -257,7 +274,7 @@ test('preserves labelled OTP input state while waiting for resend to become enab
   await expect
     .poll(() =>
       page.evaluate(() =>
-        Array.from(document.querySelectorAll('input')).map((input) => (input as HTMLInputElement).value),
+        Array.from(document.querySelectorAll('input')).map((input) => input.value),
       ),
     )
     .toEqual(['1', '2', '3', '4', '5', '6']);
