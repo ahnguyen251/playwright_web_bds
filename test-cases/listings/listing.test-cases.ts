@@ -46,6 +46,10 @@ const defineCases = (
       expectedResult: seed.expectedResult,
       playwrightTest: seed.playwrightTest,
       language: 'vi' as const,
+      automation: {
+        status: (seed.playwrightTest === MANUAL_EVIDENCE ? 'NOT_AUTOMATED' : 'AUTOMATED') as 'NOT_AUTOMATED' | 'AUTOMATED',
+        ...(seed.playwrightTest !== MANUAL_EVIDENCE && { scriptPath: seed.playwrightTest }),
+      },
     }),
   );
 

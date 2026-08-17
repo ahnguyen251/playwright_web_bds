@@ -1,5 +1,16 @@
 export type TestPriority = 'critical' | 'high' | 'medium' | 'low';
 
+export type AutomationStatus =
+  | 'NOT_AUTOMATED'
+  | 'IN_PROGRESS'
+  | 'AUTOMATED'
+  | 'BLOCKED';
+
+export interface AutomationMetadata {
+  readonly status: AutomationStatus;
+  readonly scriptPath?: string;
+}
+
 export interface TestCaseDefinition {
   readonly id: string;
   readonly title: string;
@@ -8,6 +19,7 @@ export interface TestCaseDefinition {
   readonly tags: readonly string[];
   readonly preconditions: readonly string[];
   readonly expectedResult: string;
+  readonly automation: AutomationMetadata;
 }
 
 export type ListingRequirementId =

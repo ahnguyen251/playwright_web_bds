@@ -105,7 +105,7 @@ test(
       .poll(
         async () => {
           const currentCountdown = await registerPage.resendCountdownSeconds();
-          return currentCountdown !== undefined && currentCountdown < initialCountdown;
+          return currentCountdown !== undefined && currentCountdown < initialCountdown!;
         },
         { timeout: TIMEOUTS.assertion },
       )

@@ -56,6 +56,7 @@ export default defineConfig({
         environmentInfo: createAllureEnvironment(environment),
       },
     ],
+    ['./reporters/test-tracking-reporter.ts'],
   ],
   use: {
     baseURL: environment.baseUrl,
@@ -68,7 +69,7 @@ export default defineConfig({
   projects: [
     {
       name: 'framework',
-      testMatch: /(unit|component)\/.*\.spec\.ts/,
+      testMatch: /(unit|component|api|ui)\/.*\.spec\.ts/,
       use: { ...devices['Desktop Chrome'] },
     },
     {

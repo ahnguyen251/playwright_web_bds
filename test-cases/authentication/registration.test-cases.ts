@@ -57,6 +57,7 @@ export const registrationSuccessTestCase: RegistrationTestCase = Object.freeze({
   expectedResult:
     'Nút Đăng ký hiển thị loading và bị disable; tài khoản chuyển ACTIVE, JWT được cấp và điều hướng thành công.',
   credentials: validationData.registrationSuccessCredentials,
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const requiredRegistrationFieldsTestCase: RegistrationTestCase = Object.freeze({
@@ -70,6 +71,7 @@ export const requiredRegistrationFieldsTestCase: RegistrationTestCase = Object.f
     'Không gọi API tạo tài khoản; toàn bộ trường bắt buộc hiển thị lỗi trực quan dưới field.',
   data: Object.freeze({ fullName: '', email: '', password: '', passwordConfirmation: '' }),
   expectedSubmitEnabled: false,
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const invalidRegistrationEmailTestCase: RegistrationTestCase = Object.freeze({
@@ -83,6 +85,7 @@ export const invalidRegistrationEmailTestCase: RegistrationTestCase = Object.fre
   invalidEmails: validationData.invalidRegistrationEmails,
   expectedMessages: Object.freeze([validationData.expectedMessages.invalidEmail]),
   expectedSubmitEnabled: false,
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const duplicateRegistrationEmailTestCase: RegistrationTestCase = Object.freeze({
@@ -95,6 +98,7 @@ export const duplicateRegistrationEmailTestCase: RegistrationTestCase = Object.f
   expectedResult: 'Hiển thị "Email đã tồn tại" và không tạo tài khoản.',
   credentialAlias: 'defaultUser',
   expectedMessages: Object.freeze([validationData.expectedMessages.duplicateEmail]),
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const invalidRegistrationPasswordTestCase: RegistrationTestCase = Object.freeze({
@@ -109,6 +113,7 @@ export const invalidRegistrationPasswordTestCase: RegistrationTestCase = Object.
   invalidPasswords: validationData.invalidRegistrationPasswords,
   expectedMessages: Object.freeze([validationData.expectedMessages.invalidPassword]),
   expectedSubmitEnabled: false,
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const registrationConfirmationMismatchTestCase: RegistrationTestCase = Object.freeze({
@@ -127,6 +132,7 @@ export const registrationConfirmationMismatchTestCase: RegistrationTestCase = Ob
   }),
   expectedMessages: Object.freeze([validationData.expectedMessages.mismatchedPassword]),
   expectedSubmitEnabled: false,
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const invalidOrExpiredRegistrationOtpTestCase: RegistrationTestCase = Object.freeze({
@@ -138,6 +144,7 @@ export const invalidOrExpiredRegistrationOtpTestCase: RegistrationTestCase = Obj
   preconditions: Object.freeze(['A valid registration has reached the OTP step.']),
   expectedResult: 'OTP sai hiển thị lỗi và cho nhập lại; OTP hết hạn yêu cầu gửi lại OTP.',
   otpConditions: Object.freeze(['incorrect', 'expired'] as const),
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const registrationOtpResendCountdownTestCase: RegistrationTestCase = Object.freeze({
@@ -149,6 +156,7 @@ export const registrationOtpResendCountdownTestCase: RegistrationTestCase = Obje
   preconditions: Object.freeze(['The registration OTP was just sent and the OTP view is open.']),
   expectedResult: 'Nút Gửi lại OTP bị disable trong countdown và chuyển enable sau khi hết.',
   countdown: 'default',
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const registrationTestCases = Object.freeze([

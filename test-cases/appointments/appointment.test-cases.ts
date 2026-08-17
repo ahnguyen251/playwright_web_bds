@@ -16,6 +16,7 @@ export const createAppointmentTestCase: TestCaseDefinition = Object.freeze({
     'Mutation execution is explicitly enabled on dev or staging.',
   ],
   expectedResult: 'The success confirmation is visible and the booking popup closes.',
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const requireAppointmentTimeTestCase: TestCaseDefinition = Object.freeze({
@@ -29,6 +30,7 @@ export const requireAppointmentTimeTestCase: TestCaseDefinition = Object.freeze(
     'The configured eligible listing exposes appointment dates and time slots.',
   ],
   expectedResult: 'Submission remains disabled until a time slot is selected.',
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const requireContactNameTestCase: TestCaseDefinition = Object.freeze({
@@ -39,6 +41,7 @@ export const requireContactNameTestCase: TestCaseDefinition = Object.freeze({
   tags: appointmentTags,
   preconditions: ['The appointment form is open for an eligible listing.'],
   expectedResult: 'The required-name validation message is visible.',
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const validateVietnamesePhoneTestCase: TestCaseDefinition = Object.freeze({
@@ -49,6 +52,7 @@ export const validateVietnamesePhoneTestCase: TestCaseDefinition = Object.freeze
   tags: appointmentTags,
   preconditions: ['The appointment form is open for an eligible listing.'],
   expectedResult: 'The Vietnamese phone-format validation message is visible.',
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const requireGmailEmailTestCase: TestCaseDefinition = Object.freeze({
@@ -59,6 +63,7 @@ export const requireGmailEmailTestCase: TestCaseDefinition = Object.freeze({
   tags: appointmentTags,
   preconditions: ['The appointment form is open for an eligible listing.'],
   expectedResult: 'The Gmail-address validation message is visible.',
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const appointmentCaseTitle = (testCase: TestCaseDefinition): string =>

@@ -15,6 +15,7 @@ export const profileViewTestCase: TestCaseDefinition = Object.freeze({
   tags: Object.freeze([TAGS.smoke, ...profileTags]),
   preconditions: authenticatedPrecondition,
   expectedResult: 'The profile shows account information without changing account data.',
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const disabledProfileFieldsTestCase = Object.freeze({
@@ -26,6 +27,7 @@ export const disabledProfileFieldsTestCase = Object.freeze({
   preconditions: authenticatedPrecondition,
   expectedResult: 'Email and verified phone cannot be edited.',
   disabledFields: Object.freeze(['email', 'phone'] as const),
+  automation: { status: 'NOT_AUTOMATED' as const },
 }) satisfies TestCaseDefinition & { readonly disabledFields: readonly ['email', 'phone'] };
 
 export const unchangedProfileTestCase: TestCaseDefinition = Object.freeze({
@@ -36,6 +38,7 @@ export const unchangedProfileTestCase: TestCaseDefinition = Object.freeze({
   tags: profileTags,
   preconditions: authenticatedPrecondition,
   expectedResult: 'Save remains disabled and no profile update is sent.',
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const changePasswordConfirmationTestCase = Object.freeze({
@@ -55,6 +58,7 @@ export const changePasswordConfirmationTestCase = Object.freeze({
     passwordConfirmation: 'Different1!',
   }),
   expectedMessages: Object.freeze(['Xác nhận mật khẩu mới không khớp.']),
+  automation: { status: 'NOT_AUTOMATED' as const },
 }) satisfies TestCaseDefinition & {
   readonly data: PasswordChangeData;
   readonly expectedMessages: readonly string[];

@@ -1,0 +1,32 @@
+import { getDefaultDatabase } from '../database/sqlite';
+const conn = getDefaultDatabase();
+const db = conn.db;
+
+console.log('\n--- 1. Tổng canonical Test Cases ---');
+console.log(db.prepare('SELECT COUNT(*) as count FROM test_cases').get());
+
+console.log('\n--- 2. Bao nhiêu AUTOMATED? ---');
+console.log(db.prepare('SELECT COUNT(*) as count FROM test_cases WHERE automation_status = ?').get('AUTOMATED'));
+
+console.log('\n--- 3. Bao nhiêu NOT_AUTOMATED? ---');
+console.log(db.prepare('SELECT COUNT(*) as count FROM test_cases WHERE automation_status = ?').get('NOT_AUTOMATED'));
+
+console.log('\n--- 4. Run mới nhất và metrics ---');
+const latestRun = db.prepare('SELECT run_id, total_executions, unique_mapped_test_case_ids_executed FROM test_runs ORDER BY created_at DESC LIMIT 1').get() as any;
+console.log(latestRun);
+
+console.log('\n--- 5. Thông tin execution của TC-AUTH-LOGIN-001 ---');
+console.log(db.prepare(`
+  SELECT run_id, project_name, status, traceability_status, duration_ms
+  FROM test_results 
+  WHERE parsed_test_case_id = 'TC-AUTH-LOGIN-001'
+`).all());
+
+console.log('\n--- 6. Các test UNMAPPED ---');
+console.log(db.prepare(`
+  SELECT title, status, traceability_status
+  FROM test_results
+  WHERE traceability_status = 'UNMAPPED'
+`).all());
+
+conn.close();

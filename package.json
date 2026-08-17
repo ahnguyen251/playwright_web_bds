@@ -11,6 +11,8 @@
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "db:init": "ts-node scripts/init-db.ts",
+    "start:api": "ts-node server/index.ts",
     "test": "playwright test",
     "test:smoke": "playwright test --grep @smoke",
     "test:regression": "playwright test --grep @regression",
@@ -27,6 +29,8 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@playwright/test": "1.62.1",
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/express": "^5.0.6",
     "@types/node": "26.1.2",
     "allure-commandline": "2.43.0",
     "allure-playwright": "3.10.2",
@@ -34,8 +38,13 @@
     "eslint": "10.8.0",
     "googleapis": "174.0.0",
     "prettier": "3.9.6",
+    "ts-node": "^10.9.2",
     "typescript": "6.0.3",
     "typescript-eslint": "8.66.0",
     "zod": "4.4.3"
+  },
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "express": "^5.2.1"
   }
 }

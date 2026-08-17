@@ -2,11 +2,12 @@ import { expect, test } from '../../fixtures/test.fixture';
 import { ROUTES } from '../../constants/routes';
 import { activeAccountLoginTestCase } from '../../test-cases/authentication/login.test-cases';
 import { BrowserHelper } from '../../utils/BrowserHelper';
+import { buildTestTitle } from '../../utils/test-tracking';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
 test(
-  `${activeAccountLoginTestCase.id} ${activeAccountLoginTestCase.title}`,
+  buildTestTitle(activeAccountLoginTestCase),
   { tag: [...activeAccountLoginTestCase.tags] },
   async ({ authRequestObserver, defaultUser, header, loginPage, page }) => {
     await loginPage.openHome();

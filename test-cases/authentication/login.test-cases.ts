@@ -35,6 +35,7 @@ export const activeAccountLoginTestCase: LoginTestCase = Object.freeze({
   ]),
   expectedResult: 'Đăng nhập thành công; JWT được lưu chính xác và điều hướng về trang chủ.',
   credentialAlias: 'defaultUser',
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/login.positive.spec.ts' },
 });
 
 export const incorrectPasswordLoginTestCase: LoginTestCase = Object.freeze({
@@ -49,6 +50,7 @@ export const incorrectPasswordLoginTestCase: LoginTestCase = Object.freeze({
   credentialAlias: 'defaultUser',
   invalidPassword: validationData.mismatchedPassword,
   expectedMessage: validationData.expectedMessages.invalidCredentials,
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const lockedAccountLoginTestCase: LoginTestCase = Object.freeze({
@@ -63,6 +65,7 @@ export const lockedAccountLoginTestCase: LoginTestCase = Object.freeze({
   expectedResult: 'Hiển thị "Tài khoản của bạn đã bị khóa" và dừng đăng nhập.',
   credentialAlias: 'lockedUser',
   expectedMessage: validationData.expectedMessages.lockedAccount,
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const requiredLoginFieldsTestCase: LoginTestCase = Object.freeze({
@@ -74,6 +77,7 @@ export const requiredLoginFieldsTestCase: LoginTestCase = Object.freeze({
   preconditions: signedOutLoginPreconditions,
   expectedResult: 'Validation chặn và không gửi request đăng nhập.',
   missingFieldVariants: Object.freeze(['email-or-phone', 'password'] as const),
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const googleOAuthLoginTestCase: LoginTestCase = Object.freeze({
@@ -87,6 +91,7 @@ export const googleOAuthLoginTestCase: LoginTestCase = Object.freeze({
     'Chỉ với mock: ứng dụng nhận access token, tự tạo tài khoản khi cần, cấp JWT và chuyển về trang chủ.',
   executionMode: validationData.googleOAuthExecutionMode,
   expectedOAuthOutcome: validationData.googleOAuthExpectedOutcome,
+  automation: { status: 'NOT_AUTOMATED' as const },
 });
 
 export const loginTestCases = Object.freeze([
