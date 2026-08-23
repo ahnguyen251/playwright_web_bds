@@ -1,8 +1,8 @@
 import { expect, test } from '../../fixtures/test.fixture';
-import {
-  disabledProfileFieldsTestCase,
-  unchangedProfileTestCase,
-} from '../../test-cases/authentication/profile.test-cases';
+import { getProfileTestCase } from '../../test-cases/authentication/profile.test-cases';
+
+const disabledProfileFieldsTestCase = getProfileTestCase('TC-PROFILE-VIEW-001');
+const unchangedProfileTestCase = getProfileTestCase('TC-PROFILE-EDIT-002');
 
 test(
   `${disabledProfileFieldsTestCase.id} ${disabledProfileFieldsTestCase.title}`,

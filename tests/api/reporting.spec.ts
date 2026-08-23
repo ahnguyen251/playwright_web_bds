@@ -256,5 +256,33 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
       expect(res.status()).toBe(404);
       expect((await res.json()).error.code).toBe('RESULT_NOT_FOUND');
     });
+
+    test('GET /api/test-cases/:testCaseId/results should return execution history', async ({ request }) => {
+      // Not found test case
+      const res404 = await request.get(`http://localhost:${port}/api/test-cases/TC-999/results`);
+      expect(res404.status()).toBe(404);
+
+      // TC-02 exists but no MAPPED results
+      const resEmpty = await request.get(`http://localhost:${port}/api/test-cases/TC-02/results`);
+      expect(resEmpty.status()).toBe(200);
+      expect((await resEmpty.json()).items).toHaveLength(0);
+
+      // TC-01 has 2 MAPPED results
+      const response = await request.get(`http://localhost:${port}/api/test-cases/TC-01/results`);
+      expect(response.status()).toBe(200);
+      const body = await response.json();
+      
+      expect(body.items).toHaveLength(2);
+      expect(body.items[0].runId).toBe('RUN-01');
+      expect(body.items[0].status).toBe('FAILED');
+      expect(body.items[1].runId).toBe('RUN-01');
+      expect(body.items[1].status).toBe('PASSED');
+
+      // Filter by FAILED
+      const resFailed = await request.get(`http://localhost:${port}/api/test-cases/TC-01/results?status=FAILED`);
+      const bodyFailed = await resFailed.json();
+      expect(bodyFailed.items).toHaveLength(1);
+      expect(bodyFailed.items[0].resultId).toBe('RES-02');
+    });
   });
 });

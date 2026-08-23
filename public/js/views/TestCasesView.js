@@ -11,6 +11,7 @@ export class TestCasesViewClass {
     this.page = 1;
     this.searchQuery = '';
     this.debouncer = null;
+    this.abortController = null;
   }
 
   async mount(rootElement) {
@@ -20,6 +21,10 @@ export class TestCasesViewClass {
   }
 
   unmount() {
+    if (this.abortController) {
+      this.abortController.abort();
+    }
+    clearTimeout(this.debouncer);
     this.root = null;
   }
 
@@ -52,15 +57,21 @@ export class TestCasesViewClass {
   }
 
   async fetchAndRender() {
+    if (this.abortController) {
+      this.abortController.abort();
+    }
+    this.abortController = new AbortController();
+    const signal = this.abortController.signal;
+
     this.contentArea.innerHTML = '';
-    this.contentArea.appendChild(LoadingState('Loading test cases...'));
+    this.contentArea.appendChild(LoadingState('Đang tải danh sách test cases...'));
 
     try {
-      const data = await api.getTestCases(this.page, 20, this.searchQuery);
+      const data = await api.getTestCases(this.page, 20, this.searchQuery, { signal });
       this.contentArea.innerHTML = '';
 
       if (!data.items || data.items.length === 0) {
-        this.contentArea.appendChild(EmptyState('No test cases found.'));
+        this.contentArea.appendChild(EmptyState('Không tìm thấy test case nào.'));
         return;
       }
 
@@ -71,10 +82,10 @@ export class TestCasesViewClass {
       const thead = document.createElement('thead');
       thead.innerHTML = `
         <tr>
-          <th>ID</th>
-          <th>Module</th>
-          <th>Title</th>
-          <th>Status</th>
+          <th>Mã</th>
+          <th>Mô-đun</th>
+          <th>Tiêu Đề</th>
+          <th>Trạng Thái</th>
         </tr>
       `;
       table.appendChild(thead);
@@ -84,7 +95,11 @@ export class TestCasesViewClass {
         const tr = document.createElement('tr');
         
         const tdId = document.createElement('td');
-        tdId.textContent = tc.test_case_id;
+        const aId = document.createElement('a');
+        aId.href = `#test-cases/${encodeURIComponent(tc.test_case_id)}`;
+        aId.textContent = tc.test_case_id;
+        aId.className = 'link';
+        tdId.appendChild(aId);
         
         const tdModule = document.createElement('td');
         tdModule.textContent = tc.module;
@@ -114,6 +129,10 @@ export class TestCasesViewClass {
       this.contentArea.appendChild(paginationEl);
 
     } catch (error) {
+      if (error.name === 'AbortError') {
+        // Ignored because a new request is taking over
+        return;
+      }
       this.contentArea.innerHTML = '';
       this.contentArea.appendChild(ErrorState(error));
     }

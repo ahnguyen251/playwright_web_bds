@@ -8,18 +8,18 @@ export function ErrorState(error) {
   icon.style.marginBottom = '16px';
 
   const text = document.createElement('div');
-  text.textContent = 'An error occurred while loading data.';
+  text.textContent = 'Đã có lỗi xảy ra khi tải dữ liệu.';
 
   const details = document.createElement('div');
   details.className = 'error-text';
   // Sanitize message by using textContent
-  details.textContent = error.message || 'Unknown Error';
+  details.textContent = error.message || 'Lỗi Không Xác Định';
   
   const code = document.createElement('div');
   code.style.marginTop = '8px';
   code.style.fontSize = '0.75rem';
   code.style.opacity = '0.7';
-  code.textContent = `Code: ${error.code || 'UNKNOWN_ERROR'}`;
+  code.textContent = `Mã lỗi: ${error.code || 'UNKNOWN_ERROR'}`;
 
   container.appendChild(icon);
   container.appendChild(text);

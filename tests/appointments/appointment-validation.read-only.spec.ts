@@ -1,14 +1,10 @@
 import { expect, test } from '../../fixtures/test.fixture';
 import {
   appointmentCaseTitle,
-  requireAppointmentTimeTestCase,
-  requireContactNameTestCase,
-  requireGmailEmailTestCase,
-  validateVietnamesePhoneTestCase,
 } from '../../test-cases/appointments/appointment.test-cases';
 
 test(
-  appointmentCaseTitle(requireAppointmentTimeTestCase),
+  appointmentCaseTitle('TC-APT-CREATE-003') + ' - time',
   async ({ appointmentData, appointmentPage, appointmentWorkflow }) => {
     await appointmentWorkflow.prepareAppointmentWithoutTime(appointmentData);
 
@@ -17,7 +13,7 @@ test(
 );
 
 test(
-  appointmentCaseTitle(requireContactNameTestCase),
+  appointmentCaseTitle('TC-APT-CREATE-003') + ' - name',
   async ({ appointmentData, appointmentPage, appointmentWorkflow }) => {
     await appointmentWorkflow.prepareAppointment({ ...appointmentData, fullName: '' });
 
@@ -27,7 +23,7 @@ test(
 );
 
 test(
-  appointmentCaseTitle(validateVietnamesePhoneTestCase),
+  appointmentCaseTitle('TC-APT-CREATE-003') + ' - phone',
   async ({ appointmentData, appointmentPage, appointmentWorkflow }) => {
     await appointmentWorkflow.prepareAppointment({
       ...appointmentData,
@@ -40,7 +36,7 @@ test(
 );
 
 test(
-  appointmentCaseTitle(requireGmailEmailTestCase),
+  appointmentCaseTitle('TC-APT-CREATE-003') + ' - email',
   async ({ appointmentData, appointmentPage, appointmentWorkflow }) => {
     await appointmentWorkflow.prepareAppointment({
       ...appointmentData,

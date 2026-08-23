@@ -41,22 +41,22 @@ const TestRunResultSchema = z
 const run = () => {
   const args = process.argv.slice(2);
   if (args.length === 0) {
-    console.error('Error: Please provide path to run-result.json');
+    console.error('Lỗi: Vui lòng cung cấp đường dẫn tới file run-result.json');
     process.exit(1);
   }
 
   const jsonPath = path.resolve(process.cwd(), args[0]!);
   if (!fs.existsSync(jsonPath)) {
-    console.error(`Error: File not found at ${jsonPath}`);
+    console.error(`Lỗi: Không tìm thấy file tại ${jsonPath}`);
     process.exit(1);
   }
 
-  console.log(`Reading JSON from ${jsonPath}...`);
+  console.log(`Đang đọc JSON từ ${jsonPath}...`);
   const rawData = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
 
   const validation = TestRunResultSchema.safeParse(rawData);
   if (!validation.success) {
-    console.error('Validation failed:', validation.error.format());
+    console.error('Lỗi xác thực (Validation failed):', validation.error.format());
     process.exit(1);
   }
 
@@ -65,26 +65,26 @@ const run = () => {
   const conn = getDefaultDatabase();
   const repo = new TestRunRepository(conn);
 
-  console.log(`Importing RunId: ${runResult.RunId}`);
+  console.log(`Đang import RunId: ${runResult.RunId}`);
   const importRes = repo.importRunResult(runResult);
 
   conn.close();
 
-  console.log('\n--- Import Summary ---');
+  console.log('\n--- Tổng Kết Import ---');
   if (importRes.status === 'SKIPPED') {
-    console.log(`Status: SKIPPED (${importRes.reason})`);
+    console.log(`Trạng thái: BỎ QUA (${importRes.reason})`);
   } else if (importRes.status === 'ERROR') {
-    console.error(`Status: ERROR`);
+    console.error(`Trạng thái: LỖI`);
     console.error(importRes.reason);
     process.exit(1);
   } else {
-    console.log(`Status: SUCCESS`);
+    console.log(`Trạng thái: THÀNH CÔNG`);
     console.log(`RunId: ${runResult.RunId}`);
-    console.log(`TotalExecutions: ${runResult.TotalExecutions}`);
-    console.log(`Mapped: ${runResult.MappedExecutions}`);
-    console.log(`Unmapped: ${runResult.UnmappedExecutions}`);
-    console.log(`Unknown: ${runResult.UnknownTestCaseIdExecutions}`);
-    console.log(`UniqueMappedTestCaseIds: ${runResult.UniqueMappedTestCaseIdsExecuted}`);
+    console.log(`Tổng số thực thi (TotalExecutions): ${runResult.TotalExecutions}`);
+    console.log(`Đã map (Mapped): ${runResult.MappedExecutions}`);
+    console.log(`Chưa map (Unmapped): ${runResult.UnmappedExecutions}`);
+    console.log(`Không rõ (Unknown): ${runResult.UnknownTestCaseIdExecutions}`);
+    console.log(`Số Test Case Id duy nhất (UniqueMappedTestCaseIds): ${runResult.UniqueMappedTestCaseIdsExecuted}`);
   }
 };
 

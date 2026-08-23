@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs';
 import { DatabaseConnection, getDefaultDatabase } from '../../database/sqlite';
 import { EvidenceReadRepository } from '../../database/repositories/EvidenceReadRepository';
-import { NotFoundError, BadRequestError } from '../utils/errors';
+import { NotFoundError } from '../utils/errors';
 
 export class InvalidEvidencePathError extends Error {
   constructor() {
@@ -64,6 +64,7 @@ export class EvidenceService {
 
     // Check physical existence
     if (!fs.existsSync(resolvedPath)) {
+      console.log('File not found! resolvedPath:', resolvedPath, 'evidenceId:', evidenceId, 'record:', record);
       throw new NotFoundError('EVIDENCE_FILE_NOT_FOUND', 'Evidence file does not exist on disk.');
     }
 

@@ -53,14 +53,14 @@ test.describe.serial('Dashboard UI Tests', () => {
     
     // Go to Test Cases
     await page.click('#nav-test-cases');
-    await expect(page.locator('#page-title')).toHaveText('Test Cases');
+    await expect(page.locator('#page-title')).toHaveText('Test Cases - Playwright APM');
     
     // Empty state should show since DB is empty
     await expect(page.locator('text=No test cases found.')).toBeVisible();
 
     // Go to Runs
     await page.click('#nav-runs');
-    await expect(page.locator('#page-title')).toHaveText('Test Runs');
+    await expect(page.locator('#page-title')).toHaveText('Test Runs - Playwright APM');
     await expect(page.locator('text=No test runs found.')).toBeVisible();
   });
 

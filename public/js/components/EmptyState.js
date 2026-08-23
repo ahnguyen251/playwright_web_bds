@@ -1,4 +1,4 @@
-export function EmptyState(message = 'No data available.') {
+export function EmptyState(message = 'Chưa có dữ liệu.') {
   const container = document.createElement('div');
   container.className = 'state-container';
 

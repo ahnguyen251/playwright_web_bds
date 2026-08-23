@@ -9,4 +9,6 @@ export const TAGS = Object.freeze({
   listings: '@listings',
   appointments: '@appointments',
   transactions: '@transactions',
+  packages: '@packages',
+  chat: '@chat',
 });

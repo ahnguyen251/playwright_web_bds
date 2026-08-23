@@ -21,14 +21,14 @@ export class RunsViewClass {
 
   async fetchAndRender() {
     this.root.innerHTML = '';
-    this.root.appendChild(LoadingState('Loading test runs...'));
+    this.root.appendChild(LoadingState('Đang tải danh sách lần chạy test...'));
 
     try {
       const data = await api.getRuns(this.page, 20);
       this.root.innerHTML = '';
 
       if (!data.items || data.items.length === 0) {
-        this.root.appendChild(EmptyState('No test runs found.'));
+        this.root.appendChild(EmptyState('Không tìm thấy lần chạy nào.'));
         return;
       }
 
@@ -39,11 +39,11 @@ export class RunsViewClass {
       const thead = document.createElement('thead');
       thead.innerHTML = `
         <tr>
-          <th>Run ID</th>
-          <th>Started At</th>
-          <th>Duration</th>
-          <th>Total Execs</th>
-          <th>Passed / Failed / Skipped</th>
+          <th>Mã Lần Chạy</th>
+          <th>Thời Gian Bắt Đầu</th>
+          <th>Thời Gian</th>
+          <th>Tổng Lần Chạy</th>
+          <th>Thành Công / Thất Bại / Bỏ Qua</th>
         </tr>
       `;
       table.appendChild(thead);

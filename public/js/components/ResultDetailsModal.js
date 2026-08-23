@@ -3,9 +3,15 @@ import { Badge } from './Badge.js';
 import { LoadingState } from './LoadingState.js';
 import { ErrorState } from './ErrorState.js';
 
+let singletonInstance = null;
+
 export class ResultDetailsModalClass {
   constructor() {
+    if (singletonInstance) {
+      return singletonInstance;
+    }
     this.createModalDOM();
+    singletonInstance = this;
   }
 
   createModalDOM() {
@@ -61,9 +67,9 @@ export class ResultDetailsModalClass {
   async open(resultId) {
     this.triggerElement = document.activeElement;
     this.overlay.style.display = 'flex';
-    this.titleEl.textContent = 'Result Details';
+    this.titleEl.textContent = 'Chi Tiết Kết Quả';
     this.body.innerHTML = '';
-    this.body.appendChild(LoadingState('Loading result details...'));
+    this.body.appendChild(LoadingState('Đang tải chi tiết kết quả...'));
     this.modal.focus();
 
     try {
@@ -93,7 +99,7 @@ export class ResultDetailsModalClass {
       metaDiv.style.marginBottom = '24px';
       metaDiv.style.fontSize = '0.9rem';
       metaDiv.style.color = 'var(--text-muted)';
-      metaDiv.textContent = `Project: ${result.project_name || 'N/A'} | Traceability: ${result.traceability_status} | Duration: ${(result.duration_ms / 1000).toFixed(1)}s`;
+      metaDiv.textContent = `Dự Án: ${result.project_name || 'N/A'} | Map: ${result.traceability_status} | Thời Gian: ${(result.duration_ms / 1000).toFixed(1)}s`;
       this.body.appendChild(metaDiv);
 
       // Error Info
@@ -101,7 +107,7 @@ export class ResultDetailsModalClass {
         const errorSection = document.createElement('div');
         errorSection.style.marginBottom = '24px';
         const errorLabel = document.createElement('strong');
-        errorLabel.textContent = 'Error Message:';
+        errorLabel.textContent = 'Thông Báo Lỗi:';
         const errorPre = document.createElement('pre');
         errorPre.className = 'code-block';
         errorPre.textContent = result.error_message;
@@ -114,7 +120,7 @@ export class ResultDetailsModalClass {
         const stackSection = document.createElement('div');
         stackSection.style.marginBottom = '24px';
         const stackLabel = document.createElement('strong');
-        stackLabel.textContent = 'Stack Trace:';
+        stackLabel.textContent = 'Chi Tiết Lỗi (Stack Trace):';
         const stackPre = document.createElement('pre');
         stackPre.className = 'code-block';
         stackPre.textContent = result.error_stack;
@@ -126,12 +132,12 @@ export class ResultDetailsModalClass {
       // Evidence Section
       const evSection = document.createElement('div');
       const evLabel = document.createElement('h3');
-      evLabel.textContent = 'Test Evidence';
+      evLabel.textContent = 'Chứng Cớ (Evidence)';
       evSection.appendChild(evLabel);
 
       if (!evidenceData.items || evidenceData.items.length === 0) {
         const p = document.createElement('p');
-        p.textContent = 'No evidence artifacts found for this result.';
+        p.textContent = 'Không tìm thấy tài liệu chứng cớ nào cho kết quả này.';
         p.style.color = 'var(--text-muted)';
         evSection.appendChild(p);
       } else {
@@ -155,7 +161,7 @@ export class ResultDetailsModalClass {
             img.style.maxWidth = '100%';
             img.style.borderRadius = '4px';
             img.onerror = () => {
-              img.replaceWith(this.createEvidenceError('Image unavailable'));
+              img.replaceWith(this.createEvidenceError('Hình ảnh không khả dụng'));
             };
             itemDiv.appendChild(img);
           } else if (ev.type === 'VIDEO') {
@@ -165,19 +171,19 @@ export class ResultDetailsModalClass {
             video.style.maxWidth = '100%';
             video.style.borderRadius = '4px';
             video.onerror = () => {
-              video.replaceWith(this.createEvidenceError('Video unavailable'));
+              video.replaceWith(this.createEvidenceError('Video không khả dụng'));
             };
             itemDiv.appendChild(video);
           } else if (ev.type === 'TRACE') {
             const downloadBtn = document.createElement('a');
             downloadBtn.href = ev.contentUrl;
             downloadBtn.className = 'btn';
-            downloadBtn.textContent = 'Download Trace (.zip)';
+            downloadBtn.textContent = 'Tải Xuống Trace (.zip)';
             downloadBtn.download = ev.fileName;
             itemDiv.appendChild(downloadBtn);
           } else {
             const p = document.createElement('p');
-            p.textContent = 'Unsupported type preview';
+            p.textContent = 'Loại xem trước không được hỗ trợ';
             itemDiv.appendChild(p);
           }
 

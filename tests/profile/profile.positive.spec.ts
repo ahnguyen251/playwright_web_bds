@@ -1,5 +1,7 @@
 import { expect, test } from '../../fixtures/test.fixture';
-import { profileViewTestCase } from '../../test-cases/authentication/profile.test-cases';
+import { getProfileTestCase } from '../../test-cases/authentication/profile.test-cases';
+
+const profileViewTestCase = getProfileTestCase('TC-PROFILE-VIEW-001');
 
 test(
   `${profileViewTestCase.id} ${profileViewTestCase.title}`,

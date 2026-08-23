@@ -24,7 +24,7 @@ export class RunDetailsViewClass {
     // Change page title to include runId securely
     const pageTitle = document.getElementById('page-title');
     if (pageTitle) {
-      pageTitle.textContent = `Run Details`;
+      pageTitle.textContent = `Chi Tiết Lần Chạy`;
     }
 
     await this.fetchAndRender();
@@ -36,7 +36,7 @@ export class RunDetailsViewClass {
 
   async fetchAndRender() {
     this.root.innerHTML = '';
-    this.root.appendChild(LoadingState('Loading run details...'));
+    this.root.appendChild(LoadingState('Đang tải chi tiết lần chạy...'));
 
     try {
       const runData = await api.getRunById(this.runId);
@@ -47,7 +47,7 @@ export class RunDetailsViewClass {
       // Back button
       const backBtn = document.createElement('button');
       backBtn.className = 'btn';
-      backBtn.textContent = '← Back to Runs';
+      backBtn.textContent = '← Quay lại Lịch Sử Chạy';
       backBtn.style.marginBottom = '24px';
       backBtn.onclick = () => window.location.hash = 'runs';
       this.root.appendChild(backBtn);
@@ -60,12 +60,12 @@ export class RunDetailsViewClass {
 
       const grid = document.createElement('div');
       grid.className = 'metrics-grid';
-      grid.appendChild(MetricCard('Started', new Date(runData.started_at).toLocaleString()));
-      grid.appendChild(MetricCard('Duration', `${(runData.duration_ms / 1000).toFixed(1)}s`));
-      grid.appendChild(MetricCard('Total', runData.total_executions));
-      grid.appendChild(MetricCard('Passed', runData.passed_executions));
-      grid.appendChild(MetricCard('Failed', runData.failed_executions));
-      grid.appendChild(MetricCard('Skipped', runData.skipped_executions));
+      grid.appendChild(MetricCard('Bắt Đầu', new Date(runData.started_at).toLocaleString()));
+      grid.appendChild(MetricCard('Thời Gian', `${(runData.duration_ms / 1000).toFixed(1)}s`));
+      grid.appendChild(MetricCard('Tổng Cộng', runData.total_executions));
+      grid.appendChild(MetricCard('Thành Công', runData.passed_executions));
+      grid.appendChild(MetricCard('Thất Bại', runData.failed_executions));
+      grid.appendChild(MetricCard('Bỏ Qua', runData.skipped_executions));
       this.root.appendChild(grid);
 
       // Filters
@@ -76,10 +76,10 @@ export class RunDetailsViewClass {
       const select = document.createElement('select');
       select.className = 'input';
       select.innerHTML = `
-        <option value="">All Statuses</option>
-        <option value="PASSED">Passed</option>
-        <option value="FAILED">Failed</option>
-        <option value="SKIPPED">Skipped</option>
+        <option value="">Tất Cả Trạng Thái</option>
+        <option value="PASSED">Thành Công</option>
+        <option value="FAILED">Thất Bại</option>
+        <option value="SKIPPED">Bỏ Qua</option>
       `;
       select.value = this.statusFilter;
       select.onchange = (e) => {
@@ -92,7 +92,7 @@ export class RunDetailsViewClass {
 
       // Results Table
       if (!resultsData.items || resultsData.items.length === 0) {
-        this.root.appendChild(EmptyState('No test results found for this run.'));
+        this.root.appendChild(EmptyState('Không tìm thấy kết quả test nào cho lần chạy này.'));
         return;
       }
 
@@ -103,12 +103,12 @@ export class RunDetailsViewClass {
       table.innerHTML = `
         <thead>
           <tr>
-            <th>Status</th>
-            <th>Title</th>
-            <th>Project</th>
-            <th>Duration</th>
-            <th>Traceability</th>
-            <th>Actions</th>
+            <th>Trạng Thái</th>
+            <th>Tiêu Đề</th>
+            <th>Dự Án</th>
+            <th>Thời Gian</th>
+            <th>Map</th>
+            <th>Hành Động</th>
           </tr>
         </thead>
       `;
@@ -135,7 +135,7 @@ export class RunDetailsViewClass {
         const tdAction = document.createElement('td');
         const viewBtn = document.createElement('button');
         viewBtn.className = 'btn';
-        viewBtn.textContent = 'View';
+        viewBtn.textContent = 'Xem';
         viewBtn.onclick = () => ResultDetailsModal.open(res.result_id);
         tdAction.appendChild(viewBtn);
 

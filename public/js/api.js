@@ -5,8 +5,8 @@
 
 const API_BASE = '/api';
 
-async function fetchJSON(url) {
-  const response = await fetch(url);
+async function fetchJSON(url, options = {}) {
+  const response = await fetch(url, options);
   const data = await response.json();
   
   if (!response.ok) {
@@ -20,28 +20,38 @@ async function fetchJSON(url) {
 }
 
 export const api = {
-  getSummary: () => fetchJSON(`${API_BASE}/dashboard/summary`),
+  getSummary: (options) => fetchJSON(`${API_BASE}/dashboard/summary`, options),
   
-  getTestCases: (page = 1, pageSize = 20, search = '') => {
+  getTestCases: (page = 1, pageSize = 20, search = '', options) => {
     const params = new URLSearchParams({ page, pageSize });
     if (search) params.append('search', search);
-    return fetchJSON(`${API_BASE}/test-cases?${params.toString()}`);
-  },
-  
-  getRuns: (page = 1, pageSize = 20) => {
-    const params = new URLSearchParams({ page, pageSize });
-    return fetchJSON(`${API_BASE}/runs?${params.toString()}`);
+    return fetchJSON(`${API_BASE}/test-cases?${params.toString()}`, options);
   },
 
-  getRunById: (runId) => fetchJSON(`${API_BASE}/runs/${runId}`),
+  getTestCaseById: (testCaseId, options) => fetchJSON(`${API_BASE}/test-cases/${testCaseId}`, options),
 
-  getRunResults: (runId, page = 1, pageSize = 20, status = '') => {
+  getTestCaseAnalytics: (testCaseId, options) => fetchJSON(`${API_BASE}/test-cases/${testCaseId}/analytics`, options),
+
+  getTestCaseResults: (testCaseId, page = 1, pageSize = 20, status = '', options) => {
     const params = new URLSearchParams({ page, pageSize });
     if (status) params.append('status', status);
-    return fetchJSON(`${API_BASE}/runs/${runId}/results?${params.toString()}`);
+    return fetchJSON(`${API_BASE}/test-cases/${testCaseId}/results?${params.toString()}`, options);
+  },
+  
+  getRuns: (page = 1, pageSize = 20, options) => {
+    const params = new URLSearchParams({ page, pageSize });
+    return fetchJSON(`${API_BASE}/runs?${params.toString()}`, options);
   },
 
-  getResultById: (resultId) => fetchJSON(`${API_BASE}/results/${resultId}`),
+  getRunById: (runId, options) => fetchJSON(`${API_BASE}/runs/${runId}`, options),
+
+  getRunResults: (runId, page = 1, pageSize = 20, status = '', options) => {
+    const params = new URLSearchParams({ page, pageSize });
+    if (status) params.append('status', status);
+    return fetchJSON(`${API_BASE}/runs/${runId}/results?${params.toString()}`, options);
+  },
+
+  getResultById: (resultId, options) => fetchJSON(`${API_BASE}/results/${resultId}`, options),
   
-  getResultEvidence: (resultId) => fetchJSON(`${API_BASE}/results/${resultId}/evidence`)
+  getResultEvidence: (resultId, options) => fetchJSON(`${API_BASE}/results/${resultId}/evidence`, options)
 };

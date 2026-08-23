@@ -1,4 +1,4 @@
-export function LoadingState(message = 'Loading data...') {
+export function LoadingState(message = 'Đang tải dữ liệu...') {
   const container = document.createElement('div');
   container.className = 'state-container';
 
