@@ -45,7 +45,7 @@ changes require an executable matching test.
 1. loads `allTestCases`;
 2. rejects duplicate catalog IDs;
 3. separates `AUTOMATED` and `NOT_AUTOMATED` IDs;
-4. builds an escaped, start-anchored title filter from the automated IDs;
+4. builds an escaped, token-boundary-safe Playwright grep filter from the automated IDs;
 5. invokes the existing Playwright configuration with only the canonical business-relevant projects;
 6. preserves current project dependencies and mutation/external safety gates;
 7. forwards the Playwright exit status after coverage validation.
@@ -56,8 +56,11 @@ prevents the 310 general framework tests from entering this run; only framework/
 whose titles begin with one of the automated catalog IDs are selected. Firefox and WebKit are not
 selected.
 
-An automated ID filter matches the ID as a complete first token. For example, `TC-LIST-CREATE-001`
-matches that ID and its titled variants but cannot match a longer, similarly prefixed ID.
+Playwright applies `grep` to a composite string containing the project, file, suites, and test title,
+so the CLI filter matches an ID as a complete whitespace-delimited token anywhere in that composite
+string. The reporter separately requires the ID to be the exact first token of `test.title`. For
+example, `TC-LIST-CREATE-001` matches that ID and its titled variants but cannot match a longer,
+similarly prefixed ID.
 
 The runner forwards useful Playwright arguments, including `--list`, without allowing callers to
 silently replace the catalog-derived ID filter.
@@ -133,9 +136,11 @@ reporter reuses it for business runs and keeps its current execution records bac
 Business-specific summary fields are additive and are emitted only when the dedicated runner marks
 the invocation as a business run.
 
-The business runner and reporter exchange an explicit run context/output path rather than selecting
-the newest result directory after execution. Concurrent or interrupted runs therefore cannot attach
-coverage to the wrong result file.
+The reporter derives discovered business IDs from the filtered suite received by `onBegin`, not from
+completed executions. As a result, `npm run test:business -- --list` can validate all mappings while
+reporting zero execution attempts. The business runner and reporter exchange an explicit run
+context/output path rather than selecting the newest result directory after execution. Concurrent or
+interrupted runs therefore cannot attach coverage to the wrong result file.
 
 Console output and the JSON result use the same aggregation result. The console presents Business
 Coverage first and Execution second; the JSON preserves per-attempt records plus ID- and
