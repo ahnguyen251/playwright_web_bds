@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 
+import type { AvatarFilePayload } from '../../../../pages/components/ProfileFormComponent';
 import { ProfileWorkflow } from '../../../../workflows/authentication/ProfileWorkflow';
 import type { PasswordChangeData } from '../../../../types/user.types';
 
@@ -25,6 +26,16 @@ const createProfileHarness = (currentFullName: string): ProfileHarness => {
       calls.push(`update full name ${fullName}`);
       return Promise.resolve();
     },
+    uploadAvatar: (avatar: string | AvatarFilePayload) => {
+      calls.push(`upload avatar ${typeof avatar === 'string' ? avatar : avatar.name}`);
+      return Promise.resolve();
+    },
+    captureAvatarBaseline: () =>
+      Promise.resolve({
+        name: 'profile-avatar-baseline.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('baseline'),
+      }),
     save: () => {
       calls.push('save');
       return Promise.resolve();
@@ -108,6 +119,13 @@ test('delegates password-change data without reading environment state', async (
       read: () => Promise.resolve({ fullName: '', email: '', phone: '' }),
       startEditing: () => Promise.resolve(),
       updateFullName: () => Promise.resolve(),
+      uploadAvatar: () => Promise.resolve(),
+      captureAvatarBaseline: () =>
+        Promise.resolve({
+          name: 'profile-avatar-baseline.png',
+          mimeType: 'image/png',
+          buffer: Buffer.from('baseline'),
+        }),
       save: () => Promise.resolve(),
     }),
     changePassword: () => passwordForm,
@@ -122,4 +140,48 @@ test('delegates password-change data without reading environment state', async (
     'fill password form',
     'submit password form',
   ]);
+});
+
+test('updates a changed full name and avatar in one saved profile operation', async () => {
+  const harness = createProfileHarness('Original Name');
+
+  await harness.workflow.updateProfile({
+    fullName: 'Updated Name',
+    avatar: 'test-data/files/listing-images/property.png',
+  });
+
+  expect(harness.calls).toEqual([
+    'open profile',
+    'open account information',
+    'start editing',
+    'update full name Updated Name',
+    'upload avatar test-data/files/listing-images/property.png',
+    'save',
+  ]);
+});
+
+test('saves an avatar-only update even when the full name is unchanged', async () => {
+  const harness = createProfileHarness('Baseline Name');
+
+  await harness.workflow.updateProfile({
+    fullName: 'Baseline Name',
+    avatar: 'avatar_valid.png',
+  });
+
+  expect(harness.calls).toEqual([
+    'open profile',
+    'open account information',
+    'start editing',
+    'upload avatar avatar_valid.png',
+    'save',
+  ]);
+});
+
+test('captures an avatar cleanup baseline after opening account information', async () => {
+  const harness = createProfileHarness('Baseline Name');
+
+  const baseline = await harness.workflow.captureAvatarBaseline();
+
+  expect(baseline.name).toBe('profile-avatar-baseline.png');
+  expect(harness.calls).toEqual(['open profile', 'open account information']);
 });

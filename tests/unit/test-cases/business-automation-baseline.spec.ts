@@ -35,8 +35,7 @@ const expectedAutomatedIds = [
   'TC-LIST-VIEW-001',
   'TC-LIST-VIEW-002',
   'TC-PROFILE-CHANGEPW-004',
-  'TC-PROFILE-EDIT-002',
-  'TC-PROFILE-VIEW-001',
+  'TC-PROFILE-CHANGEPW-003',
 ] as const;
 
 test('catalog records the current executable business coverage baseline', () => {
@@ -47,6 +46,6 @@ test('catalog records the current executable business coverage baseline', () => 
 
   expect(allTestCases).toHaveLength(83);
   expect(automatedIds).toEqual([...expectedAutomatedIds].sort());
-  expect(allTestCases.length - automatedIds.length).toBe(49);
+  expect(allTestCases.length - automatedIds.length).toBe(50);
   expect(() => new TestCaseRegistry().validate(allTestCases)).not.toThrow();
 });

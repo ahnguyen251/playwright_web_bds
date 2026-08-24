@@ -15,6 +15,7 @@ export class ChangePasswordComponent {
   private readonly passwordConfirmationInput: Locator;
   private readonly submitButton: Locator;
   private readonly cancelButton: Locator;
+  private readonly currentPasswordErrorLocator: Locator;
   private readonly validationMessageLocators: readonly Locator[];
 
   public constructor(page: Page) {
@@ -36,6 +37,9 @@ export class ChangePasswordComponent {
       exact: true,
     });
     this.cancelButton = profileView.getByRole('button', { name: 'Hủy', exact: true });
+    this.currentPasswordErrorLocator = profileView.getByText('Mật khẩu hiện tại không chính xác', {
+      exact: true,
+    });
     this.validationMessageLocators = VALIDATION_MESSAGES.map((message) =>
       profileView.getByText(message, { exact: true }),
     );
@@ -71,5 +75,24 @@ export class ChangePasswordComponent {
 
   public async isSubmitEnabled(): Promise<boolean> {
     return this.submitButton.isEnabled();
+  }
+
+  public async currentPasswordError(): Promise<string | undefined> {
+    return (await this.currentPasswordErrorLocator.isVisible())
+      ? (await this.currentPasswordErrorLocator.innerText()).trim()
+      : undefined;
+  }
+
+  public async matches(data: PasswordChangeData): Promise<boolean> {
+    const [currentPassword, newPassword, passwordConfirmation] = await Promise.all([
+      this.currentPasswordInput.inputValue(),
+      this.newPasswordInput.inputValue(),
+      this.passwordConfirmationInput.inputValue(),
+    ]);
+    return (
+      currentPassword === data.currentPassword &&
+      newPassword === data.newPassword &&
+      passwordConfirmation === data.passwordConfirmation
+    );
   }
 }

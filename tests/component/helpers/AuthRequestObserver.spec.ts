@@ -5,6 +5,8 @@ import { requireAcceptedRegistrationTransport } from '../../../helpers/network/R
 
 const loginUrl = 'http://example.test/api/v1/auth/login';
 const registrationUrl = 'http://example.test/api/v1/auth/register';
+const profileUrl = 'http://example.test/api/v1/user/profile';
+const changePasswordUrl = 'http://example.test/api/v1/user/change-password';
 
 interface ListenerCountPage {
   listenerCount(event: string): number;
@@ -291,4 +293,35 @@ test('status-only observation times out safely and removes its listener', async 
   ).rejects.toThrow('Timed out waiting for registration response at /api/v1/auth/register.');
 
   expect(listenerCount(eventEmitterPage, 'response')).toBe(listenerCountBefore);
+});
+
+test('counts only the exact PUT profile-update request', async ({ page }) => {
+  await page.route('**/api/v1/user/profile', async (route) => {
+    await route.fulfill({ status: 200, contentType: 'application/json', body: '{}' });
+  });
+  const observer = new AuthRequestObserver(page);
+
+  const count = await observer.countDuring('profileUpdate', async () => {
+    await page.evaluate(async (url) => {
+      await fetch(url, { method: 'POST' }).catch(() => undefined);
+      await fetch(url, { method: 'PUT' }).catch(() => undefined);
+    }, profileUrl);
+  });
+
+  expect(count).toBe(1);
+});
+
+test('observes status for the exact PUT change-password request', async ({ page }) => {
+  await page.route('**/api/v1/user/change-password', async (route) => {
+    await route.fulfill({ status: 422, contentType: 'application/json', body: '{}' });
+  });
+  const observer = new AuthRequestObserver(page);
+
+  const response = await observer.waitForStatus('changePassword', async () => {
+    await page.evaluate(async (url) => {
+      await fetch(url, { method: 'PUT' }).catch(() => undefined);
+    }, changePasswordUrl);
+  });
+
+  expect(response).toEqual({ status: 422 });
 });

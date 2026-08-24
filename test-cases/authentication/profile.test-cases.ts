@@ -13,8 +13,12 @@ export const profileViewTestCase1: TestCaseDefinition = Object.freeze({
   preconditions: authenticatedPrecondition,
   testData: 'Dữ liệu phiên đăng nhập hiện tại',
   testSteps: '1. Truy cập "Thông tin tài khoản".',
-  expectedResult: 'UI kết xuất chính xác từ DB: Avatar, Họ tên, Email, SĐT, Badge trạng thái Active.',
-  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/profile/profile.positive.spec.ts' },
+  expectedResult:
+    'UI kết xuất chính xác từ DB: Avatar, Họ tên, Email, SĐT, Badge trạng thái Active.',
+  automation: {
+    status: 'IN_PROGRESS' as const,
+    scriptPath: 'tests/profile/profile.positive.spec.ts',
+  },
 });
 
 export const profileViewTestCase2: TestCaseDefinition = Object.freeze({
@@ -27,7 +31,10 @@ export const profileViewTestCase2: TestCaseDefinition = Object.freeze({
   testData: 'Token invalid',
   testSteps: '1. Với token invalid, truy cập "Thông tin tài khoản".',
   expectedResult: 'Redirect về trang đăng nhập.',
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: {
+    status: 'IN_PROGRESS' as const,
+    scriptPath: 'tests/profile/profile.negative.spec.ts',
+  },
 });
 
 export const profileEditTestCase1: TestCaseDefinition = Object.freeze({
@@ -35,12 +42,16 @@ export const profileEditTestCase1: TestCaseDefinition = Object.freeze({
   title: '[Happy Path / CRUD] Chỉnh sửa thông tin cá nhân thành công kèm upload Avatar',
   module: 'Profile',
   priority: 'critical',
-  tags: profileTags,
+  tags: Object.freeze([...profileTags, TAGS.mutating]),
   preconditions: Object.freeze(['Người dùng đã đăng nhập, ở màn Chỉnh sửa thông tin']),
   testData: 'Họ tên mới hợp lệ; File ảnh: avatar_valid.png',
   testSteps: '1. Nhập họ tên mới hợp lệ. 2. Upload avatar mới (PNG). 3. Click "Lưu".',
-  expectedResult: 'Dữ liệu cập nhật thành công vào DB; hiển thị Toast thông báo hoàn tất; avatar mới cập nhật ngay trên header.',
-  automation: { status: 'NOT_AUTOMATED' as const },
+  expectedResult:
+    'Dữ liệu cập nhật thành công vào DB; hiển thị Toast thông báo hoàn tất; avatar mới cập nhật ngay trên header.',
+  automation: {
+    status: 'IN_PROGRESS' as const,
+    scriptPath: 'tests/profile/profile.mutating.spec.ts',
+  },
 });
 
 export const profileEditTestCase2: TestCaseDefinition = Object.freeze({
@@ -53,7 +64,10 @@ export const profileEditTestCase2: TestCaseDefinition = Object.freeze({
   testData: 'Giữ nguyên thông tin cũ',
   testSteps: '1. Click "Lưu" mà không chỉnh sửa gì.',
   expectedResult: 'Hiển thị "Không có thay đổi dữ liệu"; không gọi API Update.',
-  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/profile/profile.validation.spec.ts' },
+  automation: {
+    status: 'IN_PROGRESS' as const,
+    scriptPath: 'tests/profile/profile.validation.spec.ts',
+  },
 });
 
 export const profileEditTestCase3: TestCaseDefinition = Object.freeze({
@@ -65,8 +79,11 @@ export const profileEditTestCase3: TestCaseDefinition = Object.freeze({
   preconditions: Object.freeze(['Đang ở màn hình Chỉnh sửa thông tin cá nhân']),
   testData: 'Chuỗi 60 ký tự',
   testSteps: '1. Copy chuỗi 60 ký tự. 2. Paste vào field "Họ và tên".',
-  expectedResult: 'Trường tự động cắt, chỉ giữ 50 ký tự đầu.',
-  automation: { status: 'NOT_AUTOMATED' as const },
+  expectedResult: 'Trường tự động cắt, chỉ giữ chính xác 50 ký tự đầu.',
+  automation: {
+    status: 'IN_PROGRESS' as const,
+    scriptPath: 'tests/profile/profile.validation.spec.ts',
+  },
 });
 
 export const profileChangePwTestCase1: TestCaseDefinition = Object.freeze({
@@ -74,12 +91,22 @@ export const profileChangePwTestCase1: TestCaseDefinition = Object.freeze({
   title: '[Happy Path / State Transition] Đổi mật khẩu thành công và thu hồi phiên cũ',
   module: 'Profile',
   priority: 'critical',
-  tags: profileTags,
+  tags: Object.freeze([
+    ...profileTags,
+    TAGS.authentication,
+    TAGS.external,
+    TAGS.otp,
+    TAGS.mutating,
+  ]),
   preconditions: authenticatedPrecondition,
   testData: 'MK cũ đúng; MK mới hợp lệ; Xác nhận khớp',
   testSteps: '1. Nhập đúng MK hiện tại. 2. Nhập MK mới hợp lệ + xác nhận khớp. 3. Nhấn "Xác nhận".',
-  expectedResult: 'Mật khẩu cập nhật vào DB; token hiện tại trong LocalStorage/Cookie bị thu hồi; tự động đẩy về trang Đăng nhập.',
-  automation: { status: 'NOT_AUTOMATED' as const },
+  expectedResult:
+    'Mật khẩu cập nhật vào DB; token hiện tại trong LocalStorage/Cookie bị thu hồi; tự động đẩy về trang Đăng nhập.',
+  automation: {
+    status: 'IN_PROGRESS' as const,
+    scriptPath: 'tests/profile/change-password.mutating.spec.ts',
+  },
 });
 
 export const profileChangePwTestCase2: TestCaseDefinition = Object.freeze({
@@ -87,12 +114,21 @@ export const profileChangePwTestCase2: TestCaseDefinition = Object.freeze({
   title: '[Negative] Sai mật khẩu hiện tại',
   module: 'Profile',
   priority: 'high',
-  tags: profileTags,
+  tags: Object.freeze([
+    ...profileTags,
+    TAGS.authentication,
+    TAGS.external,
+    TAGS.otp,
+    TAGS.mutating,
+  ]),
   preconditions: authenticatedPrecondition,
   testData: 'MK cũ sai',
   testSteps: '1. Nhập sai MK hiện tại, các trường còn lại đúng. 2. Nhấn "Xác nhận".',
   expectedResult: 'Lỗi "Mật khẩu hiện tại không chính xác"; giữ nguyên form, không đổi dữ liệu.',
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: {
+    status: 'IN_PROGRESS' as const,
+    scriptPath: 'tests/profile/change-password.mutating.spec.ts',
+  },
 });
 
 export const profileChangePwTestCase3: TestCaseDefinition = Object.freeze({
@@ -102,10 +138,14 @@ export const profileChangePwTestCase3: TestCaseDefinition = Object.freeze({
   priority: 'high',
   tags: profileTags,
   preconditions: authenticatedPrecondition,
-  testData: 'MK mới không đạt rule',
+  testData: 'Mật khẩu mới dưới 8 ký tự hoặc thiếu chữ hoa, chữ thường hay chữ số',
   testSteps: '1. Nhập đúng MK hiện tại. 2. Nhập MK mới không hợp lệ. 3. Nhấn "Xác nhận".',
-  expectedResult: 'Hiển thị lỗi, quay lại bước nhập.',
-  automation: { status: 'NOT_AUTOMATED' as const },
+  expectedResult:
+    'Hiển thị lỗi mật khẩu mới phải có tối thiểu 8 ký tự, gồm chữ hoa, chữ thường và chữ số; giữ nguyên form để nhập lại.',
+  automation: {
+    status: 'AUTOMATED' as const,
+    scriptPath: 'tests/profile/change-password.validation.spec.ts',
+  },
 });
 
 export const profileChangePwTestCase4: TestCaseDefinition = Object.freeze({
@@ -116,9 +156,13 @@ export const profileChangePwTestCase4: TestCaseDefinition = Object.freeze({
   tags: profileTags,
   preconditions: authenticatedPrecondition,
   testData: 'Xác nhận MK khác MK mới',
-  testSteps: '1. Nhập đúng MK hiện tại, MK mới hợp lệ. 2. Nhập xác nhận khác giá trị. 3. Nhấn "Xác nhận".',
+  testSteps:
+    '1. Nhập đúng MK hiện tại, MK mới hợp lệ. 2. Nhập xác nhận khác giá trị. 3. Nhấn "Xác nhận".',
   expectedResult: 'Hiển thị lỗi không khớp.',
-  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/profile/change-password.validation.spec.ts' },
+  automation: {
+    status: 'AUTOMATED' as const,
+    scriptPath: 'tests/profile/change-password.validation.spec.ts',
+  },
 });
 
 export const profileTestCases = Object.freeze([
@@ -143,4 +187,3 @@ export const profileCaseTitle = (id: string): string => {
   const testCase = getProfileTestCase(id);
   return `${testCase.id} ${testCase.title} ${testCase.tags.join(' ')}`;
 };
-

@@ -7,6 +7,7 @@ import { ProfileFormComponent } from '../components/ProfileFormComponent';
 
 export class ProfilePage extends BasePage {
   private readonly accountInformationButton: Locator;
+  private readonly accountSummaryAvatar: Locator;
   private readonly profileForm: ProfileFormComponent;
   private readonly changePasswordForm: ChangePasswordComponent;
 
@@ -16,6 +17,9 @@ export class ProfilePage extends BasePage {
       name: 'Thông tin tài khoản',
       exact: true,
     });
+    this.accountSummaryAvatar = page
+      .getByRole('complementary')
+      .getByRole('img', { name: 'Avatar', exact: true });
     this.profileForm = new ProfileFormComponent(page);
     this.changePasswordForm = new ChangePasswordComponent(page);
   }
@@ -34,5 +38,13 @@ export class ProfilePage extends BasePage {
 
   public changePassword(): ChangePasswordComponent {
     return this.changePasswordForm;
+  }
+
+  public async hasSynchronizedAvatar(): Promise<boolean> {
+    const [profileSource, summarySource] = await Promise.all([
+      this.profileForm.avatarSource(),
+      this.accountSummaryAvatar.getAttribute('src'),
+    ]);
+    return profileSource !== '' && profileSource === summarySource;
   }
 }

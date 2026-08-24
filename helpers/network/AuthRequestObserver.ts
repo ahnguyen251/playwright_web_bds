@@ -1,9 +1,9 @@
 import type { Page, Request, Response } from '@playwright/test';
 
-import { AUTH_API_PATHS } from '../../constants/authentication';
+import { AUTH_API_METHODS, AUTH_API_PATHS } from '../../constants/authentication';
 import { TIMEOUTS } from '../../constants/timeouts';
 
-export type AuthOperation = 'registration' | 'login' | 'forgotPassword';
+export type AuthOperation = keyof typeof AUTH_API_PATHS;
 
 export interface AuthResponseSnapshot {
   status: number;
@@ -149,7 +149,9 @@ export class AuthRequestObserver {
   }
 
   private isOperationRequest(url: string, method: string, operation: AuthOperation): boolean {
-    return method === 'POST' && new URL(url).pathname === AUTH_API_PATHS[operation];
+    return (
+      method === AUTH_API_METHODS[operation] && new URL(url).pathname === AUTH_API_PATHS[operation]
+    );
   }
 
   private createTimeoutError(operation: AuthOperation): Error {
