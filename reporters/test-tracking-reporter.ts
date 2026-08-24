@@ -1,20 +1,51 @@
-import type { Reporter, TestCase, TestResult, FullConfig, Suite } from '@playwright/test/reporter';
+import type {
+  FullConfig,
+  FullResult,
+  Reporter,
+  Suite,
+  TestCase,
+  TestResult,
+} from '@playwright/test/reporter';
 import * as fs from 'fs';
 import * as path from 'path';
 import crypto from 'crypto';
-import type { TestRunResult, TestExecutionResult } from '../types/test-result.types';
+import { allTestCases } from '../test-cases';
+import type {
+  BusinessDiscoveredTest,
+  TestExecutionResult,
+  TestRunResult,
+} from '../types/test-result.types';
+import { aggregateBusinessRun, formatBusinessRunSummary } from './business-run-aggregation';
 import { mapPlaywrightStatus, mapEvidence, resolveTraceability } from './result-mapper';
 
 class TestTrackingReporter implements Reporter {
   private runId!: string;
   private startedAt!: Date;
   private executions: TestExecutionResult[] = [];
+  private readonly businessRun = process.env.BUSINESS_TEST_RUN === 'true';
+  private discoveredTests: BusinessDiscoveredTest[] = [];
 
   onBegin(config: FullConfig, suite: Suite) {
     this.startedAt = new Date();
     const dateStr = this.startedAt.toISOString().replace(/[-:T]/g, '').slice(0, 14);
     const shortRandom = crypto.randomBytes(2).toString('hex');
-    this.runId = `RUN-${dateStr}-${shortRandom}`;
+    const suppliedRunId = process.env.BUSINESS_RUN_ID;
+    const safeBusinessRunId = /^BUSINESS-RUN-\d{14}-[a-f0-9]{4}$/;
+    this.runId =
+      this.businessRun && suppliedRunId && safeBusinessRunId.test(suppliedRunId)
+        ? suppliedRunId
+        : `RUN-${dateStr}-${shortRandom}`;
+
+    if (this.businessRun) {
+      this.discoveredTests = suite.allTests().map((testCase) => {
+        const projectName = testCase.parent.project()?.name;
+        return {
+          PlaywrightTestId: testCase.id,
+          Title: testCase.title,
+          ...(projectName !== undefined ? { ProjectName: projectName } : {}),
+        };
+      });
+    }
   }
 
   onTestEnd(test: TestCase, result: TestResult) {
@@ -43,7 +74,7 @@ class TestTrackingReporter implements Reporter {
     this.executions.push(executionResult);
   }
 
-  async onEnd() {
+  async onEnd(result: FullResult) {
     const finishedAt = new Date();
 
     let mapped = 0;
@@ -87,6 +118,10 @@ class TestTrackingReporter implements Reporter {
       }
     }
 
+    const business = this.businessRun
+      ? aggregateBusinessRun(allTestCases, this.discoveredTests, this.executions)
+      : undefined;
+
     const runResult: TestRunResult = {
       RunId: this.runId,
       StartedAt: this.startedAt.toISOString(),
@@ -103,6 +138,7 @@ class TestTrackingReporter implements Reporter {
       TimedOutExecutions: timedOut,
       InterruptedExecutions: interrupted,
       Results: this.executions,
+      ...(business !== undefined ? { Business: business } : {}),
     };
 
     const outputDir = path.resolve(process.cwd(), 'test-results', 'tracking', this.runId);
@@ -121,6 +157,13 @@ class TestTrackingReporter implements Reporter {
     console.log(`Unmapped: ${runResult.UnmappedExecutions}`);
     console.log(`UnknownTestCaseIds: ${runResult.UnknownTestCaseIdExecutions}`);
     console.log(`Output: ${outputPath}\n`);
+
+    if (business) {
+      for (const line of formatBusinessRunSummary(business)) console.log(line);
+    }
+
+    if (business?.HasValidationErrors) return { status: 'failed' as const };
+    return result.status === 'passed' ? undefined : { status: result.status };
   }
 }
 

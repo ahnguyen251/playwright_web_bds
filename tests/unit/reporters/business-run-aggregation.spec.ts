@@ -3,6 +3,7 @@ import {
   aggregateBusinessRun,
   formatBusinessRunSummary,
 } from '../../../reporters/business-run-aggregation';
+import { allTestCases } from '../../../test-cases';
 import type { TestCaseDefinition } from '../../../types/test-case.types';
 import type { BusinessDiscoveredTest, TestExecutionResult } from '../../../types/test-result.types';
 
@@ -95,6 +96,23 @@ test('reports discovery separately from zero execution attempts in list mode', (
     NotRunVariants: 1,
   });
   expect(summary.Execution.Ids[0]?.Status).toBe('NOT_RUN');
+});
+
+test('real catalog business baseline aggregates to 34 automated and 49 backlog IDs', () => {
+  const automated = allTestCases.filter(({ automation }) => automation.status === 'AUTOMATED');
+  const discoveredTests = automated.map(({ id }, index) =>
+    discovered(id, `variant-${String(index)}`),
+  );
+  const summary = aggregateBusinessRun(allTestCases, discoveredTests, []);
+
+  expect(summary.Coverage).toMatchObject({
+    CatalogTotal: 83,
+    AutomatedTotal: 34,
+    NotAutomatedTotal: 49,
+    MissingAutomatedIds: [],
+    UnknownIds: [],
+  });
+  expect(summary.Execution.NotRunVariants).toBe(34);
 });
 
 test('fails validation for missing automated IDs and unknown discovered IDs', () => {
