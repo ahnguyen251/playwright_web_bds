@@ -23,6 +23,7 @@ const aggregateIdStatus = (
   if (statuses.some((status) => ['FAILED', 'TIMED_OUT', 'INTERRUPTED'].includes(status))) {
     return 'FAILED';
   }
+  if (statuses.includes('NOT_RUN')) return 'PARTIAL';
   if (statuses.every((status) => status === 'SKIPPED')) return 'SKIPPED';
   if (statuses.includes('PASSED') && statuses.includes('SKIPPED')) return 'PARTIAL';
   return 'PASSED';
@@ -43,7 +44,7 @@ export const aggregateBusinessRun = (
   );
   const notAutomatedIds = new Set(
     testCases
-      .filter((testCase) => testCase.automation.status === 'NOT_AUTOMATED')
+      .filter((testCase) => testCase.automation.status !== 'AUTOMATED')
       .map((testCase) => testCase.id),
   );
 

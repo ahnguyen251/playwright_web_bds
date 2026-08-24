@@ -49,13 +49,14 @@ export const createBusinessCatalogSelection = (
   };
 };
 
-const controlledOptions =
-  /^(?:-g|-G|--grep(?:=|$)|--grep-invert(?:=|$)|--project(?:=|$)|--config(?:=|$)|--reporter(?:=|$))/;
+const safeForwardedArgs = new Set(['--list']);
 
 export const validateBusinessRunnerArgs = (args: readonly string[]): void => {
-  const forbidden = args.find((arg) => controlledOptions.test(arg));
+  const forbidden = args.find((arg) => !safeForwardedArgs.has(arg));
   if (forbidden) {
-    throw new Error(`${forbidden} is controlled by test:business.`);
+    throw new Error(
+      `${forbidden} cannot be forwarded; selection and safety options are controlled by test:business.`,
+    );
   }
 };
 

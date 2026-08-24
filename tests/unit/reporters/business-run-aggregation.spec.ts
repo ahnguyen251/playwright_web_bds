@@ -5,9 +5,16 @@ import {
 } from '../../../reporters/business-run-aggregation';
 import { allTestCases } from '../../../test-cases';
 import type { TestCaseDefinition } from '../../../types/test-case.types';
-import type { BusinessDiscoveredTest, TestExecutionResult } from '../../../types/test-result.types';
+import type {
+  BusinessDiscoveredTest,
+  BusinessVariantStatus,
+  TestExecutionResult,
+} from '../../../types/test-result.types';
 
-const catalogCase = (id: string, automated = true): TestCaseDefinition => ({
+const catalogCase = (
+  id: string,
+  status: TestCaseDefinition['automation']['status'] = 'AUTOMATED',
+): TestCaseDefinition => ({
   id,
   title: id,
   module: 'Test',
@@ -15,7 +22,7 @@ const catalogCase = (id: string, automated = true): TestCaseDefinition => ({
   tags: [],
   preconditions: [],
   expectedResult: 'deterministic result',
-  automation: { status: automated ? 'AUTOMATED' : 'NOT_AUTOMATED' },
+  automation: { status },
 });
 
 const discovered = (id: string, testId: string, project = 'chromium'): BusinessDiscoveredTest => ({
@@ -45,7 +52,7 @@ const attempt = (
 
 test('counts one ID with multiple variants once and collapses retries to the final attempt', () => {
   const summary = aggregateBusinessRun(
-    [catalogCase('TC-A-001'), catalogCase('TC-B-001', false)],
+    [catalogCase('TC-A-001'), catalogCase('TC-B-001', 'NOT_AUTOMATED')],
     [discovered('TC-A-001', 'variant-a'), discovered('TC-A-001', 'variant-b')],
     [
       attempt('TC-A-001', 'variant-a', 'FAILED', 0),
@@ -115,6 +122,26 @@ test('real catalog business baseline aggregates to 34 automated and 49 backlog I
   expect(summary.Execution.NotRunVariants).toBe(34);
 });
 
+test('classifies every non-automated catalog state as backlog in deterministic order', () => {
+  const summary = aggregateBusinessRun(
+    [
+      catalogCase('TC-Z-001', 'BLOCKED'),
+      catalogCase('TC-A-001'),
+      catalogCase('TC-M-001', 'IN_PROGRESS'),
+      catalogCase('TC-B-001', 'NOT_AUTOMATED'),
+    ],
+    [discovered('TC-A-001', 'variant-a')],
+    [],
+  );
+
+  expect(summary.Coverage).toMatchObject({
+    CatalogTotal: 4,
+    AutomatedTotal: 1,
+    NotAutomatedTotal: 3,
+    NotAutomatedIds: ['TC-B-001', 'TC-M-001', 'TC-Z-001'],
+  });
+});
+
 test('fails validation for missing automated IDs and unknown discovered IDs', () => {
   const summary = aggregateBusinessRun(
     [catalogCase('TC-A-001')],
@@ -134,7 +161,7 @@ test('fails validation for missing automated IDs and unknown discovered IDs', ()
 test('formats Business Coverage before Execution', () => {
   const lines = formatBusinessRunSummary(
     aggregateBusinessRun(
-      [catalogCase('TC-A-001'), catalogCase('TC-B-001', false)],
+      [catalogCase('TC-A-001'), catalogCase('TC-B-001', 'NOT_AUTOMATED')],
       [discovered('TC-A-001', 'variant-a')],
       [attempt('TC-A-001', 'variant-a', 'PASSED', 0)],
     ),
@@ -148,10 +175,15 @@ test('formats Business Coverage before Execution', () => {
 });
 
 test.describe('ID status precedence', () => {
-  const cases = [
+  const cases: readonly {
+    readonly statuses: readonly BusinessVariantStatus[];
+    readonly expected: 'PASSED' | 'FAILED' | 'PARTIAL' | 'SKIPPED' | 'NOT_RUN';
+  }[] = [
     { statuses: ['PASSED'] as const, expected: 'PASSED' },
     { statuses: ['SKIPPED'] as const, expected: 'SKIPPED' },
     { statuses: ['PASSED', 'SKIPPED'] as const, expected: 'PARTIAL' },
+    { statuses: ['PASSED', 'NOT_RUN'] as const, expected: 'PARTIAL' },
+    { statuses: ['SKIPPED', 'NOT_RUN'] as const, expected: 'PARTIAL' },
     { statuses: ['PASSED', 'FAILED'] as const, expected: 'FAILED' },
     { statuses: ['PASSED', 'TIMED_OUT'] as const, expected: 'FAILED' },
     { statuses: ['PASSED', 'INTERRUPTED'] as const, expected: 'FAILED' },
@@ -160,8 +192,8 @@ test.describe('ID status precedence', () => {
   for (const { statuses, expected } of cases) {
     test(`${statuses.join('+')} aggregates to ${expected}`, () => {
       const tests = statuses.map((_, index) => discovered('TC-A-001', `variant-${String(index)}`));
-      const attempts = statuses.map((status, index) =>
-        attempt('TC-A-001', `variant-${String(index)}`, status, 0),
+      const attempts = statuses.flatMap((status, index) =>
+        status === 'NOT_RUN' ? [] : [attempt('TC-A-001', `variant-${String(index)}`, status, 0)],
       );
       const summary = aggregateBusinessRun([catalogCase('TC-A-001')], tests, attempts);
       expect(summary.Execution.Ids[0]?.Status).toBe(expected);

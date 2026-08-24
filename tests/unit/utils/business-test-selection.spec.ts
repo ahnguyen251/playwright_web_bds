@@ -55,18 +55,9 @@ test('rejects duplicate IDs and an empty automated selection', () => {
   );
 });
 
-test('keeps catalog grep and canonical projects under runner control', () => {
-  for (const args of [
-    ['--grep', 'anything'],
-    ['-g', 'anything'],
-    ['--grep-invert', 'anything'],
-    ['-G', 'anything'],
-    ['--project=firefox'],
-    ['--config=other.ts'],
-    ['--reporter=line'],
-  ]) {
-    expect(() => validateBusinessRunnerArgs(args)).toThrow(/controlled by test:business/);
-  }
+test('forwards only the explicitly safe list option', () => {
+  expect(() => validateBusinessRunnerArgs([])).not.toThrow();
+  expect(() => validateBusinessRunnerArgs(['--list'])).not.toThrow();
 
   const selection = createBusinessCatalogSelection([testCase('TC-A-001', 'AUTOMATED')]);
   expect(buildBusinessPlaywrightArgs(selection, ['--list'])).toEqual([
@@ -76,6 +67,38 @@ test('keeps catalog grep and canonical projects under runner control', () => {
     selection.GrepSource,
     '--list',
   ]);
+});
+
+test.describe('runner-controlled Playwright arguments', () => {
+  const unsafeArguments = [
+    { name: 'short config override', args: ['-c', 'other.ts'] },
+    { name: 'long config override with separate value', args: ['--config', 'other.ts'] },
+    { name: 'long config override with equals value', args: ['--config=other.ts'] },
+    { name: 'dependency suppression', args: ['--no-deps'] },
+    { name: 'positional file filter', args: ['tests/authentication/login.positive.spec.ts'] },
+    { name: 'positional title filter', args: ['TC-A-001'] },
+    { name: 'short grep override', args: ['-g', 'anything'] },
+    { name: 'long grep override with separate value', args: ['--grep', 'anything'] },
+    { name: 'long grep override with equals value', args: ['--grep=anything'] },
+    { name: 'short inverted grep override', args: ['-G', 'anything'] },
+    { name: 'long inverted grep override', args: ['--grep-invert=anything'] },
+    { name: 'project override with separate value', args: ['--project', 'firefox'] },
+    { name: 'project override with equals value', args: ['--project=firefox'] },
+    { name: 'reporter override with separate value', args: ['--reporter', 'line'] },
+    { name: 'reporter override with equals value', args: ['--reporter=line'] },
+    { name: 'shard discovery restriction with separate value', args: ['--shard', '1/2'] },
+    { name: 'shard discovery restriction with equals value', args: ['--shard=1/2'] },
+    { name: 'test-list discovery restriction', args: ['--test-list=selected-tests.txt'] },
+    { name: 'changed-test discovery restriction', args: ['--only-changed=main'] },
+    { name: 'last-failed discovery restriction', args: ['--last-failed'] },
+    { name: 'option terminator before a positional filter', args: ['--', 'tests/listings'] },
+  ] as const;
+
+  for (const { name, args } of unsafeArguments) {
+    test(`rejects ${name}`, () => {
+      expect(() => validateBusinessRunnerArgs(args)).toThrow(/controlled by test:business/);
+    });
+  }
 });
 
 test('canonical project selection excludes Firefox and WebKit', () => {
