@@ -14,7 +14,7 @@ export const appointmentTestCases: readonly TestCaseDefinition[] = [
     testData: 'Ngày/Khung giờ hợp lệ (> giờ hiện tại 2h); Họ tên/SĐT hợp lệ',
     testSteps: '1. Chọn ngày trên Carousel. 2. Chọn khung giờ từ dropdown. 3. Nhập/chỉnh sửa thông tin liên hệ. 4. Nhấn "Đặt lịch hẹn".',
     expectedResult: 'Bản ghi lịch hẹn tạo thành công, trạng thái mặc định "Chờ xác nhận"; gửi thông báo cho các bên.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/appointments/appointment-booking.mutating.spec.ts' },
   },
   {
     id: 'TC-APT-CREATE-002',
@@ -38,7 +38,7 @@ export const appointmentTestCases: readonly TestCaseDefinition[] = [
     testData: 'Dropdown khung giờ; SĐT sai định dạng',
     testSteps: '1. Mở dropdown Khung giờ, kiểm tra danh sách. 2. Nhập SĐT sai định dạng, submit.',
     expectedResult: 'Case 1: chỉ hiện khung giờ ≥ hiện tại + 2h. Case 2: lỗi định dạng SĐT.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/appointments/appointment-validation.read-only.spec.ts' },
   },
   {
     id: 'TC-APT-CONFIRM-001',

@@ -14,7 +14,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Loại hình: Mua bán; Tiêu đề: "Bán căn hộ 2PN Vinhomes"; Giá: 3.5 tỷ; Pháp lý: "Sổ hồng riêng"; Diện tích, địa chỉ, ảnh hợp lệ',
     testSteps: '1. Chọn "Mua bán". 2. Nhập đầy đủ trường bắt buộc. 3. Upload 1–10 ảnh hợp lệ. 4. Nhập Họ tên/SĐT liên hệ hợp lệ. 5. Click "Đăng tin".',
     expectedResult: 'Hệ thống tính điểm chất lượng tin, lưu DB với trạng thái "Chờ duyệt"; hiển thị popup/toast thông báo thành công.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/create-listing.mutating.spec.ts' },
   },
   {
     id: 'TC-LIST-CREATE-002',
@@ -26,7 +26,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Loại hình: Cho thuê; Giá thuê: 7 triệu/tháng; Tiền cọc: 14 triệu; Thời gian thuê, kỳ thanh toán hợp lệ',
     testSteps: '1. Chọn "Cho thuê". 2. Nhập đầy đủ trường bắt buộc + Thời gian thuê/Kỳ thanh toán. 3. Upload ảnh hợp lệ. 4. Click "Đăng tin".',
     expectedResult: 'Tin lưu DB với trạng thái "Chờ duyệt"; trường Tiền cọc/Giá thuê ghi nhận chính xác.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/create-listing.mutating.spec.ts' },
   },
   {
     id: 'TC-LIST-CREATE-003',
@@ -170,7 +170,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Từ khóa khớp 1 tin của User A',
     testSteps: '1. Truy cập "Danh sách tin đăng". 2. Nhập từ khóa tìm kiếm trong danh sách.',
     expectedResult: 'Hiển thị đúng danh sách tin của User A; kết quả tìm kiếm lọc đúng theo từ khóa.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/view-own-listings.read-only.spec.ts' },
   },
   {
     id: 'TC-LIST-VIEW-002',
@@ -182,7 +182,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Tài khoản mới; từ khóa không tồn tại',
     testSteps: '1. Truy cập danh sách khi chưa có tin. 2. Tìm kiếm với từ khóa không khớp.',
     expectedResult: 'Cả 2 trường hợp hiển thị empty state phù hợp.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/view-own-listings.read-only.spec.ts' },
   },
   {
     id: 'TC-LIST-DETAIL-001',
@@ -194,7 +194,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Tin đăng đã duyệt',
     testSteps: '1. Click vào tin đăng đã duyệt.',
     expectedResult: 'Hiển thị đầy đủ thông tin, hình ảnh/video, mô tả, liên hệ, tiện ích, tin liên quan; view count tăng.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/listing-detail.read-only.spec.ts' },
   },
   {
     id: 'TC-LIST-DETAIL-002',
@@ -206,7 +206,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'PostID invalid; tin chưa duyệt',
     testSteps: '1. Truy cập chi tiết với PostID không tồn tại. 2. Truy cập trực tiếp chi tiết tin chưa duyệt.',
     expectedResult: 'Case 1: "Tin không tồn tại". Case 2: không hiển thị nội dung.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/listing-detail.read-only.spec.ts' },
   },
   {
     id: 'TC-LIST-EDIT-001',
@@ -218,7 +218,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Sửa nội dung mô tả',
     testSteps: '1. Chọn "Sửa" trên tin đăng. 2. Thay đổi nội dung. 3. Nhấn "Cập nhật".',
     expectedResult: 'Dữ liệu mới lưu vào DB; trạng thái chuyển từ "Đang đăng" về "Chờ duyệt".',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/component/pages/ListingFormComponent.spec.ts' },
   },
   {
     id: 'TC-LIST-EDIT-002',
@@ -230,7 +230,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'URL: /listing/edit/{PostID_of_A}',
     testSteps: '1. Tại tài khoản User B, truy cập trực tiếp URL sửa tin của User A.',
     expectedResult: 'Hệ thống từ chối, hiển thị "Bạn không có quyền chỉnh sửa bài viết này" hoặc redirect về trang quản lý cá nhân.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/edit-listing.mutating.spec.ts' },
   },
   {
     id: 'TC-LIST-REMOVE-001',
@@ -242,7 +242,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Tin đăng "Đang đăng"',
     testSteps: '1. Nhấn "Gỡ tin". 2. Xác nhận tại popup.',
     expectedResult: 'Trạng thái chuyển "Đã gỡ"; tin biến mất khỏi trang công khai.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/withdraw-listing.mutating.spec.ts' },
   },
   {
     id: 'TC-LIST-REMOVE-002',
@@ -254,7 +254,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Tin đăng "Chờ duyệt"',
     testSteps: '1. Cố gắng gỡ tin không ở trạng thái "Đang đăng" (qua UI hoặc API).',
     expectedResult: 'Hệ thống từ chối, giữ nguyên trạng thái ban đầu.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/withdraw-listing.mutating.spec.ts' },
   },
   {
     id: 'TC-LIST-FAVORITE-001',
@@ -266,7 +266,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Tin đăng bất kỳ',
     testSteps: '1. Click icon Trái tim → thêm yêu thích, kiểm tra tại trang "Tin đăng yêu thích". 2. Click lại icon Trái tim → bỏ yêu thích.',
     expectedResult: 'Bước 1: icon active, tin xuất hiện trong danh sách yêu thích. Bước 2: tin biến mất khỏi danh sách yêu thích.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/favorite-listing.mutating.spec.ts' },
   },
   {
     id: 'TC-LIST-FAVORITE-002',
@@ -278,7 +278,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: '-',
     testSteps: '1. Nhấn icon Trái tim khi chưa đăng nhập.',
     expectedResult: 'Chuyển tới màn hình đăng nhập.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/favorite-listing.mutating.spec.ts' },
   },
   {
     id: 'TC-LIST-VERIFY-001',
@@ -338,7 +338,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Người đăng: Chủ nhà/Môi giới; Giá Từ<Đến',
     testSteps: '1. Chọn Người đăng. 2. Nhập khoảng giá hợp lệ. 3. Áp dụng bộ lọc.',
     expectedResult: 'Danh sách lọc đúng theo cả 2 điều kiện.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/filter-listing.read-only.spec.ts' },
   },
   {
     id: 'TC-LIST-FILTER-002',
@@ -350,7 +350,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Giá/Diện tích Từ > Đến',
     testSteps: '1. Nhập Từ > Đến cho giá hoặc diện tích. 2. Áp dụng.',
     expectedResult: 'Hiển thị lỗi khoảng giá trị không hợp lệ tương ứng.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/filter-listing.read-only.spec.ts' },
   },
   {
     id: 'TC-LIST-FILTER-003',
@@ -374,7 +374,7 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Từ khóa khớp dữ liệu; từ khóa không khớp',
     testSteps: '1. Tìm với từ khóa khớp → kiểm tra kết quả. 2. Tìm với từ khóa không khớp → kiểm tra empty state.',
     expectedResult: 'Case 1: trả kết quả đúng, loại tin không đủ điều kiện, sắp xếp mặc định. Case 2: thông báo không tìm thấy.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/listings/search-listing.read-only.spec.ts' },
   }
 ];
 

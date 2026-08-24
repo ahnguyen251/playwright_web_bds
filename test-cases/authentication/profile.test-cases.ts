@@ -14,7 +14,7 @@ export const profileViewTestCase1: TestCaseDefinition = Object.freeze({
   testData: 'Dữ liệu phiên đăng nhập hiện tại',
   testSteps: '1. Truy cập "Thông tin tài khoản".',
   expectedResult: 'UI kết xuất chính xác từ DB: Avatar, Họ tên, Email, SĐT, Badge trạng thái Active.',
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/profile/profile.positive.spec.ts' },
 });
 
 export const profileViewTestCase2: TestCaseDefinition = Object.freeze({
@@ -53,7 +53,7 @@ export const profileEditTestCase2: TestCaseDefinition = Object.freeze({
   testData: 'Giữ nguyên thông tin cũ',
   testSteps: '1. Click "Lưu" mà không chỉnh sửa gì.',
   expectedResult: 'Hiển thị "Không có thay đổi dữ liệu"; không gọi API Update.',
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/profile/profile.validation.spec.ts' },
 });
 
 export const profileEditTestCase3: TestCaseDefinition = Object.freeze({
@@ -118,7 +118,7 @@ export const profileChangePwTestCase4: TestCaseDefinition = Object.freeze({
   testData: 'Xác nhận MK khác MK mới',
   testSteps: '1. Nhập đúng MK hiện tại, MK mới hợp lệ. 2. Nhập xác nhận khác giá trị. 3. Nhấn "Xác nhận".',
   expectedResult: 'Hiển thị lỗi không khớp.',
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/profile/change-password.validation.spec.ts' },
 });
 
 export const profileTestCases = Object.freeze([

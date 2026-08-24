@@ -26,7 +26,7 @@ export const successfulPasswordRecoveryTestCase: PasswordRecoveryTestCase = Obje
   preconditions: Object.freeze(['An active account and its test mailbox are configured.']),
   expectedResult: 'Khôi phục mật khẩu thành công và điều hướng về trang Đăng nhập.',
   newPassword: validationData.passwordRecoveryNewPassword,
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/password-recovery.otp.mutating.spec.ts' },
 });
 
 export const nonexistentEmailPasswordRecoveryTestCase: PasswordRecoveryTestCase = Object.freeze({
@@ -38,7 +38,7 @@ export const nonexistentEmailPasswordRecoveryTestCase: PasswordRecoveryTestCase 
   preconditions: Object.freeze(['The visitor is signed out.']),
   expectedResult: 'Hiển thị lỗi, dừng luồng và không gửi OTP.',
   emailSource: validationData.nonexistentEmailSource,
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/password-recovery.validation.spec.ts' },
 });
 
 export const invalidOrExpiredPasswordRecoveryOtpTestCase: PasswordRecoveryTestCase = Object.freeze({
@@ -50,7 +50,7 @@ export const invalidOrExpiredPasswordRecoveryOtpTestCase: PasswordRecoveryTestCa
   preconditions: Object.freeze(['A valid password-reset OTP was sent.']),
   expectedResult: 'OTP sai hiển thị lỗi và cho nhập lại; OTP hết hạn yêu cầu gửi lại OTP.',
   otpConditions: Object.freeze(['incorrect', 'expired'] as const),
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/password-recovery.otp.mutating.spec.ts' },
 });
 
 export const passwordRecoveryTestCases = Object.freeze([

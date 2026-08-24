@@ -57,7 +57,7 @@ export const registrationSuccessTestCase: RegistrationTestCase = Object.freeze({
   expectedResult:
     'Nút Đăng ký hiển thị loading và bị disable; tài khoản chuyển ACTIVE, JWT được cấp và điều hướng thành công.',
   credentials: validationData.registrationSuccessCredentials,
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/registration.production.spec.ts' },
 });
 
 export const requiredRegistrationFieldsTestCase: RegistrationTestCase = Object.freeze({
@@ -71,7 +71,7 @@ export const requiredRegistrationFieldsTestCase: RegistrationTestCase = Object.f
     'Không gọi API tạo tài khoản; toàn bộ trường bắt buộc hiển thị lỗi trực quan dưới field.',
   data: Object.freeze({ fullName: '', email: '', password: '', passwordConfirmation: '' }),
   expectedSubmitEnabled: false,
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/registration.validation.spec.ts' },
 });
 
 export const invalidRegistrationEmailTestCase: RegistrationTestCase = Object.freeze({
@@ -85,7 +85,7 @@ export const invalidRegistrationEmailTestCase: RegistrationTestCase = Object.fre
   invalidEmails: validationData.invalidRegistrationEmails,
   expectedMessages: Object.freeze([validationData.expectedMessages.invalidEmail]),
   expectedSubmitEnabled: false,
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/registration.validation.spec.ts' },
 });
 
 export const duplicateRegistrationEmailTestCase: RegistrationTestCase = Object.freeze({
@@ -98,7 +98,7 @@ export const duplicateRegistrationEmailTestCase: RegistrationTestCase = Object.f
   expectedResult: 'Hiển thị "Email đã tồn tại" và không tạo tài khoản.',
   credentialAlias: 'defaultUser',
   expectedMessages: Object.freeze([validationData.expectedMessages.duplicateEmail]),
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/registration.validation.spec.ts' },
 });
 
 export const invalidRegistrationPasswordTestCase: RegistrationTestCase = Object.freeze({
@@ -113,7 +113,7 @@ export const invalidRegistrationPasswordTestCase: RegistrationTestCase = Object.
   invalidPasswords: validationData.invalidRegistrationPasswords,
   expectedMessages: Object.freeze([validationData.expectedMessages.invalidPassword]),
   expectedSubmitEnabled: false,
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/registration.validation.spec.ts' },
 });
 
 export const registrationConfirmationMismatchTestCase: RegistrationTestCase = Object.freeze({
@@ -132,7 +132,7 @@ export const registrationConfirmationMismatchTestCase: RegistrationTestCase = Ob
   }),
   expectedMessages: Object.freeze([validationData.expectedMessages.mismatchedPassword]),
   expectedSubmitEnabled: false,
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/registration.validation.spec.ts' },
 });
 
 export const invalidOrExpiredRegistrationOtpTestCase: RegistrationTestCase = Object.freeze({
