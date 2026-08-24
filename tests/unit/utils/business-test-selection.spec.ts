@@ -77,3 +77,15 @@ test('keeps catalog grep and canonical projects under runner control', () => {
     '--list',
   ]);
 });
+
+test('canonical project selection excludes Firefox and WebKit', () => {
+  expect(BUSINESS_PROJECTS).toEqual([
+    'framework',
+    'chromium',
+    'mutating-chromium',
+    'appointment-mutating-chromium',
+    'production-registration-chromium',
+  ]);
+  expect(BUSINESS_PROJECTS).not.toContain('firefox');
+  expect(BUSINESS_PROJECTS).not.toContain('webkit');
+});

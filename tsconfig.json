@@ -22,6 +22,7 @@
     "helpers/**/*.ts",
     "pages/**/*.ts",
     "reporters/**/*.ts",
+    "scripts/**/*.ts",
     "test-cases/**/*.ts",
     "test-data/**/*.ts",
     "tests/**/*.ts",

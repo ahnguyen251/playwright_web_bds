@@ -221,6 +221,19 @@ npx playwright test --project=firefox
 npx playwright test --project=webkit
 ```
 
+### Business catalog execution
+
+`npm run test:business` derives its test-case ID filter from `test-cases`. It runs every discovered
+variant for catalog entries marked `AUTOMATED` on the canonical projects, while Business Coverage
+counts each ID once. At the current baseline this is 34/83 automated IDs and 49 not automated IDs.
+
+`npm run test:framework` checks unit, component, API, and reporting health independently.
+`npm run test:cross-browser` performs browser compatibility execution independently and does not
+change the business coverage numerator.
+
+Use `npm run test:business -- --list` to validate discovery without executing application tests.
+Mutating and external variants keep their existing environment gates and may be reported as skipped.
+
 Các project browser phụ thuộc `auth-setup`, dùng `.auth/defaultUser.json` cho scenario cần đăng nhập
 và giữ chế độ parallel. Login/registration/recovery tự đặt storage state rỗng khi cần kiểm tra trạng
 thái chưa đăng nhập.
