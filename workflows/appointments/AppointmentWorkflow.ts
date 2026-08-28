@@ -20,7 +20,9 @@ const resolveOption = (
 
   const earliest = availableLabels[0];
   if (earliest === undefined) {
-    throw new Error(`No appointment ${kind} options are available`);
+    throw new Error(
+      `Không có tùy chọn lịch hẹn ${kind === 'date' ? 'ngày' : 'khung giờ'} khả dụng`,
+    );
   }
   return earliest;
 };

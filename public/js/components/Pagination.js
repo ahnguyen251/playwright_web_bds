@@ -10,7 +10,7 @@ export function Pagination(paginationData, onPageChange) {
 
   const info = document.createElement('div');
   info.className = 'pagination-info';
-  info.textContent = `Showing page ${page} of ${totalPages} (${totalItems} total items)`;
+  info.textContent = `Trang ${page}/${totalPages} (${totalItems} mục)`;
   container.appendChild(info);
 
   const controls = document.createElement('div');
@@ -18,13 +18,13 @@ export function Pagination(paginationData, onPageChange) {
 
   const prevBtn = document.createElement('button');
   prevBtn.className = 'btn';
-  prevBtn.textContent = 'Previous';
+  prevBtn.textContent = 'Trang trước';
   prevBtn.disabled = page <= 1;
   prevBtn.onclick = () => onPageChange(page - 1);
 
   const nextBtn = document.createElement('button');
   nextBtn.className = 'btn';
-  nextBtn.textContent = 'Next';
+  nextBtn.textContent = 'Trang sau';
   nextBtn.disabled = page >= totalPages;
   nextBtn.onclick = () => onPageChange(page + 1);
 

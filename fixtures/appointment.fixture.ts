@@ -1,4 +1,4 @@
-import { loadEnvironmentConfig } from '../config/environment.config';
+import { loadProcessEnvironmentConfig } from '../config/process-environment.config';
 import { AppointmentDataFactory } from '../test-data/factories/AppointmentDataFactory';
 import type { AppointmentData } from '../types/appointment.types';
 import { listingStateTest } from './listing-state.fixture';
@@ -8,7 +8,7 @@ export interface AppointmentFixtures {
   readonly appointmentData: AppointmentData;
 }
 
-const environment = loadEnvironmentConfig();
+const environment = loadProcessEnvironmentConfig();
 
 export const appointmentTest = listingStateTest.extend<AppointmentFixtures>({
   appointmentDataFor: async ({}, use) => {
@@ -17,7 +17,7 @@ export const appointmentTest = listingStateTest.extend<AppointmentFixtures>({
   appointmentData: async ({ appointmentDataFor }, use, testInfo) => {
     const listingId = environment.appointmentListingId;
     if (listingId === undefined) {
-      testInfo.skip(true, 'APPOINTMENT_LISTING_ID is not configured for appointment E2E tests.');
+      testInfo.skip(true, 'APPOINTMENT_LISTING_ID chưa được cấu hình cho kiểm thử E2E lịch hẹn.');
       return;
     }
     await use(appointmentDataFor(listingId));

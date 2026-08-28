@@ -5,9 +5,9 @@ import runRoutes from './runs.routes';
 import resultRoutes from './results.routes';
 import dashboardRoutes from './dashboard.routes';
 import evidenceRoutes from './evidence.routes';
-import { DatabaseConnection } from '../../database/sqlite';
+import type { DatabaseConnection } from '../../database/sqlite';
 
-export default function createRoutes(db?: DatabaseConnection, evidenceRoot?: string) {
+export default function createRoutes(db: DatabaseConnection, evidenceRoot: string) {
   const router = Router();
 
   router.use('/health', healthRoutes(db));

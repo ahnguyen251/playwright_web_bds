@@ -1,7 +1,7 @@
 import { expect, test } from '../../fixtures/test.fixture';
 import { listingCaseTitle } from '../../test-cases/listings/listing.test-cases';
 
-test(listingCaseTitle('LIST-UC10-001'), async ({ listingWorkflow, controlledListing }) => {
+test(listingCaseTitle('TC-LIST-DETAIL-001'), async ({ listingWorkflow, controlledListing }) => {
   const approved = controlledListing('approved');
   const detail = await listingWorkflow.viewDetail(approved);
 
@@ -13,20 +13,20 @@ test(listingCaseTitle('LIST-UC10-001'), async ({ listingWorkflow, controlledList
   expect(detail.relatedTitles.length).toBeGreaterThan(0);
 });
 
-test(listingCaseTitle('LIST-UC10-002'), async ({ listingDetailPage }) => {
+test(listingCaseTitle('TC-LIST-DETAIL-002'), async ({ listingDetailPage }) => {
   await listingDetailPage.open('25');
 
   expect(await listingDetailPage.notFoundMessage()).not.toBe('');
   expect(await listingDetailPage.isContentVisible()).toBe(false);
 });
 
-test(listingCaseTitle('LIST-UC10-003'), async ({ listingDetailPage, controlledListing }) => {
+test(listingCaseTitle('TC-LIST-DETAIL-002') + ' - Chưa duyệt', async ({ listingDetailPage, controlledListing }) => {
   await listingDetailPage.open(controlledListing('unapproved'));
 
   expect(await listingDetailPage.isContentVisible()).toBe(false);
 });
 
-test(listingCaseTitle('LIST-UC10-004'), async ({ listingDetailPage, controlledListing }) => {
+test(listingCaseTitle('TC-LIST-DETAIL-001') + ' - Không có ảnh', async ({ listingDetailPage, controlledListing }) => {
   await listingDetailPage.open(controlledListing('approvedWithoutMedia'));
 
   expect(await listingDetailPage.hasDefaultImage()).toBe(true);

@@ -1,13 +1,14 @@
 import { join } from 'node:path';
-import { test as base, type BrowserContext } from '@playwright/test';
+import type { BrowserContext } from '@playwright/test';
 
-import { loadEnvironmentConfig } from '../config/environment.config';
+import { loadProcessEnvironmentConfig } from '../config/process-environment.config';
 import { AuthenticationDataFactory } from '../test-data/factories/AuthenticationDataFactory';
 import { UserDataFactory } from '../test-data/factories/UserDataFactory';
 import { AuthRequestObserver } from '../helpers/network/AuthRequestObserver';
 import type { OtpProvider, OtpQuery } from '../types/otp.types';
 import type { EnvironmentConfig, TestEnvironment } from '../types/environment.types';
 import type { RegistrationData, UserCredentials } from '../types/user.types';
+import { evidenceTest as base } from './evidence.fixture';
 
 const disabledOtpMessage =
   'OTP automation is disabled. Enable RUN_OTP_E2E with valid Gmail configuration.';
@@ -68,7 +69,7 @@ const readExecutionFlag = (
 ): boolean => {
   const value = source[key] ?? 'false';
   if (value !== 'true' && value !== 'false') {
-    throw new Error(`Invalid execution policy configuration: ${key}`);
+    throw new Error(`Cấu hình chính sách thực thi không hợp lệ: ${key}`);
   }
   return value === 'true';
 };
@@ -76,7 +77,7 @@ const readExecutionFlag = (
 const readExecutionEnvironment = (source: NodeJS.ProcessEnv): TestEnvironment => {
   const value = source.TEST_ENV ?? 'production';
   if (value !== 'dev' && value !== 'staging' && value !== 'production') {
-    throw new Error('Invalid execution policy configuration: TEST_ENV');
+    throw new Error('Cấu hình chính sách thực thi không hợp lệ: TEST_ENV');
   }
   return value;
 };
@@ -93,7 +94,7 @@ export const createExecutionPolicy = (source: NodeJS.ProcessEnv = process.env): 
   const genericRegistrationAllowed = environment !== 'production' && runOtpE2e && runMutatingE2e;
   if (runMutatingE2e && !runOtpE2e) {
     throw new Error(
-      'Invalid execution policy configuration: RUN_MUTATING_E2E requires RUN_OTP_E2E',
+      'Cấu hình chính sách thực thi không hợp lệ: RUN_MUTATING_E2E yêu cầu RUN_OTP_E2E',
     );
   }
   if (
@@ -103,7 +104,7 @@ export const createExecutionPolicy = (source: NodeJS.ProcessEnv = process.env): 
     !runProductionMutatingE2e
   ) {
     throw new Error(
-      'Invalid execution policy configuration: a dedicated production registration or existing-account mutation approval is required',
+      'Cấu hình chính sách thực thi không hợp lệ: bắt buộc phê duyệt riêng cho đăng ký production hoặc thao tác thay đổi dữ liệu tài khoản hiện có',
     );
   }
   return Object.freeze({
@@ -123,10 +124,10 @@ const createOtpProvider = async (executionPolicy: ExecutionPolicy): Promise<OtpP
     return new DisabledOtpProvider();
   }
 
-  const { loadEnvironmentConfig } = await import('../config/environment.config.js');
-  const configuration = loadEnvironmentConfig();
+  const { loadProcessEnvironmentConfig } = await import('../config/process-environment.config.js');
+  const configuration = loadProcessEnvironmentConfig();
   if (configuration.gmail === undefined) {
-    throw new Error('Invalid OTP automation configuration: Gmail configuration is incomplete');
+    throw new Error('Cấu hình tự động hóa OTP không hợp lệ: cấu hình Gmail chưa đầy đủ');
   }
   const [{ GmailApiClient }, { GmailOtpProvider }] = await Promise.all([
     import('../helpers/otp/GmailApiClient.js'),
@@ -148,7 +149,7 @@ const createOtpProvider = async (executionPolicy: ExecutionPolicy): Promise<OtpP
 const createAuthenticationData = (): AuthenticationFixtureData => {
   const mailboxAddress = process.env.OTP_MAILBOX_ADDRESS;
   if (mailboxAddress === undefined) {
-    throw new Error('Authentication data requires OTP_MAILBOX_ADDRESS');
+    throw new Error('Dữ liệu xác thực yêu cầu OTP_MAILBOX_ADDRESS');
   }
   return Object.freeze({
     registration: AuthenticationDataFactory.createRegistration(mailboxAddress),
@@ -159,7 +160,7 @@ const createMutatingUser = (): MutatingUserFixture => {
   const credentials = UserDataFactory.getCredentials('mutatingUser');
   const baselineName = process.env.MUTATING_USER_BASELINE_NAME?.trim();
   if (!baselineName) {
-    throw new Error('Mutating user fixture requires MUTATING_USER_BASELINE_NAME');
+    throw new Error('Fixture người dùng thay đổi dữ liệu yêu cầu MUTATING_USER_BASELINE_NAME');
   }
   return Object.freeze({ ...credentials, baselineName });
 };
@@ -195,7 +196,7 @@ export const authTest = base.extend<AuthFixtures>({
     await use(UserDataFactory.getCredentials('defaultUser'));
   },
   lockedUser: async ({}, use) => {
-    await use(createLockedUserFixture(loadEnvironmentConfig()));
+    await use(createLockedUserFixture(loadProcessEnvironmentConfig()));
   },
   contextForUser: async ({ browser }, use) => {
     const contexts: BrowserContext[] = [];
@@ -222,10 +223,10 @@ export const authTest = base.extend<AuthFixtures>({
       if (fixtureError instanceof Error) {
         throw fixtureError;
       }
-      throw new Error('Named browser context fixture failed with an unknown error');
+      throw new Error('Fixture browser context định danh thất bại với lỗi không xác định');
     }
     if (closeResults.some((result) => result.status === 'rejected')) {
-      throw new Error('Failed to close one or more named browser contexts');
+      throw new Error('Không thể đóng một hoặc nhiều browser context định danh');
     }
   },
   executionPolicy: async ({}, use) => use(createExecutionPolicy()),

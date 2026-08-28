@@ -8,7 +8,7 @@ export class RegistrationDataFactory {
     uniqueValue = RandomDataGenerator.string('registration'),
   ): RegistrationData {
     if ((config.emailTemplate.match(/\{unique\}/g)?.length ?? 0) !== 1) {
-      throw new Error('Registration email template must contain exactly one {unique} token.');
+      throw new Error('Mẫu email đăng ký phải chứa đúng một token {unique}.');
     }
 
     return Object.freeze({

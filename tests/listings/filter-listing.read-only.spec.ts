@@ -3,13 +3,13 @@ import { listingCaseTitle } from '../../test-cases/listings/listing.test-cases';
 
 test.use({ storageState: { cookies: [], origins: [] } });
 
-test(listingCaseTitle('LIST-UC17-001'), async ({ listingWorkflow }) => {
+test(listingCaseTitle('TC-LIST-FILTER-001'), async ({ listingWorkflow }) => {
   const results = await listingWorkflow.filter('sale', { poster: 'owner' });
 
   expect(results.every(({ poster }) => poster === 'owner')).toBe(true);
 });
 
-test(listingCaseTitle('LIST-UC17-007'), async ({ listingWorkflow }) => {
+test(listingCaseTitle('TC-LIST-FILTER-001') + ' - Kết hợp', async ({ listingWorkflow }) => {
   const results = await listingWorkflow.filter('sale', {
     poster: 'owner',
     price: { kind: 'custom', from: 2, to: 5 },
@@ -29,14 +29,14 @@ test(listingCaseTitle('LIST-UC17-007'), async ({ listingWorkflow }) => {
   ).toBe(true);
 });
 
-test(listingCaseTitle('LIST-UC17-012'), async ({ listingListPage }) => {
+test(listingCaseTitle('TC-LIST-FILTER-002') + ' - Chuẩn hóa giá', async ({ listingListPage }) => {
   await listingListPage.open('sale');
   await listingListPage.applyFilters({ price: { kind: 'custom', from: -1, to: 5 } });
 
   expect(await listingListPage.normalizedRangeValue('priceFrom')).toBe(0);
 });
 
-test(listingCaseTitle('LIST-UC17-013'), async ({ listingListPage }) => {
+test(listingCaseTitle('TC-LIST-FILTER-001') + ' - Không có kết quả', async ({ listingListPage }) => {
   await listingListPage.open('sale');
   await listingListPage.applyFilters({
     area: { kind: 'custom', from: 999_999, to: 1_000_000 },

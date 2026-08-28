@@ -17,23 +17,12 @@ export const openDatabase = (dbPath: string): DatabaseConnection => {
   }
 
   const db = new Database(dbPath);
-  
+
   // Enable foreign keys
   db.pragma('foreign_keys = ON');
 
   return {
     db,
-    close: () => db.close()
+    close: () => db.close(),
   };
-};
-
-// Singleton connection for the main app if needed
-let defaultConnection: DatabaseConnection | null = null;
-
-export const getDefaultDatabase = (): DatabaseConnection => {
-  if (!defaultConnection) {
-    const defaultPath = path.resolve(process.cwd(), 'data', 'autotest.db');
-    defaultConnection = openDatabase(defaultPath);
-  }
-  return defaultConnection;
 };

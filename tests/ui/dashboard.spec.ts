@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { Server } from 'http';
+import type { Server } from 'http';
 import { createApp } from '../../server/app';
 import { openDatabase, DatabaseConnection } from '../../database/sqlite';
 import { initializeSchema } from '../../database/schema';
+import path from 'node:path';
 
 let server: Server;
 let port: number;
@@ -12,7 +13,10 @@ test.beforeAll(async () => {
   conn = openDatabase(':memory:');
   initializeSchema(conn);
 
-  const app = createApp(conn);
+  const app = createApp({
+    database: conn,
+    evidenceRoot: path.resolve(process.cwd(), 'test-results'),
+  });
 
   return new Promise<void>((resolve) => {
     server = app.listen(0, () => {
@@ -22,9 +26,26 @@ test.beforeAll(async () => {
   });
 });
 
-test.afterAll(() => {
-  server.close();
-  conn.close();
+test.afterAll(async () => {
+  let firstFailure: unknown;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  } catch (error) {
+    firstFailure = error;
+  } finally {
+    try {
+      conn.close();
+    } catch (error) {
+      firstFailure ??= error;
+    }
+  }
+
+  if (firstFailure instanceof Error) throw firstFailure;
+  if (firstFailure !== undefined) {
+    throw new Error('Dashboard cleanup failed.', { cause: firstFailure });
+  }
 });
 
 test.beforeEach(async () => {
@@ -36,54 +57,102 @@ test.beforeEach(async () => {
 });
 
 test.describe.serial('Dashboard UI Tests', () => {
-  
   test('Dashboard loads successfully with empty state', async ({ page }) => {
     await page.goto(`http://localhost:${port}/`);
-    await expect(page).toHaveTitle(/Automation Dashboard/);
-    
+    await expect(page).toHaveTitle(/Automation|Bảng Điều Khiển/);
+
     // Check nav highlights
     await expect(page.locator('#nav-summary')).toHaveClass(/active/);
-    
+
     // Check metric cards for empty state
     await expect(page.locator('.metric-value').first()).toHaveText('0');
   });
 
   test('Hash navigation works correctly', async ({ page }) => {
     await page.goto(`http://localhost:${port}/`);
-    
+
     // Go to Test Cases
     await page.click('#nav-test-cases');
-    await expect(page.locator('#page-title')).toHaveText('Test Cases - Playwright APM');
-    
+    await expect(page.locator('#page-title')).toHaveText('Danh Sách Test Case - Playwright APM');
+
     // Empty state should show since DB is empty
-    await expect(page.locator('text=No test cases found.')).toBeVisible();
+    await expect(page.locator('text=Không tìm thấy test case nào.')).toBeVisible();
 
     // Go to Runs
     await page.click('#nav-runs');
-    await expect(page.locator('#page-title')).toHaveText('Test Runs - Playwright APM');
-    await expect(page.locator('text=No test runs found.')).toBeVisible();
+    await expect(page.locator('#page-title')).toHaveText('Lịch Sử Chạy Test - Playwright APM');
+    await expect(page.locator('text=Không tìm thấy lần chạy nào.')).toBeVisible();
   });
 
   test.describe('With Seeded Data', () => {
     test.beforeEach(() => {
       // Seed data
-      const insertTc = conn.db.prepare('INSERT INTO test_cases (test_case_id, title, module, automation_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
-      insertTc.run('TC-01', 'Login Check', 'Auth', 'AUTOMATED', '2026-01-01T10:00Z', '2026-01-01T10:00Z');
-      insertTc.run('TC-02', 'Sign Up Check', 'Auth', 'NOT_AUTOMATED', '2026-01-01T10:00Z', '2026-01-01T10:00Z');
+      const insertTc = conn.db.prepare(
+        'INSERT INTO test_cases (test_case_id, title, module, automation_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+      );
+      insertTc.run(
+        'TC-01',
+        'Login Check',
+        'Auth',
+        'AUTOMATED',
+        '2026-01-01T10:00Z',
+        '2026-01-01T10:00Z',
+      );
+      insertTc.run(
+        'TC-02',
+        'Sign Up Check',
+        'Auth',
+        'NOT_AUTOMATED',
+        '2026-01-01T10:00Z',
+        '2026-01-01T10:00Z',
+      );
 
-      const insertRun = conn.db.prepare('INSERT INTO test_runs (run_id, created_at, started_at, finished_at, duration_ms, total_executions, mapped_executions, unmapped_executions, unknown_test_case_id_executions, unique_mapped_test_case_ids_executed, passed_executions, failed_executions, skipped_executions, timed_out_executions, interrupted_executions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      insertRun.run('RUN-01', '2026-01-01T10:00Z', '2026-01-01T10:00Z', '2026-01-01T10:01Z', 60000, 2, 2, 0, 0, 1, 1, 1, 0, 0, 0);
+      const insertRun = conn.db.prepare(
+        'INSERT INTO test_runs (run_id, created_at, started_at, finished_at, duration_ms, total_executions, mapped_executions, unmapped_executions, unknown_test_case_id_executions, unique_mapped_test_case_ids_executed, passed_executions, failed_executions, skipped_executions, timed_out_executions, interrupted_executions) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      );
+      insertRun.run(
+        'RUN-01',
+        '2026-01-01T10:00Z',
+        '2026-01-01T10:00Z',
+        '2026-01-01T10:01Z',
+        60000,
+        2,
+        2,
+        0,
+        0,
+        1,
+        1,
+        1,
+        0,
+        0,
+        0,
+      );
 
-      const insertRes = conn.db.prepare('INSERT INTO test_results (result_id, run_id, test_case_id, parsed_test_case_id, traceability_status, status, title, file_path, duration_ms, retry, created_at, project_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-      insertRes.run('RES-01', 'RUN-01', 'TC-01', 'TC-01', 'MAPPED', 'PASSED', 'Login Check', 'test.ts', 1000, 0, '2026-01-01T10:00Z', 'chromium');
+      const insertRes = conn.db.prepare(
+        'INSERT INTO test_results (result_id, run_id, test_case_id, parsed_test_case_id, traceability_status, status, title, file_path, duration_ms, retry, created_at, project_name) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      );
+      insertRes.run(
+        'RES-01',
+        'RUN-01',
+        'TC-01',
+        'TC-01',
+        'MAPPED',
+        'PASSED',
+        'Login Check',
+        'test.ts',
+        1000,
+        0,
+        '2026-01-01T10:00Z',
+        'chromium',
+      );
     });
 
     test('Summary metrics render from API data', async ({ page }) => {
       await page.goto(`http://localhost:${port}/#summary`);
-      
+
       // Wait for metrics to load
       await page.waitForSelector('.metrics-grid');
-      
+
       const cards = page.locator('.metric-value');
       // Total Test Cases = 2
       await expect(cards.nth(0)).toHaveText('2');
@@ -95,16 +164,16 @@ test.describe.serial('Dashboard UI Tests', () => {
 
     test('Test Case search triggers API-backed results', async ({ page }) => {
       await page.goto(`http://localhost:${port}/#test-cases`);
-      
+
       // Wait for table to load
       await page.waitForSelector('table');
-      
+
       // Both cases should be visible
       await expect(page.locator('tbody tr')).toHaveCount(2);
 
       // Search for TC-01
       await page.fill('input[placeholder="Search Test Cases..."]', 'Login');
-      
+
       // Wait for debounced fetch and re-render
       await expect(page.locator('tbody tr')).toHaveCount(1);
       await expect(page.locator('tbody tr').first()).toContainText('TC-01');
@@ -116,7 +185,7 @@ test.describe.serial('Dashboard UI Tests', () => {
     conn.db.prepare('DROP TABLE test_cases').run();
 
     await page.goto(`http://localhost:${port}/#test-cases`);
-    
+
     // Should render ErrorState
     await expect(page.locator('.error-text')).toBeVisible();
     await expect(page.locator('text=DATABASE_ERROR')).toBeVisible();

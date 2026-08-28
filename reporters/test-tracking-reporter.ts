@@ -6,9 +6,16 @@ import type {
   TestCase,
   TestResult,
 } from '@playwright/test/reporter';
-import * as fs from 'fs';
-import * as path from 'path';
 import crypto from 'crypto';
+import path from 'node:path';
+import { resolveEvidenceConfiguration } from '../config/evidence.config';
+import { EvidenceArchiveService } from '../services/evidence/EvidenceArchiveService';
+import type {
+  FinalizeRunInput,
+  FinalizeRunOutput,
+  PersistExecutionInput,
+  PersistExecutionOutput,
+} from '../services/evidence/evidence-contracts';
 import { allTestCases } from '../test-cases';
 import type { TestCaseDefinition } from '../types/test-case.types';
 import type {
@@ -17,7 +24,20 @@ import type {
   TestRunResult,
 } from '../types/test-result.types';
 import { aggregateBusinessRun, formatBusinessRunSummary } from './business-run-aggregation';
-import { mapPlaywrightStatus, mapEvidence, resolveTraceability } from './result-mapper';
+import { mapPlaywrightStatus, resolveTraceability } from './result-mapper';
+
+export interface EvidenceArchiver {
+  beginRun(runId: string): Promise<void>;
+  persistExecution(input: PersistExecutionInput): Promise<PersistExecutionOutput>;
+  finalizeRun(input: FinalizeRunInput): Promise<FinalizeRunOutput>;
+  rollbackRun(runId: string): Promise<void>;
+}
+
+type ReporterLogger = Pick<Console, 'error' | 'log' | 'warn'>;
+
+interface AwaitableTestEndReporter extends Omit<Reporter, 'onTestEnd'> {
+  onTestEnd(test: TestCase, result: TestResult): Promise<void>;
+}
 
 export interface TestTrackingReporterOptions {
   readonly env?: NodeJS.ProcessEnv;
@@ -25,9 +45,14 @@ export interface TestTrackingReporterOptions {
   readonly now?: () => Date;
   readonly randomSuffix?: () => string;
   readonly outputRoot?: string;
+  readonly evidenceRoot?: string;
+  readonly archiveService?: EvidenceArchiver;
+  readonly logger?: ReporterLogger;
 }
 
-class TestTrackingReporter implements Reporter {
+type ReporterEndResult = { status: FullResult['status'] } | undefined;
+
+class TestTrackingReporter implements AwaitableTestEndReporter {
   private runId!: string;
   private startedAt!: Date;
   private executions: TestExecutionResult[] = [];
@@ -36,8 +61,14 @@ class TestTrackingReporter implements Reporter {
   private readonly testCases: readonly TestCaseDefinition[];
   private readonly now: () => Date;
   private readonly randomSuffix: () => string;
-  private readonly outputRoot: string;
+  private readonly archiveService: EvidenceArchiver;
+  private readonly logger: ReporterLogger;
   private discoveredTests: BusinessDiscoveredTest[] = [];
+  private approvedSourceRoots: string[] = [];
+  private archiveInitialization: Promise<void> = Promise.resolve();
+  private pendingPersistence: Promise<void>[] = [];
+  private fatalArchiveError: unknown;
+  private endPromise: Promise<ReporterEndResult> | undefined;
 
   constructor(options: TestTrackingReporterOptions = {}) {
     const env = options.env ?? process.env;
@@ -46,7 +77,14 @@ class TestTrackingReporter implements Reporter {
     this.testCases = options.testCases ?? allTestCases;
     this.now = options.now ?? (() => new Date());
     this.randomSuffix = options.randomSuffix ?? (() => crypto.randomBytes(2).toString('hex'));
-    this.outputRoot = options.outputRoot ?? process.cwd();
+    this.logger = options.logger ?? console;
+    this.archiveService =
+      options.archiveService ??
+      new EvidenceArchiveService({
+        evidenceRoot:
+          options.evidenceRoot ??
+          resolveEvidenceConfiguration(env, options.outputRoot ?? process.cwd()).root,
+      });
   }
 
   onBegin(config: FullConfig, suite: Suite) {
@@ -60,6 +98,15 @@ class TestTrackingReporter implements Reporter {
         ? suppliedRunId
         : `RUN-${dateStr}-${shortRandom}`;
 
+    this.approvedSourceRoots = [
+      ...new Set(config.projects.map(({ outputDir }) => path.resolve(outputDir))),
+    ];
+    this.archiveInitialization = this.archiveService
+      .beginRun(this.runId)
+      .catch((error: unknown) => {
+        this.recordFatalArchiveError(error);
+      });
+
     if (this.businessRun) {
       this.discoveredTests = suite.allTests().map((testCase) => {
         const projectName = testCase.parent.project()?.name;
@@ -72,13 +119,14 @@ class TestTrackingReporter implements Reporter {
     }
   }
 
-  onTestEnd(test: TestCase, result: TestResult) {
+  async onTestEnd(test: TestCase, result: TestResult): Promise<void> {
     const { testCaseId, traceabilityStatus } = resolveTraceability(test.title);
 
     const projectName = test.parent.project()?.name;
     const errorMessage = result.error?.message;
     const errorStack = result.error?.stack;
 
+    const executionIndex = this.executions.length;
     const executionResult: TestExecutionResult = {
       TestCaseId: testCaseId,
       TraceabilityStatus: traceabilityStatus,
@@ -88,17 +136,74 @@ class TestTrackingReporter implements Reporter {
       Status: mapPlaywrightStatus(result.status),
       DurationMs: result.duration,
       Retry: result.retry,
-      Evidence: mapEvidence(result.attachments),
+      Evidence: [],
       ...(projectName !== undefined ? { ProjectName: projectName } : {}),
-      ...(test.expectedStatus !== undefined ? { ExpectedStatus: test.expectedStatus } : {}),
+      ExpectedStatus: test.expectedStatus,
       ...(errorMessage !== undefined ? { ErrorMessage: errorMessage } : {}),
       ...(errorStack !== undefined ? { ErrorStack: errorStack } : {}),
     };
 
     this.executions.push(executionResult);
+    const persistence = this.persistExecutionEvidence({
+      executionIndex,
+      executionResult,
+      test,
+      result,
+      testCaseId,
+      ...(projectName !== undefined ? { projectName } : {}),
+    });
+    this.pendingPersistence.push(persistence);
+    await persistence;
   }
 
-  async onEnd(result: FullResult) {
+  onEnd(result: FullResult): Promise<ReporterEndResult> {
+    this.endPromise ??= this.completeRun(result);
+    return this.endPromise;
+  }
+
+  private async persistExecutionEvidence(input: {
+    readonly executionIndex: number;
+    readonly executionResult: TestExecutionResult;
+    readonly test: TestCase;
+    readonly result: TestResult;
+    readonly testCaseId: string | null;
+    readonly projectName?: string;
+  }): Promise<void> {
+    await this.archiveInitialization;
+    if (this.fatalArchiveError !== undefined) return;
+
+    try {
+      const persisted = await this.archiveService.persistExecution({
+        runId: this.runId,
+        testCaseId: input.testCaseId,
+        playwrightTestId: input.test.id,
+        repeatEachIndex: input.test.repeatEachIndex,
+        retry: input.result.retry,
+        attachments: input.result.attachments,
+        approvedSourceRoots: this.approvedSourceRoots,
+        ...(input.projectName !== undefined ? { projectName: input.projectName } : {}),
+      });
+
+      for (const { reason } of persisted.skipped) {
+        this.logger.warn(`Evidence attachment skipped: ${reason}.`);
+      }
+      this.executions[input.executionIndex] = {
+        ...input.executionResult,
+        Evidence: persisted.evidence,
+      };
+    } catch (error) {
+      this.recordFatalArchiveError(error);
+    }
+  }
+
+  private async completeRun(result: FullResult): Promise<ReporterEndResult> {
+    await this.archiveInitialization;
+    await Promise.all(this.pendingPersistence);
+    if (this.fatalArchiveError !== undefined) {
+      await this.rollbackAfterFatalError();
+      return { status: 'failed' };
+    }
+
     const finishedAt = this.now();
 
     let mapped = 0;
@@ -119,7 +224,7 @@ class TestTrackingReporter implements Reporter {
         if (exec.TestCaseId) uniqueMappedIds.add(exec.TestCaseId);
       } else if (exec.TraceabilityStatus === 'UNMAPPED') {
         unmapped++;
-      } else if (exec.TraceabilityStatus === 'UNKNOWN_TEST_CASE_ID') {
+      } else {
         unknownId++;
       }
 
@@ -165,29 +270,58 @@ class TestTrackingReporter implements Reporter {
       ...(business !== undefined ? { Business: business } : {}),
     };
 
-    const outputDir = path.resolve(this.outputRoot, 'test-results', 'tracking', this.runId);
-    fs.mkdirSync(outputDir, { recursive: true });
-    const outputPath = path.join(outputDir, 'run-result.json');
+    let outputPath: string;
+    try {
+      const finalized = await this.archiveService.finalizeRun({
+        runId: this.runId,
+        manifest: runResult,
+      });
+      outputPath = finalized.manifestPath;
+    } catch (error) {
+      this.recordFatalArchiveError(error);
+      await this.rollbackAfterFatalError();
+      return { status: 'failed' };
+    }
 
-    fs.writeFileSync(outputPath, JSON.stringify(runResult, null, 2), 'utf-8');
-
-    console.log(`\n=== Test Tracking Reporter Summary ===`);
-    console.log(`RunId: ${runResult.RunId}`);
-    console.log(`TotalExecutions: ${runResult.TotalExecutions}`);
-    console.log(`UniqueMappedTestCaseIdsExecuted: ${runResult.UniqueMappedTestCaseIdsExecuted}`);
-    console.log(`Passed: ${runResult.PassedExecutions}`);
-    console.log(`Failed: ${runResult.FailedExecutions}`);
-    console.log(`Skipped: ${runResult.SkippedExecutions}`);
-    console.log(`Unmapped: ${runResult.UnmappedExecutions}`);
-    console.log(`UnknownTestCaseIds: ${runResult.UnknownTestCaseIdExecutions}`);
-    console.log(`Output: ${outputPath}\n`);
+    this.logger.log(`\n=== Tổng kết Reporter theo dõi kiểm thử ===`);
+    this.logger.log(`RunId: ${runResult.RunId}`);
+    this.logger.log(`Tổng số lần thực thi: ${String(runResult.TotalExecutions)}`);
+    this.logger.log(
+      `Số Test Case ID đã map duy nhất: ${String(runResult.UniqueMappedTestCaseIdsExecuted)}`,
+    );
+    this.logger.log(`Thành công: ${String(runResult.PassedExecutions)}`);
+    this.logger.log(`Thất bại: ${String(runResult.FailedExecutions)}`);
+    this.logger.log(`Bỏ qua: ${String(runResult.SkippedExecutions)}`);
+    this.logger.log(`Chưa map: ${String(runResult.UnmappedExecutions)}`);
+    this.logger.log(
+      `Test Case ID không xác định: ${String(runResult.UnknownTestCaseIdExecutions)}`,
+    );
+    this.logger.log(`Đầu ra: ${outputPath}\n`);
 
     if (business) {
-      for (const line of formatBusinessRunSummary(business)) console.log(line);
+      for (const line of formatBusinessRunSummary(business)) this.logger.log(line);
     }
 
     if (business?.HasValidationErrors) return { status: 'failed' as const };
     return result.status === 'passed' ? undefined : { status: result.status };
+  }
+
+  private recordFatalArchiveError(error: unknown): void {
+    if (this.fatalArchiveError !== undefined) return;
+    this.fatalArchiveError = error;
+    const code =
+      typeof error === 'object' && error !== null && 'code' in error
+        ? String(error.code)
+        : 'UNKNOWN';
+    this.logger.error(`Evidence archive failed (${code}); the run will be rolled back.`);
+  }
+
+  private async rollbackAfterFatalError(): Promise<void> {
+    try {
+      await this.archiveService.rollbackRun(this.runId);
+    } catch {
+      this.logger.error('Evidence archive rollback failed.');
+    }
   }
 }
 

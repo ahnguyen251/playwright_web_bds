@@ -53,11 +53,11 @@ export const runBusinessTests = (options: BusinessRunnerOptions = {}): ChildProc
   const selection = createBusinessCatalogSelection(testCases);
   const playwrightArgs = buildBusinessPlaywrightArgs(selection, forwardedArgs);
 
-  log('\n=== Business Coverage Baseline ===');
-  log(`Catalog IDs: ${String(selection.CatalogTotal)}`);
-  log(`Automated IDs: ${String(selection.AutomatedIds.length)}`);
-  log(`Not automated IDs: ${String(selection.NotAutomatedIds.length)}`);
-  log(`Not automated ID list: ${selection.NotAutomatedIds.join(', ')}`);
+  log('\n=== Đường cơ sở độ bao phủ nghiệp vụ ===');
+  log(`Số ID trong catalog: ${String(selection.CatalogTotal)}`);
+  log(`Số ID đã tự động hóa: ${String(selection.AutomatedIds.length)}`);
+  log(`Số ID chưa tự động hóa: ${String(selection.NotAutomatedIds.length)}`);
+  log(`Danh sách ID chưa tự động hóa: ${selection.NotAutomatedIds.join(', ')}`);
 
   const child = spawnProcess(process.execPath, [playwrightCli, ...playwrightArgs], {
     cwd,
@@ -71,7 +71,7 @@ export const runBusinessTests = (options: BusinessRunnerOptions = {}): ChildProc
   });
 
   child.on('error', (spawnError) => {
-    error(`Unable to start Playwright business run: ${spawnError.message}`);
+    error(`Không thể khởi động lần chạy kiểm thử nghiệp vụ bằng Playwright: ${spawnError.message}`);
     setExitCode(1);
   });
 

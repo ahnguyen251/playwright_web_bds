@@ -22,25 +22,25 @@ const transactionTypes = new Set<TransactionType>(['sale', 'rent']);
 let uniqueTitleSequence = 0;
 
 const validateListing = (listing: ListingData): void => {
-  if (!listing.title.trim()) throw new Error('Listing title is required');
+  if (!listing.title.trim()) throw new Error('Tiêu đề tin đăng là bắt buộc');
   if (listing.title.length > LISTING_UI_LIMITS.titleCharacters) {
     throw new Error(
       `Listing title cannot exceed ${String(LISTING_UI_LIMITS.titleCharacters)} characters`,
     );
   }
-  if (!listing.description.trim()) throw new Error('Listing description is required');
+  if (!listing.description.trim()) throw new Error('Mô tả tin đăng là bắt buộc');
   if (listing.description.length > LISTING_UI_LIMITS.descriptionCharacters) {
     throw new Error(
       `Listing description cannot exceed ${String(LISTING_UI_LIMITS.descriptionCharacters)} characters`,
     );
   }
   if (!transactionTypes.has(listing.transactionType)) {
-    throw new Error('Listing transaction type is invalid');
+    throw new Error('Loại giao dịch của tin đăng không hợp lệ');
   }
   if (listing.price <= 0) throw new Error('Listing price must be positive');
   if (listing.area <= 0) throw new Error('Listing area must be positive');
   if (listing.bedrooms < 0 || listing.bathrooms < 0) {
-    throw new Error('Listing room counts cannot be negative');
+    throw new Error('Số phòng ngủ và phòng tắm của tin đăng không được âm');
   }
   if (listing.media.imagePaths.length > LISTING_UI_LIMITS.maximumImages) {
     throw new Error(

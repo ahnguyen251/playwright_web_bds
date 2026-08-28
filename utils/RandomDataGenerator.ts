@@ -11,7 +11,7 @@ const normalizePrefix = (prefix: string): string => {
 export class RandomDataGenerator {
   public static string(prefix = 'data', bytes = 6): string {
     if (!Number.isInteger(bytes) || bytes < 1) {
-      throw new Error('Random byte count must be a positive integer');
+      throw new Error('Số byte ngẫu nhiên phải là số nguyên dương');
     }
     return `${normalizePrefix(prefix)}-${randomBytes(bytes).toString('hex')}`;
   }
@@ -26,7 +26,7 @@ export class RandomDataGenerator {
 
   public static integer(minimum: number, maximum: number): number {
     if (!Number.isInteger(minimum) || !Number.isInteger(maximum) || minimum > maximum) {
-      throw new Error('Random integer boundaries must be valid integers');
+      throw new Error('Biên số nguyên ngẫu nhiên phải là các số nguyên hợp lệ');
     }
     return randomInt(minimum, maximum + 1);
   }

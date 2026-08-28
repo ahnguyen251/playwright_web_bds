@@ -1,9 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { Server } from 'http';
+import type { Server } from 'http';
 import { createApp } from '../../server/app';
 import { openDatabase, DatabaseConnection } from '../../database/sqlite';
 import { initializeSchema } from '../../database/schema';
 import * as crypto from 'crypto';
+import * as path from 'path';
 
 let server: Server;
 let port: number;
@@ -13,7 +14,10 @@ test.beforeAll(async () => {
   conn = openDatabase(':memory:');
   initializeSchema(conn);
 
-  const app = createApp(conn);
+  const app = createApp({
+    database: conn,
+    evidenceRoot: path.resolve(process.cwd(), 'test-results'),
+  });
 
   return new Promise<void>((resolve) => {
     server = app.listen(0, () => {
@@ -23,13 +27,29 @@ test.beforeAll(async () => {
   });
 });
 
-test.afterAll(() => {
-  server.close();
-  conn.close();
+test.afterAll(async () => {
+  let firstFailure: unknown;
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.close((error) => (error ? reject(error) : resolve()));
+    });
+  } catch (error) {
+    firstFailure = error;
+  } finally {
+    try {
+      conn.close();
+    } catch (error) {
+      firstFailure ??= error;
+    }
+  }
+
+  if (firstFailure instanceof Error) throw firstFailure;
+  if (firstFailure !== undefined) {
+    throw new Error('Reporting API cleanup failed.', { cause: firstFailure });
+  }
 });
 
 test.describe.serial('API Endpoints against Isolated DB', () => {
-
   test.beforeEach(() => {
     conn.db.prepare('DELETE FROM test_evidence').run();
     conn.db.prepare('DELETE FROM test_results').run();
@@ -61,9 +81,11 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
   });
 
   test('Runtime Validation - Invalid enums', async ({ request }) => {
-    const response = await request.get(`http://localhost:${port}/api/test-cases?automationStatus=INVALID`);
+    const response = await request.get(
+      `http://localhost:${port}/api/test-cases?automationStatus=INVALID`,
+    );
     expect(response.status()).toBe(400);
-    
+
     const res2 = await request.get(`http://localhost:${port}/api/runs?status=INVALID`);
     expect(res2.status()).toBe(400);
   });
@@ -72,7 +94,9 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
     const res1 = await request.get(`http://localhost:${port}/api/runs?from=not-a-date`);
     expect(res1.status()).toBe(400);
 
-    const res2 = await request.get(`http://localhost:${port}/api/runs?from=2024-01-02T00:00:00Z&to=2024-01-01T00:00:00Z`);
+    const res2 = await request.get(
+      `http://localhost:${port}/api/runs?from=2024-01-02T00:00:00Z&to=2024-01-01T00:00:00Z`,
+    );
     expect(res2.status()).toBe(400);
     const body2 = await res2.json();
     expect(body2.error.message).toContain('from date must be before or equal to to date');
@@ -84,7 +108,7 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
   test('Error Contract - DATABASE_ERROR should not expose stack traces', async ({ request }) => {
     // Drop table temporarily to force a database error
     conn.db.prepare('DROP TABLE test_cases').run();
-    
+
     const response = await request.get(`http://localhost:${port}/api/test-cases`);
     expect(response.status()).toBe(500);
     const body = await response.json();
@@ -107,7 +131,7 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
       total: 0,
       automated: 0,
       notAutomated: 0,
-      coveragePercent: 0
+      coveragePercent: 0,
     });
     expect(body.latestRun).toEqual({
       runId: null,
@@ -118,7 +142,7 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
       mapped: 0,
       unmapped: 0,
       unknown: 0,
-      uniqueMappedTestCaseIds: 0
+      uniqueMappedTestCaseIds: 0,
     });
   });
 
@@ -128,9 +152,25 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
   test.describe('With data', () => {
     test.beforeEach(() => {
       // Seed Test Cases
-      const insertTc = conn.db.prepare('INSERT INTO test_cases (test_case_id, title, module, automation_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)');
-      insertTc.run('TC-01', 'Login success % _', 'auth', 'AUTOMATED', '2026-01-01T10:00:00.000Z', '2026-01-01T10:00:00.000Z');
-      insertTc.run('TC-02', 'Login fail', 'auth', 'NOT_AUTOMATED', '2026-01-01T10:00:00.000Z', '2026-01-01T10:00:00.000Z');
+      const insertTc = conn.db.prepare(
+        'INSERT INTO test_cases (test_case_id, title, module, automation_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+      );
+      insertTc.run(
+        'TC-01',
+        'Login success % _',
+        'auth',
+        'AUTOMATED',
+        '2026-01-01T10:00:00.000Z',
+        '2026-01-01T10:00:00.000Z',
+      );
+      insertTc.run(
+        'TC-02',
+        'Login fail',
+        'auth',
+        'NOT_AUTOMATED',
+        '2026-01-01T10:00:00.000Z',
+        '2026-01-01T10:00:00.000Z',
+      );
 
       // Seed Run
       const insertRun = conn.db.prepare(`
@@ -142,8 +182,21 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
       insertRun.run(
-        'RUN-01', '2026-01-01T10:00:00.000Z', '2026-01-01T10:05:00.000Z', 300000,
-        4, 2, 1, 1, 1, 2, 2, 0, 0, 0, '2026-01-01T10:00:00.000Z'
+        'RUN-01',
+        '2026-01-01T10:00:00.000Z',
+        '2026-01-01T10:05:00.000Z',
+        300000,
+        4,
+        2,
+        1,
+        1,
+        1,
+        2,
+        2,
+        0,
+        0,
+        0,
+        '2026-01-01T10:00:00.000Z',
       );
 
       // Seed Results
@@ -153,18 +206,70 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
           status, title, file_path, duration_ms, retry, created_at, project_name
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
-      
+
       // MAPPED (test_case_id != null)
-      insertRes.run('RES-01', 'RUN-01', 'TC-01', 'TC-01', 'MAPPED', 'PASSED', 'Login success', 'test.ts', 1000, 0, '2026-01-01T10:01:00.000Z', 'chromium');
-      
+      insertRes.run(
+        'RES-01',
+        'RUN-01',
+        'TC-01',
+        'TC-01',
+        'MAPPED',
+        'PASSED',
+        'Login success',
+        'test.ts',
+        1000,
+        0,
+        '2026-01-01T10:01:00.000Z',
+        'chromium',
+      );
+
       // MAPPED (Multiple executions of the same test case - Execution identity test)
-      insertRes.run('RES-02', 'RUN-01', 'TC-01', 'TC-01', 'MAPPED', 'FAILED', 'Login success retry', 'test.ts', 1000, 1, '2026-01-01T10:02:00.000Z', 'firefox');
-      
+      insertRes.run(
+        'RES-02',
+        'RUN-01',
+        'TC-01',
+        'TC-01',
+        'MAPPED',
+        'FAILED',
+        'Login success retry',
+        'test.ts',
+        1000,
+        1,
+        '2026-01-01T10:02:00.000Z',
+        'firefox',
+      );
+
       // UNKNOWN_TEST_CASE_ID (test_case_id == null, parsed_test_case_id != null)
-      insertRes.run('RES-03', 'RUN-01', null, 'TC-99', 'UNKNOWN_TEST_CASE_ID', 'FAILED', 'Unknown case', 'test.ts', 1000, 0, '2026-01-01T10:03:00.000Z', 'chromium');
-      
+      insertRes.run(
+        'RES-03',
+        'RUN-01',
+        null,
+        'TC-99',
+        'UNKNOWN_TEST_CASE_ID',
+        'FAILED',
+        'Unknown case',
+        'test.ts',
+        1000,
+        0,
+        '2026-01-01T10:03:00.000Z',
+        'chromium',
+      );
+
       // UNMAPPED (test_case_id == null, parsed_test_case_id == null)
-      insertRes.run('RES-04', 'RUN-01', null, null, 'UNMAPPED', 'PASSED', 'Unmapped case', 'test.ts', 1000, 0, '2026-01-01T10:04:00.000Z', 'chromium');
+      insertRes.run(
+        'RES-04',
+        'RUN-01',
+        null,
+        null,
+        'UNMAPPED',
+        'PASSED',
+        'Unmapped case',
+        'test.ts',
+        1000,
+        0,
+        '2026-01-01T10:04:00.000Z',
+        'chromium',
+      );
     });
 
     test('Pagination Contract and Deterministic ordering', async ({ request }) => {
@@ -177,7 +282,7 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
         page: 1,
         pageSize: 1,
         totalItems: 2,
-        totalPages: 2
+        totalPages: 2,
       });
     });
 
@@ -198,20 +303,22 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
     test('Dashboard Metrics compute from test_results', async ({ request }) => {
       const response = await request.get(`http://localhost:${port}/api/dashboard/summary`);
       const body = await response.json();
-      
+
       expect(body.testCases.coveragePercent).toBe(50); // 1 out of 2
 
-      expect(body.latestRun).toEqual(expect.objectContaining({
-        runId: 'RUN-01',
-        totalExecutions: 4,
-        passed: 2,
-        failed: 2,
-        skipped: 0,
-        mapped: 2,
-        unknown: 1,
-        unmapped: 1,
-        uniqueMappedTestCaseIds: 1 // TC-01 executed twice, but it's 1 unique test case
-      }));
+      expect(body.latestRun).toEqual(
+        expect.objectContaining({
+          runId: 'RUN-01',
+          totalExecutions: 4,
+          passed: 2,
+          failed: 2,
+          skipped: 0,
+          mapped: 2,
+          unknown: 1,
+          unmapped: 1,
+          uniqueMappedTestCaseIds: 1, // TC-01 executed twice, but it's 1 unique test case
+        }),
+      );
     });
 
     test('Traceability & Execution Identity', async ({ request }) => {
@@ -227,7 +334,7 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
       // MAPPED
       expect(res1.test_case_id).toBe('TC-01');
       expect(res1.traceability_status).toBe('MAPPED');
-      
+
       // Execution Identity
       expect(res2.test_case_id).toBe('TC-01');
       expect(res2.result_id).not.toBe(res1.result_id); // Retrieved independently
@@ -257,7 +364,48 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
       expect((await res.json()).error.code).toBe('RESULT_NOT_FOUND');
     });
 
-    test('GET /api/test-cases/:testCaseId/results should return execution history', async ({ request }) => {
+    test('GET /api/results/:resultId strips ANSI control sequences from stored errors', async ({
+      request,
+    }) => {
+      conn.db
+        .prepare('UPDATE test_results SET error_message = ?, error_stack = ? WHERE result_id = ?')
+        .run(
+          'Error: \u001b[31mreceived\u001b[39m',
+          'Error: \u001b[2mexpect\u001b[22m\n    at test.ts:1',
+          'RES-02',
+        );
+
+      const response = await request.get(`http://localhost:${port}/api/results/RES-02`);
+
+      expect(response.status()).toBe(200);
+      const body = await response.json();
+      expect(body.error_message).toBe('Error: received');
+      expect(body.error_stack).toBe('Error: expect\n    at test.ts:1');
+      expect(body.error_message).not.toContain('\u001b');
+      expect(body.error_stack).not.toContain('\u001b');
+    });
+
+    test('GET /api/runs/:runId/results strips ANSI from every stored result row', async ({
+      request,
+    }) => {
+      conn.db
+        .prepare('UPDATE test_results SET error_message = ?, error_stack = ? WHERE result_id = ?')
+        .run('Error: \u001b[31mreceived\u001b[39m', 'Error: \u001b[2mexpect\u001b[22m', 'RES-02');
+
+      const response = await request.get(`http://localhost:${port}/api/runs/RUN-01/results`);
+
+      expect(response.status()).toBe(200);
+      const body = await response.json();
+      const failedResult = body.items.find(
+        (item: { result_id: string }) => item.result_id === 'RES-02',
+      );
+      expect(failedResult.error_message).toBe('Error: received');
+      expect(failedResult.error_stack).toBe('Error: expect');
+    });
+
+    test('GET /api/test-cases/:testCaseId/results should return execution history', async ({
+      request,
+    }) => {
       // Not found test case
       const res404 = await request.get(`http://localhost:${port}/api/test-cases/TC-999/results`);
       expect(res404.status()).toBe(404);
@@ -271,7 +419,7 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
       const response = await request.get(`http://localhost:${port}/api/test-cases/TC-01/results`);
       expect(response.status()).toBe(200);
       const body = await response.json();
-      
+
       expect(body.items).toHaveLength(2);
       expect(body.items[0].runId).toBe('RUN-01');
       expect(body.items[0].status).toBe('FAILED');
@@ -279,7 +427,9 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
       expect(body.items[1].status).toBe('PASSED');
 
       // Filter by FAILED
-      const resFailed = await request.get(`http://localhost:${port}/api/test-cases/TC-01/results?status=FAILED`);
+      const resFailed = await request.get(
+        `http://localhost:${port}/api/test-cases/TC-01/results?status=FAILED`,
+      );
       const bodyFailed = await resFailed.json();
       expect(bodyFailed.items).toHaveLength(1);
       expect(bodyFailed.items[0].resultId).toBe('RES-02');

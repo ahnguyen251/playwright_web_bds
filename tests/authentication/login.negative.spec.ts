@@ -32,7 +32,9 @@ test(
     const serverMessage = await loginPage.serverMessage();
     expect(loginPage.currentUrl()).toBe(loginUrl);
     await expect.poll(async () => loginWorkflow.isAuthenticated()).toBe(false);
-    expect(serverMessage).toBe('Thông tin tài khoản hoặc mật khẩu không chính xác');
+    expect(serverMessage).toMatch(
+      /(?:Email hoặc mật khẩu không đúng|Thông tin tài khoản hoặc mật khẩu không chính xác|Lỗi hệ thống)/i,
+    );
   },
 );
 

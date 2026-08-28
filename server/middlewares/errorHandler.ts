@@ -21,7 +21,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
     });
   }
 
-  console.error('[Unhandled Error]', err);
+  console.error('[Lỗi chưa được xử lý]', err);
 
   return res.status(500).json({
     error: {

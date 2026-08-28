@@ -149,7 +149,7 @@ export class MyListingsPage extends BasePage {
       await this.rowByReference(reference).locator('[data-listing-status]').innerText()
     ).trim();
     const status = Object.values(LISTING_STATUS_LABELS).find((candidate) => candidate === text);
-    if (status === undefined) throw new Error(`Unknown listing status: ${text}`);
+    if (status === undefined) throw new Error(`Trạng thái tin đăng không xác định: ${text}`);
     return status;
   }
 

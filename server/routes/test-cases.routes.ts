@@ -2,9 +2,9 @@ import { Router } from 'express';
 import { ReportingService } from '../services/ReportingService';
 import { validateQuery } from '../middlewares/validate';
 import { TestCaseFilterSchema, ResultFilterSchema } from '../schemas';
-import { DatabaseConnection } from '../../database/sqlite';
+import type { DatabaseConnection } from '../../database/sqlite';
 
-export default function testCaseRoutes(db?: DatabaseConnection) {
+export default function testCaseRoutes(db: DatabaseConnection) {
   const router = Router();
   const reportingService = new ReportingService(db);
 
@@ -52,6 +52,6 @@ export default function testCaseRoutes(db?: DatabaseConnection) {
       next(err);
     }
   });
-  
+
   return router;
 }

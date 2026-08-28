@@ -1,11 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 
-import { loadEnvironmentConfig } from './config/environment.config';
+import { loadProcessEnvironmentConfig } from './config/process-environment.config';
 import { TIMEOUTS } from './constants/timeouts';
 import { createAllureEnvironment } from './reporters/allure-environment';
 import type { TestEnvironment } from './types/environment.types';
 
-const environment = loadEnvironmentConfig();
+const environment = loadProcessEnvironmentConfig();
 const defaultStorageState = '.auth/defaultUser.json';
 const endToEndTestMatch =
   /(authentication|profile|listings|appointments|transactions)\/.*\.spec\.ts/;
@@ -27,8 +27,6 @@ export const createGeneralMutatingProject = (testEnvironment: TestEnvironment) =
   use: {
     ...devices['Desktop Chrome'],
     storageState: { cookies: [], origins: [] },
-    screenshot: 'off' as const,
-    video: 'off' as const,
     trace: 'off' as const,
   },
 });
@@ -123,8 +121,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: { cookies: [], origins: [] },
-        screenshot: 'off',
-        video: 'off',
         trace: 'off',
       },
     },
@@ -138,8 +134,6 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         storageState: defaultStorageState,
-        screenshot: 'off',
-        video: 'off',
         trace: 'off',
       },
     },

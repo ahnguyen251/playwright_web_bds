@@ -1,10 +1,5 @@
 import type { TestStatus } from '@playwright/test/reporter';
-import type {
-  ExecutionStatus,
-  EvidenceType,
-  TestEvidence,
-  TraceabilityStatus,
-} from '../types/test-result.types';
+import type { ExecutionStatus, TraceabilityStatus } from '../types/test-result.types';
 import { parseTestCaseId } from '../utils/test-tracking';
 import { allTestCases } from '../test-cases/index';
 
@@ -23,28 +18,6 @@ export const mapPlaywrightStatus = (status: TestStatus): ExecutionStatus => {
     default:
       return 'FAILED';
   }
-};
-
-export const mapEvidence = (
-  attachments: readonly { name: string; contentType: string; path?: string }[],
-): TestEvidence[] => {
-  return attachments
-    .filter((a) => a.path)
-    .map((a) => {
-      let type: EvidenceType = 'OTHER';
-      const cType = a.contentType || '';
-
-      if (cType.startsWith('image/')) type = 'SCREENSHOT';
-      else if (cType.startsWith('video/')) type = 'VIDEO';
-      else if (cType === 'application/zip' || a.name.includes('trace')) type = 'TRACE';
-      else if (cType.startsWith('text/')) type = 'LOG';
-
-      return {
-        type,
-        path: a.path!,
-        contentType: a.contentType,
-      };
-    });
 };
 
 export const resolveTraceability = (

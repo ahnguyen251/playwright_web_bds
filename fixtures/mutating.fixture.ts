@@ -1,4 +1,4 @@
-import { loadEnvironmentConfig } from '../config/environment.config';
+import { loadProcessEnvironmentConfig } from '../config/process-environment.config';
 import { expect, test as base } from './test.fixture';
 import type { TestEnvironment } from '../types/environment.types';
 
@@ -14,10 +14,10 @@ interface MutationPolicy {
 
 export const mutationSkipReason = (policy: MutationPolicy): string | undefined => {
   if (!policy.allowMutatingE2E) {
-    return 'Mutating E2E is disabled. Set ALLOW_MUTATING_E2E=true only for an approved target.';
+    return 'E2E có thay đổi dữ liệu đang tắt. Chỉ đặt ALLOW_MUTATING_E2E=true cho mục tiêu đã được phê duyệt.';
   }
   if (policy.environment === 'production' && !policy.runProductionMutatingE2e) {
-    return 'Production mutation is disabled. Set RUN_PRODUCTION_MUTATING_E2E=true only with explicit production approval.';
+    return 'Thao tác thay đổi dữ liệu trên production đang tắt. Chỉ đặt RUN_PRODUCTION_MUTATING_E2E=true khi có phê duyệt production rõ ràng.';
   }
   return undefined;
 };
@@ -27,7 +27,7 @@ export const listingMutationSkipReason = mutationSkipReason;
 export const mutatingTest = base.extend<MutationSafetyFixture>({
   mutationSafety: [
     async ({}, use, testInfo) => {
-      const configuration = loadEnvironmentConfig();
+      const configuration = loadProcessEnvironmentConfig();
       const skipReason = mutationSkipReason(configuration);
 
       testInfo.skip(skipReason !== undefined, skipReason);

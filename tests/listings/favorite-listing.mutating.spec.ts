@@ -12,7 +12,7 @@ const restoreFavorite = async (
   if (currentState !== initialState) await listingWorkflow.toggleFavorite(reference);
 };
 
-test(listingCaseTitle('LIST-UC12-001'), async ({ listingWorkflow, controlledListing }) => {
+test(listingCaseTitle('TC-LIST-FAVORITE-001'), async ({ listingWorkflow, controlledListing }) => {
   const reference = controlledListing('approved');
   const firstState = await listingWorkflow.toggleFavorite(reference);
   const initialState = !firstState;
@@ -26,7 +26,7 @@ test(listingCaseTitle('LIST-UC12-001'), async ({ listingWorkflow, controlledList
   }
 });
 
-test(listingCaseTitle('LIST-UC12-002'), async ({ listingWorkflow, controlledListing }) => {
+test(listingCaseTitle('TC-LIST-FAVORITE-001') + ' - Không có media', async ({ listingWorkflow, controlledListing }) => {
   const reference = controlledListing('approvedWithoutMedia');
   const firstState = await listingWorkflow.toggleFavorite(reference);
   const initialState = !firstState;
@@ -47,7 +47,7 @@ test(listingCaseTitle('LIST-UC12-002'), async ({ listingWorkflow, controlledList
 test.describe('Khách chưa đăng nhập', () => {
   test.use({ storageState: { cookies: [], origins: [] } });
 
-  test(listingCaseTitle('LIST-UC12-003'), async ({ listingWorkflow, controlledListing }) => {
+  test(listingCaseTitle('TC-LIST-FAVORITE-002'), async ({ listingWorkflow, controlledListing }) => {
     const reference = controlledListing('approved');
 
     expect(await listingWorkflow.toggleFavorite(reference)).toBe(false);

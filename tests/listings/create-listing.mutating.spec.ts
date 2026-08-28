@@ -6,7 +6,7 @@ test.beforeEach(async ({ authenticationWorkflow, defaultUser }) => {
   await authenticationWorkflow.login(defaultUser);
 });
 
-test(listingCaseTitle('LIST-UC08-001'), async ({ listingWorkflow }) => {
+test(listingCaseTitle('TC-LIST-CREATE-001'), async ({ listingWorkflow }) => {
   // Tạo dữ liệu test hợp lệ: Loại giao dịch Mua bán, vai trò Chủ nhà
   const listingData = ListingDataFactory.create({
     title: ListingDataFactory.uniqueTitle('Tạo tin đăng mua bán chủ nhà'),
@@ -23,7 +23,7 @@ test(listingCaseTitle('LIST-UC08-001'), async ({ listingWorkflow }) => {
   expect(status).toBe('Chờ duyệt');
 });
 
-test(listingCaseTitle('LIST-UC08-002'), async ({ listingWorkflow }) => {
+test(listingCaseTitle('TC-LIST-CREATE-001') + ' - Có video', async ({ listingWorkflow }) => {
   // Tạo dữ liệu test hợp lệ với video tùy chọn đính kèm
   const listingData = ListingDataFactory.create({
     title: ListingDataFactory.uniqueTitle('Tạo tin đăng có video'),
@@ -44,7 +44,7 @@ test(listingCaseTitle('LIST-UC08-002'), async ({ listingWorkflow }) => {
   expect(status).toBe('Chờ duyệt');
 });
 
-test('Tạo tin đăng với loại giao dịch Cho thuê', async ({ listingWorkflow }) => {
+test(listingCaseTitle('TC-LIST-CREATE-002'), async ({ listingWorkflow }) => {
   // Ghi đè transactionType thành 'rent' (Cho thuê)
   const listingData = ListingDataFactory.create({
     title: ListingDataFactory.uniqueTitle('Tạo tin đăng cho thuê'),
@@ -55,7 +55,7 @@ test('Tạo tin đăng với loại giao dịch Cho thuê', async ({ listingWork
   expect(status).toBe('Chờ duyệt');
 });
 
-test('Tạo tin đăng với vai trò Môi giới', async ({ listingWorkflow }) => {
+test(listingCaseTitle('TC-LIST-CREATE-001') + ' - Môi giới', async ({ listingWorkflow }) => {
   // Ghi đè vai trò liên hệ thành 'broker' (Môi giới)
   const listingData = ListingDataFactory.create({
     title: ListingDataFactory.uniqueTitle('Tạo tin đăng bởi môi giới'),

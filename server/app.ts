@@ -2,14 +2,19 @@ import express from 'express';
 import path from 'path';
 import createRoutes from './routes';
 import { errorHandler } from './middlewares/errorHandler';
-import { DatabaseConnection } from '../database/sqlite';
+import type { DatabaseConnection } from '../database/sqlite';
 
-export function createApp(db?: DatabaseConnection, evidenceRoot?: string) {
+export interface AppDependencies {
+  readonly database: DatabaseConnection;
+  readonly evidenceRoot: string;
+}
+
+export function createApp({ database, evidenceRoot }: AppDependencies) {
   const app = express();
   app.use(express.json());
 
   // API Routes must be authoritative
-  app.use('/api', createRoutes(db, evidenceRoot));
+  app.use('/api', createRoutes(database, evidenceRoot));
 
   // Serve Dashboard UI statically
   app.use(express.static(path.join(__dirname, '../public')));
@@ -19,6 +24,3 @@ export function createApp(db?: DatabaseConnection, evidenceRoot?: string) {
 
   return app;
 }
-
-// Fallback default app export for backward compatibility
-export default createApp();

@@ -16,7 +16,7 @@ const searchBothTransactionTypes = async (
   return [...saleResults, ...rentResults];
 };
 
-test(listingCaseTitle('LIST-UC16-001'), async ({ listingWorkflow, controlledListing }) => {
+test(listingCaseTitle('TC-LIST-SEARCH-001'), async ({ listingWorkflow, controlledListing }) => {
   const approved = controlledListing('approved');
 
   expect(await searchBothTransactionTypes(listingWorkflow, approved)).toContainEqual(
@@ -24,7 +24,7 @@ test(listingCaseTitle('LIST-UC16-001'), async ({ listingWorkflow, controlledList
   );
 });
 
-test(listingCaseTitle('LIST-UC16-003'), async ({ listingWorkflow }) => {
+test(listingCaseTitle('TC-LIST-SEARCH-001') + ' - Không có kết quả', async ({ listingWorkflow }) => {
   const results = await listingWorkflow.search('sale', {
     keyword: ListingDataFactory.uniqueTitle('KHÔNG CÓ KẾT QUẢ'),
   });
@@ -32,7 +32,7 @@ test(listingCaseTitle('LIST-UC16-003'), async ({ listingWorkflow }) => {
   expect(results).toEqual([]);
 });
 
-test(listingCaseTitle('LIST-UC16-007'), async ({ listingWorkflow, controlledListing }) => {
+test(listingCaseTitle('TC-LIST-SEARCH-001') + ' - Loại bỏ tin chưa duyệt', async ({ listingWorkflow, controlledListing }) => {
   const approved = controlledListing('approved');
   const unapproved = controlledListing('unapproved');
   const results = await searchBothTransactionTypes(listingWorkflow, approved);

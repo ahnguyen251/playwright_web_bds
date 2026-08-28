@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { DashboardService } from '../services/DashboardService';
-import { DatabaseConnection } from '../../database/sqlite';
+import type { DatabaseConnection } from '../../database/sqlite';
 
-export default function dashboardRoutes(db?: DatabaseConnection) {
+export default function dashboardRoutes(db: DatabaseConnection) {
   const router = Router();
   const dashboardService = new DashboardService(db);
 
@@ -14,6 +14,6 @@ export default function dashboardRoutes(db?: DatabaseConnection) {
       next(err);
     }
   });
-  
+
   return router;
 }

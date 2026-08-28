@@ -7,32 +7,61 @@ import { loadProductionRegistrationConfig } from '../../../config/registration.c
 
 const validEnvironment = {
   TEST_ENV: 'production',
-  DEV_BASE_URL: 'https://propifyy.duckdns.org/',
-  STAGING_BASE_URL: 'https://propifyy.duckdns.org/',
-  PRODUCTION_BASE_URL: 'https://propifyy.duckdns.org/',
-  DEFAULT_USER_EMAIL: 'ngocanh25102004@gmail.com',
-  DEFAULT_USER_PASSWORD: 'Anh!12345',
+  PRODUCTION_BASE_URL: 'https://prod.example.test/',
+  DEFAULT_USER_EMAIL: 'default-user@example.test',
+  DEFAULT_USER_PASSWORD: 'default-user-password',
 };
 
 const validOtpEnvironment = {
   ...validEnvironment,
   RUN_OTP_E2E: 'true',
-  GMAIL_CLIENT_ID: 'test',
-  GMAIL_CLIENT_SECRET: 'GOCSPX-test-GF',
-  GMAIL_REFRESH_TOKEN: '1//test-test',
-  OTP_MAILBOX_ADDRESS: 'test@gmail.com',
-  GMAIL_OTP_SENDER: 'no-test@test.test.org',
-  GMAIL_OTP_SUBJECT: 'Xác thực test khoản RentHouse — Mã OTP của bạn',
-  GMAIL_OTP_PATTERN: 'hoàn tất xác thực:[\s\S]*?(?<otp>\d{6})',
+  GMAIL_CLIENT_ID: 'test-client-id',
+  GMAIL_CLIENT_SECRET: 'test-client-secret',
+  GMAIL_REFRESH_TOKEN: 'test-refresh-token',
+  OTP_MAILBOX_ADDRESS: 'automation@gmail.com',
+  GMAIL_OTP_SENDER: 'mailer@example.test',
+  GMAIL_OTP_SUBJECT: 'Account security code',
+  GMAIL_OTP_PATTERN: 'Use {otp} to continue.',
 };
 
-test('selects the base URL for the requested environment', () => {
+test('accepts the production target without dev or staging URLs', () => {
   const config = loadEnvironmentConfig(validEnvironment);
 
-  expect(config.environment).toBe('dev');
-  expect(config.baseUrl).toBe('https://dev.example.test/');
+  expect(config.environment).toBe('production');
+  expect(config.baseUrl).toBe('https://prod.example.test/');
   expect(config.ci).toBe(false);
   expect(config.appointmentListingId).toBeUndefined();
+});
+
+test('requires an explicit target environment', () => {
+  const withoutTarget = { ...validEnvironment, TEST_ENV: undefined };
+
+  expect(() =>
+    loadEnvironmentConfig({
+      ...withoutTarget,
+      DEV_BASE_URL: 'https://dev.example.test/',
+      STAGING_BASE_URL: 'https://staging.example.test/',
+    }),
+  ).toThrow(/TEST_ENV/);
+});
+
+test('validates only the supplied source instead of reading TEST_ENV from process.env', () => {
+  const previousTestEnvironment = process.env.TEST_ENV;
+  process.env.TEST_ENV = 'production';
+
+  try {
+    const withoutTarget = { ...validEnvironment, TEST_ENV: undefined };
+    expect(() =>
+      loadEnvironmentConfig({
+        ...withoutTarget,
+        DEV_BASE_URL: 'https://dev.example.test/',
+        STAGING_BASE_URL: 'https://staging.example.test/',
+      }),
+    ).toThrow(/TEST_ENV/);
+  } finally {
+    if (previousTestEnvironment === undefined) delete process.env.TEST_ENV;
+    else process.env.TEST_ENV = previousTestEnvironment;
+  }
 });
 
 test('parses a controlled appointment listing reference', () => {
@@ -62,6 +91,7 @@ test('chỉ bật E2E có thay đổi khi cờ có giá trị chính xác là tr
     loadEnvironmentConfig({
       ...validEnvironment,
       ALLOW_MUTATING_E2E: 'true',
+      RUN_PRODUCTION_MUTATING_E2E: 'true',
     }).allowMutatingE2E,
   ).toBe(true);
 });
@@ -179,6 +209,7 @@ test('keeps Gmail integration disabled when optional values are absent', () => {
   expect(config.runMutatingE2e).toBe(false);
   expect(config.runProductionRegistrationE2e).toBe(false);
   expect(config.runProductionMutatingE2e).toBe(false);
+  expect(config.allowMutatingE2E).toBe(false);
   expect(config.gmail).toBeUndefined();
 });
 
@@ -210,7 +241,7 @@ test('rejects an unsafe OTP pattern instead of compiling arbitrary regular expre
   expect(() =>
     loadEnvironmentConfig({
       ...validOtpEnvironment,
-      GMAIL_OTP_PATTERN: 'hoàn tất xác thực:[\\s\\S]*?{otp}',
+      GMAIL_OTP_PATTERN: '(\\d+)+',
     }),
   ).toThrow(/GMAIL_OTP_PATTERN/);
 });
@@ -259,20 +290,13 @@ test('permits production authentication mutation with the unified approval flag'
   expect(config.runProductionMutatingE2e).toBe(true);
 });
 
-test('permits non-production authentication mutation without production approval flags', () => {
-  const config = loadEnvironmentConfig({
-    ...validOtpEnvironment,
-    TEST_ENV: 'staging',
-    RUN_MUTATING_E2E: 'true',
-    RUN_PRODUCTION_REGISTRATION_E2E: 'false',
-    RUN_PRODUCTION_MUTATING_E2E: 'false',
-    MUTATING_USER_EMAIL: 'automation+mutating@gmail.com',
-    MUTATING_USER_BASELINE_PASSWORD: 'baseline-secret',
-    MUTATING_USER_BASELINE_NAME: 'Automation User',
-  });
-
-  expect(config.runProductionRegistrationE2e).toBe(false);
-  expect(config.runProductionMutatingE2e).toBe(false);
+test('rejects staging because no staging website target exists', () => {
+  expect(() =>
+    loadEnvironmentConfig({
+      ...validOtpEnvironment,
+      TEST_ENV: 'staging',
+    }),
+  ).toThrow(/TEST_ENV/);
 });
 
 test('documents one parseable runtime contract using placeholder-only identities', () => {

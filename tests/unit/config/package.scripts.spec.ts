@@ -234,8 +234,6 @@ test('documents exact environment and project contracts for conditional authenti
   const rows = parseMarkdownRows(traceability);
   const commonEnvironment = [
     'TEST_ENV',
-    'DEV_BASE_URL',
-    'STAGING_BASE_URL',
     'PRODUCTION_BASE_URL',
     'DEFAULT_USER_EMAIL',
     'DEFAULT_USER_PASSWORD',
@@ -259,7 +257,10 @@ test('documents exact environment and project contracts for conditional authenti
   const contracts = {
     'generic-registration': {
       environment: [...commonEnvironment, ...gmailEnvironment, ...mutatingUserEnvironment],
-      conditions: ['dev', 'staging', 'ignored in production'],
+      conditions: [
+        'unsupported under the current production-only target',
+        'DEPENDENCY / DEFERRED FINDING',
+      ],
       project: 'mutating-chromium',
       command:
         'npx playwright test tests/authentication/registration.otp.mutating.spec.ts --project=mutating-chromium --workers=1',
@@ -286,14 +287,14 @@ test('documents exact environment and project contracts for conditional authenti
         ...mutatingUserEnvironment,
         'RUN_PRODUCTION_MUTATING_E2E',
       ],
-      conditions: ['dev', 'staging', 'production'],
+      conditions: ['production'],
       project: 'mutating-chromium',
       command:
         'npx playwright test tests/authentication/password-recovery.otp.mutating.spec.ts --project=mutating-chromium --workers=1',
     },
     'locked-login': {
       environment: [...commonEnvironment, 'LOCKED_USER_EMAIL', 'LOCKED_USER_PASSWORD'],
-      conditions: ['dev', 'staging', 'production'],
+      conditions: ['production'],
       project: 'chromium',
       command:
         'npx playwright test tests/authentication/login.negative.spec.ts --grep "TC-AUTH-LOGIN-003" --project=chromium --workers=1',
@@ -312,8 +313,46 @@ test('documents exact environment and project contracts for conditional authenti
     expect(row?.[4], flow).toContain(`\`${contract.project}\``);
     expect(row?.[5], flow).toContain(`\`${contract.command}\``);
   }
+
+  expect(traceability).not.toContain('`DEV_BASE_URL`');
+  expect(traceability).not.toContain('`STAGING_BASE_URL`');
+  expect(traceability).toContain('`TEST_ENV=production`');
 });
 
 test('pins the Google APIs client to the reviewed release', () => {
   expect(packageManifest().devDependencies?.googleapis).toBe('174.0.0');
+});
+
+test('exposes evidence cleanup only as an explicit maintenance command', () => {
+  const scripts = packageManifest().scripts ?? {};
+
+  expect(scripts['evidence:cleanup']).toBe('ts-node scripts/cleanup-evidence.ts');
+  for (const [name, command] of Object.entries(scripts)) {
+    if (name === 'evidence:cleanup') continue;
+    expect(command, name).not.toContain('cleanup-evidence');
+  }
+});
+
+test('documents persistent evidence import, retention, cleanup and backward compatibility', () => {
+  const scripts = packageManifest().scripts ?? {};
+  const readme = readFileSync(resolve(process.cwd(), 'README.md'), 'utf8');
+
+  expect(scripts['db:import']).toBe('ts-node scripts/import-run-result.ts');
+  expect(scripts['evidence:cleanup']).toBe('ts-node scripts/cleanup-evidence.ts');
+  for (const command of [
+    "$env:EVIDENCE_ROOT = 'evidence'",
+    'npm run db:import -- evidence/<runId>/run-result.json',
+    'npm run evidence:cleanup -- --days 90 --dry-run',
+    'npm run evidence:cleanup -- --days 90 --apply',
+  ]) {
+    expect(readme, command).toContain(command);
+  }
+
+  expect(readme).toContain('Retention mặc định là **unlimited**');
+  expect(readme).toContain('không có cleanup tự động');
+  expect(readme).toContain('không thể khôi phục tự động');
+  expect(readme).toContain('Markdown/LOG chỉ hiển thị dưới dạng plain text');
+  expect(readme).toContain('không fallback về `test-results/`');
+  expect(readme).toContain('maintenance window khi API đã dừng');
+  expect(readme).not.toContain('npm run db:import -- test-results');
 });

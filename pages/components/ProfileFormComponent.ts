@@ -26,13 +26,13 @@ const avatarFileExtension = (mimeType: string): string => {
 const dataUrlAvatar = (source: string): { readonly buffer: Buffer; readonly mimeType: string } => {
   const separatorIndex = source.indexOf(',');
   if (!source.startsWith('data:') || separatorIndex < 0) {
-    throw new Error('Profile avatar source is not a valid data URL.');
+    throw new Error('Nguồn avatar Profile không phải data URL hợp lệ.');
   }
 
   const metadata = source.slice('data:'.length, separatorIndex).split(';');
   const mimeType = metadata[0] ?? '';
   if (!mimeType.startsWith('image/')) {
-    throw new Error('Profile avatar source is not an image.');
+    throw new Error('Nguồn avatar Profile không phải hình ảnh.');
   }
 
   const encodedBody = source.slice(separatorIndex + 1);
@@ -186,14 +186,14 @@ export class ProfileFormComponent {
 
   public async captureAvatarBaseline(): Promise<AvatarFilePayload> {
     const source = await this.avatarSource();
-    if (source === '') throw new Error('Cannot capture a missing Profile avatar baseline.');
+    if (source === '') throw new Error('Không thể ghi nhận baseline khi thiếu avatar Profile.');
 
     let asset: { readonly buffer: Buffer; readonly mimeType: string };
     if (source.startsWith('data:')) {
       asset = dataUrlAvatar(source);
     } else {
       const response = await this.page.request.get(new URL(source, this.page.url()).toString());
-      if (!response.ok()) throw new Error('Cannot download the current Profile avatar baseline.');
+      if (!response.ok()) throw new Error('Không thể tải avatar Profile hiện tại để làm baseline.');
       const mimeType = response.headers()['content-type']?.split(';')[0] ?? '';
       if (!mimeType.startsWith('image/')) {
         throw new Error('Current Profile avatar response is not an image.');

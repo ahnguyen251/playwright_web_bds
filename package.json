@@ -12,6 +12,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "db:init": "ts-node scripts/init-db.ts",
+    "db:import": "ts-node scripts/import-run-result.ts",
+    "evidence:cleanup": "ts-node scripts/cleanup-evidence.ts",
     "start:api": "ts-node server/index.ts",
     "test": "playwright test",
     "test:business": "ts-node scripts/run-business-tests.ts",

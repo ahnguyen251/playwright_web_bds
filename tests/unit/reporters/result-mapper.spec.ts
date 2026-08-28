@@ -1,9 +1,5 @@
 import { test, expect } from '@playwright/test';
-import {
-  mapPlaywrightStatus,
-  mapEvidence,
-  resolveTraceability,
-} from '../../../reporters/result-mapper';
+import { mapPlaywrightStatus, resolveTraceability } from '../../../reporters/result-mapper';
 import { allTestCases } from '../../../test-cases/index';
 
 test.describe('Result Mapper Utilities', () => {
@@ -15,28 +11,10 @@ test.describe('Result Mapper Utilities', () => {
     expect(mapPlaywrightStatus('interrupted')).toBe('INTERRUPTED');
   });
 
-  test('mapEvidence -> categorizes evidence correctly based on contentType and name', () => {
-    const rawAttachments = [
-      { name: 'screenshot', contentType: 'image/png', path: 'path/to/img.png' },
-      { name: 'video', contentType: 'video/webm', path: 'path/to/vid.webm' },
-      { name: 'trace', contentType: 'application/zip', path: 'path/to/trace.zip' },
-      { name: 'log', contentType: 'text/plain', path: 'path/to/log.txt' },
-      { name: 'unknown', contentType: 'application/json', path: 'path/to/data.json' },
-      { name: 'no-path', contentType: 'image/png' },
-    ];
-
-    const mapped = mapEvidence(rawAttachments);
-
-    expect(mapped).toHaveLength(5); // no-path is filtered out
-    expect(mapped.find((e) => e.path === 'path/to/img.png')?.type).toBe('SCREENSHOT');
-    expect(mapped.find((e) => e.path === 'path/to/vid.webm')?.type).toBe('VIDEO');
-    expect(mapped.find((e) => e.path === 'path/to/trace.zip')?.type).toBe('TRACE');
-    expect(mapped.find((e) => e.path === 'path/to/log.txt')?.type).toBe('LOG');
-    expect(mapped.find((e) => e.path === 'path/to/data.json')?.type).toBe('OTHER');
-  });
-
   test('resolveTraceability -> returns MAPPED for existing ID', () => {
-    const existingId = allTestCases[0]!.id;
+    const firstTestCase = allTestCases[0];
+    if (!firstTestCase) throw new Error('The test-case catalog must not be empty.');
+    const existingId = firstTestCase.id;
     const { testCaseId, traceabilityStatus } = resolveTraceability(`${existingId} - Some Title`);
 
     expect(testCaseId).toBe(existingId);

@@ -12,8 +12,8 @@ export const listingStateTest = workflowTest.extend<ListingStateFixtures>({
       const reference = ListingReferenceFactory.get(alias);
       if (reference !== undefined) return reference;
 
-      testInfo.skip(true, `Controlled listing ${alias} is not configured`);
-      throw new Error(`Controlled listing ${alias} is not configured`);
+      testInfo.skip(true, `Tin đăng được kiểm soát ${alias} chưa được cấu hình`);
+      throw new Error(`Tin đăng được kiểm soát ${alias} chưa được cấu hình`);
     });
   },
 });

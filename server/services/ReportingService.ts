@@ -1,7 +1,7 @@
 import { TestCaseReadRepository } from '../../database/repositories/TestCaseReadRepository';
 import { TestRunReadRepository } from '../../database/repositories/TestRunReadRepository';
 import { TestCaseAnalyticsRepository } from '../../database/repositories/TestCaseAnalyticsRepository';
-import { getDefaultDatabase, DatabaseConnection } from '../../database/sqlite';
+import type { DatabaseConnection } from '../../database/sqlite';
 import { NotFoundError } from '../utils/errors';
 
 export class ReportingService {
@@ -9,11 +9,10 @@ export class ReportingService {
   private testRunRepo: TestRunReadRepository;
   private analyticsRepo: TestCaseAnalyticsRepository;
 
-  constructor(conn?: DatabaseConnection) {
-    const db = conn || getDefaultDatabase();
-    this.testCaseRepo = new TestCaseReadRepository(db);
-    this.testRunRepo = new TestRunReadRepository(db);
-    this.analyticsRepo = new TestCaseAnalyticsRepository(db);
+  constructor(conn: DatabaseConnection) {
+    this.testCaseRepo = new TestCaseReadRepository(conn);
+    this.testRunRepo = new TestRunReadRepository(conn);
+    this.analyticsRepo = new TestCaseAnalyticsRepository(conn);
   }
 
   public getTestCases(filters: any, limit: number, offset: number) {
@@ -74,7 +73,7 @@ export class ReportingService {
     const TREND_LIMIT = 20;
 
     const executions = this.analyticsRepo.getLogicalExecutionsInWindow(testCaseId, DAYS);
-    
+
     // Sort oldest -> newest for trend and status change calculation
     const chronological = [...executions].reverse();
 
@@ -113,12 +112,15 @@ export class ReportingService {
 
     const eligibleExecutions = passed + failed;
     const passRatePercent = eligibleExecutions > 0 ? (passed / eligibleExecutions) * 100 : 0;
-    const retryFlakyRatePercent = eligibleExecutions > 0 ? (retryFlakyExecutions / eligibleExecutions) * 100 : 0;
-    
-    const possibleTransitions = Math.max(executions.length - 1, 0);
-    const statusChangeRatePercent = possibleTransitions > 0 ? (statusChanges / possibleTransitions) * 100 : 0;
+    const retryFlakyRatePercent =
+      eligibleExecutions > 0 ? (retryFlakyExecutions / eligibleExecutions) * 100 : 0;
 
-    const averageDurationMs = logicalDurationCount > 0 ? Math.round(logicalDurationSum / logicalDurationCount) : null;
+    const possibleTransitions = Math.max(executions.length - 1, 0);
+    const statusChangeRatePercent =
+      possibleTransitions > 0 ? (statusChanges / possibleTransitions) * 100 : 0;
+
+    const averageDurationMs =
+      logicalDurationCount > 0 ? Math.round(logicalDurationSum / logicalDurationCount) : null;
 
     // Latest status/executedAt from the newest (first item in executions array, since it's newest-first)
     const latestExecution = executions[0];
@@ -141,20 +143,20 @@ export class ReportingService {
         retryFlakyRatePercent: Math.round(retryFlakyRatePercent * 100) / 100,
         averageDurationMs,
         latestStatus,
-        latestExecutedAt
+        latestExecutedAt,
       },
       stability: {
         statusChanges,
-        statusChangeRatePercent: Math.round(statusChangeRatePercent * 100) / 100
+        statusChangeRatePercent: Math.round(statusChangeRatePercent * 100) / 100,
       },
-      trend: trend.map(t => ({
+      trend: trend.map((t) => ({
         runId: t.runId,
         resultId: t.finalResultId,
         executedAt: t.finalExecutedAt,
         finalStatus: t.finalStatus,
         retryFlaky: t.retryFlaky,
-        durationMs: t.logicalDurationMs
-      }))
+        durationMs: t.logicalDurationMs,
+      })),
     };
   }
 }

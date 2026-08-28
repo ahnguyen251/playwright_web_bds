@@ -1,7 +1,6 @@
-import { DatabaseConnection } from '../sqlite';
-import { TestRunResult } from '../../types/test-result.types';
+import type { DatabaseConnection } from '../sqlite';
+import type { TestRunResult } from '../../types/test-result.types';
 import crypto from 'crypto';
-import path from 'path';
 
 export interface ImportResult {
   status: 'SUCCESS' | 'SKIPPED' | 'ERROR';
@@ -71,19 +70,12 @@ export class TestRunRepository {
       for (const res of runData.Results) {
         const resultId = `RES-${runData.RunId}-${crypto.randomUUID().slice(0, 8)}`;
 
-        let dbTestCaseId: string | null = null;
-        let dbParsedTestCaseId: string | null = null;
-
-        if (res.TraceabilityStatus === 'MAPPED') {
-          dbTestCaseId = res.TestCaseId;
-          dbParsedTestCaseId = res.TestCaseId;
-        } else if (res.TraceabilityStatus === 'UNMAPPED') {
-          dbTestCaseId = null;
-          dbParsedTestCaseId = null;
-        } else if (res.TraceabilityStatus === 'UNKNOWN_TEST_CASE_ID') {
-          dbTestCaseId = null;
-          dbParsedTestCaseId = res.TestCaseId;
-        }
+        const [dbTestCaseId, dbParsedTestCaseId]: readonly [string | null, string | null] =
+          res.TraceabilityStatus === 'MAPPED'
+            ? [res.TestCaseId, res.TestCaseId]
+            : res.TraceabilityStatus === 'UNMAPPED'
+              ? [null, null]
+              : [null, res.TestCaseId];
 
         stmtInsertResult.run(
           resultId,
@@ -91,35 +83,27 @@ export class TestRunRepository {
           dbTestCaseId,
           dbParsedTestCaseId,
           res.TraceabilityStatus,
-          res.PlaywrightTestId || null,
+          res.PlaywrightTestId ?? null,
           res.Title,
           res.FilePath,
-          res.ProjectName || null,
+          res.ProjectName ?? null,
           res.Status,
-          res.ExpectedStatus || null,
+          res.ExpectedStatus ?? null,
           res.DurationMs,
           res.Retry,
-          res.ErrorMessage || null,
-          res.ErrorStack || null,
+          res.ErrorMessage ?? null,
+          res.ErrorStack ?? null,
           now,
         );
 
         for (const ev of res.Evidence) {
           const evidenceId = `EVD-${crypto.randomUUID()}`;
-          // Normalize absolute paths to relative
-          let normalizedPath = ev.path;
-          const cwd = process.cwd();
-          if (path.isAbsolute(normalizedPath) && normalizedPath.startsWith(cwd)) {
-            normalizedPath = path.relative(cwd, normalizedPath);
-          }
-          normalizedPath = normalizedPath.replace(/\\/g, '/');
-
           stmtInsertEvidence.run(
             evidenceId,
             resultId,
             ev.type,
-            normalizedPath,
-            ev.contentType || null,
+            ev.path,
+            ev.contentType ?? null,
             now,
           );
         }
@@ -129,8 +113,9 @@ export class TestRunRepository {
     try {
       transaction(runResult);
       return { status: 'SUCCESS', runId: runResult.RunId };
-    } catch (e: any) {
-      return { status: 'ERROR', reason: e.message, runId: runResult.RunId };
+    } catch (error: unknown) {
+      const reason = error instanceof Error ? error.message : String(error);
+      return { status: 'ERROR', reason, runId: runResult.RunId };
     }
   }
 }

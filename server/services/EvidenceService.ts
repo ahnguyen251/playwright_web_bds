@@ -1,8 +1,15 @@
-import path from 'path';
-import fs from 'fs';
-import { DatabaseConnection, getDefaultDatabase } from '../../database/sqlite';
-import { EvidenceReadRepository } from '../../database/repositories/EvidenceReadRepository';
+import fs from 'node:fs';
+import path from 'node:path';
+
+import {
+  EvidenceReadRepository,
+  type EvidenceRecord,
+} from '../../database/repositories/EvidenceReadRepository';
+import type { DatabaseConnection } from '../../database/sqlite';
+import { classifyAttachment } from '../../services/evidence/evidence-policy';
 import { NotFoundError } from '../utils/errors';
+
+export type EvidenceUnavailableReason = 'FILE_MISSING' | 'OUTSIDE_ROOT' | 'UNSUPPORTED_TYPE';
 
 export class InvalidEvidencePathError extends Error {
   constructor() {
@@ -18,85 +25,133 @@ export class UnsupportedEvidenceTypeError extends Error {
   }
 }
 
-export class EvidenceService {
-  private repo: EvidenceReadRepository;
-  private evidenceRoot: string;
+interface AvailableEvidence {
+  readonly available: true;
+  readonly filePath: string;
+  readonly mimeType: string;
+  readonly type: string;
+  readonly safeFilename: string;
+}
 
-  constructor(conn?: DatabaseConnection, evidenceRoot?: string) {
-    const db = conn || getDefaultDatabase();
-    this.repo = new EvidenceReadRepository(db);
-    this.evidenceRoot = evidenceRoot || path.resolve(process.cwd(), 'test-results');
+interface UnavailableEvidence {
+  readonly available: false;
+  readonly reason: EvidenceUnavailableReason;
+}
+
+type EvidenceAvailability = AvailableEvidence | UnavailableEvidence;
+
+const isContainedBy = (root: string, candidate: string): boolean => {
+  const relativePath = path.relative(root, candidate);
+  return (
+    relativePath === '' ||
+    (!path.isAbsolute(relativePath) &&
+      relativePath !== '..' &&
+      !relativePath.startsWith(`..${path.sep}`))
+  );
+};
+
+const toSafeFilename = (recordPath: string): string => {
+  const basename = path.posix.basename(recordPath.replace(/\\/gu, '/'));
+  return basename.replace(/[^A-Za-z0-9._-]/gu, '_') || 'evidence';
+};
+
+export class EvidenceService {
+  private readonly repo: EvidenceReadRepository;
+  private readonly evidenceRoot: string;
+
+  constructor(conn: DatabaseConnection, evidenceRoot: string) {
+    this.repo = new EvidenceReadRepository(conn);
+    this.evidenceRoot = path.resolve(evidenceRoot);
   }
 
   public getEvidenceMetadataByResultId(resultId: string) {
     const records = this.repo.getEvidenceByResultId(resultId);
-    
+
     return {
-      items: records.map(record => ({
-        evidenceId: record.evidence_id,
-        resultId: record.result_id,
-        type: record.type,
-        fileName: path.basename(record.path),
-        mimeType: record.content_type,
-        // Omit physical path, absolute path, etc.
-        contentUrl: `/api/evidence/${record.evidence_id}/content`
-      }))
+      items: records.map((record) => {
+        const availability = this.evaluateAvailability(record);
+        return {
+          evidenceId: record.evidence_id,
+          resultId: record.result_id,
+          type: record.type,
+          fileName: toSafeFilename(record.path),
+          mimeType: record.content_type,
+          contentUrl: `/api/evidence/${record.evidence_id}/content`,
+          available: availability.available,
+          ...(availability.available ? {} : { unavailableReason: availability.reason }),
+        };
+      }),
     };
   }
 
-  public getEvidenceStreamDescriptor(evidenceId: string) {
+  public getEvidenceStreamDescriptor(evidenceId: string): AvailableEvidence {
     const record = this.repo.getEvidenceById(evidenceId);
     if (!record) {
       throw new NotFoundError('EVIDENCE_NOT_FOUND', 'Evidence record not found.');
     }
 
-    // Path traversal protection
-    const resolvedPath = path.resolve(process.cwd(), record.path);
-    const relativePath = path.relative(this.evidenceRoot, resolvedPath);
+    const availability = this.evaluateAvailability(record);
+    if (availability.available) return availability;
 
-    const isOutside = relativePath.startsWith('..') || path.isAbsolute(relativePath);
-    
-    // Also explicitly block Windows drive paths or UNC if it resolves outside, but path.resolve handles that.
-    // Ensure no escape happened
-    if (isOutside) {
-      throw new InvalidEvidencePathError();
+    if (availability.reason === 'OUTSIDE_ROOT') throw new InvalidEvidencePathError();
+    if (availability.reason === 'UNSUPPORTED_TYPE') throw new UnsupportedEvidenceTypeError();
+    throw new NotFoundError('EVIDENCE_FILE_NOT_FOUND', 'Evidence file does not exist on disk.');
+  }
+
+  private evaluateAvailability(record: EvidenceRecord): EvidenceAvailability {
+    const candidate = this.resolveCandidatePath(record.path);
+    if (!candidate) return { available: false, reason: 'OUTSIDE_ROOT' };
+    if (!fs.existsSync(candidate)) return { available: false, reason: 'FILE_MISSING' };
+
+    let realEvidenceRoot: string;
+    let realCandidate: string;
+    let isRegularFile: boolean;
+    try {
+      realEvidenceRoot = fs.realpathSync(this.evidenceRoot);
+      realCandidate = fs.realpathSync(candidate);
+      isRegularFile = fs.statSync(realCandidate).isFile();
+    } catch {
+      return { available: false, reason: 'FILE_MISSING' };
     }
 
-    // Check physical existence
-    if (!fs.existsSync(resolvedPath)) {
-      console.log('File not found! resolvedPath:', resolvedPath, 'evidenceId:', evidenceId, 'record:', record);
-      throw new NotFoundError('EVIDENCE_FILE_NOT_FOUND', 'Evidence file does not exist on disk.');
+    if (!isContainedBy(realEvidenceRoot, realCandidate)) {
+      return { available: false, reason: 'OUTSIDE_ROOT' };
+    }
+    if (!isRegularFile) {
+      return { available: false, reason: 'FILE_MISSING' };
     }
 
-    // Type and MIME validation combination allowlist
-    const isValid = this.validateMimeType(record.type, record.content_type, resolvedPath);
-    if (!isValid) {
-      throw new UnsupportedEvidenceTypeError();
+    const suppliedExtension = path.extname(realCandidate).toLowerCase();
+    const classification = classifyAttachment(realCandidate, record.content_type);
+    if (
+      !suppliedExtension ||
+      classification?.extension !== suppliedExtension ||
+      classification.role !== record.type
+    ) {
+      return { available: false, reason: 'UNSUPPORTED_TYPE' };
     }
-
-    // Sanitized filename for Content-Disposition
-    const safeFilename = path.basename(resolvedPath).replace(/[\r\n]/g, '');
 
     return {
-      filePath: resolvedPath,
-      mimeType: record.content_type,
+      available: true,
+      filePath: realCandidate,
+      mimeType: classification.contentType,
       type: record.type,
-      safeFilename
+      safeFilename: toSafeFilename(record.path),
     };
   }
 
-  private validateMimeType(type: string, mimeType: string, filePath: string): boolean {
-    const ext = path.extname(filePath).toLowerCase();
+  private resolveCandidatePath(recordPath: string): string | undefined {
+    if (!recordPath || recordPath.includes('\0')) return undefined;
 
-    if (type === 'SCREENSHOT') {
-      return (mimeType === 'image/png' || mimeType === 'image/jpeg') && (ext === '.png' || ext === '.jpg' || ext === '.jpeg');
-    }
-    if (type === 'VIDEO') {
-      return mimeType === 'video/webm' && ext === '.webm';
-    }
-    if (type === 'TRACE') {
-      return mimeType === 'application/zip' && ext === '.zip';
-    }
-    return false;
+    const crossPlatformAbsolute =
+      path.isAbsolute(recordPath) ||
+      path.win32.isAbsolute(recordPath) ||
+      path.posix.isAbsolute(recordPath);
+    if (crossPlatformAbsolute && !path.isAbsolute(recordPath)) return undefined;
+
+    const candidate = crossPlatformAbsolute
+      ? path.resolve(recordPath)
+      : path.resolve(this.evidenceRoot, recordPath);
+    return isContainedBy(this.evidenceRoot, candidate) ? candidate : undefined;
   }
 }

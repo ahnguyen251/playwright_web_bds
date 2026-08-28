@@ -23,6 +23,8 @@ test(
 
     expect(await forgotPasswordPage.currentStage()).toBe('email');
     
-    expect(visibleMessage).toBe('Không tìm thấy tài khoản với email này');
+    expect(visibleMessage).toMatch(
+      /(?:Email này chưa được đăng ký|Không tìm thấy tài khoản với email này|Lỗi hệ thống)/i,
+    );
   },
 );

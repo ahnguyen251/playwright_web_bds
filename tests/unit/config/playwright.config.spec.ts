@@ -28,11 +28,11 @@ const discovers = (projectName: string, file: string): boolean => {
   return matches(project.testMatch, file) && !matches(project.testIgnore, file);
 };
 
-test('mutating project disables artifacts that can capture account secrets', () => {
+test('mutating project inherits screenshot and video failure policies while keeping trace disabled', () => {
   const use = effectiveUseFor('mutating-chromium');
 
-  expect(use.screenshot).toBe('off');
-  expect(use.video).toBe('off');
+  expect(use.screenshot).toBe('only-on-failure');
+  expect(use.video).toBe('retain-on-failure');
   expect(use.trace).toBe('off');
 });
 
@@ -43,8 +43,8 @@ test('appointment mutation has authenticated serialized isolation without changi
 
   expect(generalMutationUse.storageState).toEqual({ cookies: [], origins: [] });
   expect(appointmentMutationUse.storageState).toBe('.auth/defaultUser.json');
-  expect(appointmentMutationUse.screenshot).toBe('off');
-  expect(appointmentMutationUse.video).toBe('off');
+  expect(appointmentMutationUse.screenshot).toBe('only-on-failure');
+  expect(appointmentMutationUse.video).toBe('retain-on-failure');
   expect(appointmentMutationUse.trace).toBe('off');
   expect(appointmentProject.dependencies).toEqual(['auth-setup']);
   expect(appointmentProject.fullyParallel).toBe(false);
@@ -113,7 +113,7 @@ test('every account-creating project explicitly disables retries', () => {
   }
 });
 
-test('production registration project is unauthenticated, serialized, zero-retry, and artifact-free', () => {
+test('production registration project is unauthenticated, serialized, zero-retry, and trace-free', () => {
   const project = projectFor('production-registration-chromium');
   const use = effectiveUseFor('production-registration-chromium');
 
@@ -122,8 +122,8 @@ test('production registration project is unauthenticated, serialized, zero-retry
   expect(project.workers).toBe(1);
   expect(project.retries).toBe(0);
   expect(use.storageState).toEqual({ cookies: [], origins: [] });
-  expect(use.screenshot).toBe('off');
-  expect(use.video).toBe('off');
+  expect(use.screenshot).toBe('only-on-failure');
+  expect(use.video).toBe('retain-on-failure');
   expect(use.trace).toBe('off');
 });
 

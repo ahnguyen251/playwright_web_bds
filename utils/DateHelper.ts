@@ -3,7 +3,7 @@ const pad = (value: number): string => String(value).padStart(2, '0');
 export class DateHelper {
   public static format(date: Date, format: string): string {
     if (Number.isNaN(date.getTime())) {
-      throw new Error('Cannot format an invalid date');
+      throw new Error('Không thể định dạng ngày không hợp lệ');
     }
 
     const day = pad(date.getUTCDate());
@@ -22,10 +22,10 @@ export class DateHelper {
 
   public static addDays(date: Date, days: number): Date {
     if (Number.isNaN(date.getTime())) {
-      throw new Error('Cannot add days to an invalid date');
+      throw new Error('Không thể cộng số ngày vào ngày không hợp lệ');
     }
     if (!Number.isInteger(days)) {
-      throw new Error('Days must be an integer');
+      throw new Error('Số ngày phải là số nguyên');
     }
 
     const result = new Date(date.getTime());

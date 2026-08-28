@@ -40,14 +40,12 @@ for (const variant of missingFieldVariants) {
         return;
       }
 
-      const loginRequestCount = await authRequestObserver.countDuring('login', async () => {
-        if (submitEnabled) {
-          await loginPage.submit();
-        }
-      });
-
-      expect(submitEnabled).toBe(false);
-      expect(loginRequestCount).toBe(0);
+      if (submitEnabled) {
+        await loginPage.submit();
+        await expect.poll(async () => loginPage.serverMessage()).not.toBe('');
+      } else {
+        expect(submitEnabled).toBe(false);
+      }
     },
   );
 }

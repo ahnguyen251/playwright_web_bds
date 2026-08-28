@@ -376,9 +376,14 @@ tr:hover td {
 
 .evidence-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(250px, 100%), 1fr));
   gap: 16px;
   margin-top: 16px;
+  align-items: start;
+}
+
+.evidence-supplementary {
+  grid-template-columns: minmax(0, 1fr);
 }
 
 .evidence-item {
@@ -388,8 +393,108 @@ tr:hover td {
   border: var(--glass-border);
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  text-align: left;
+  box-sizing: border-box;
+  min-width: 0;
+  width: 100%;
+}
+
+.evidence-label {
+  overflow-wrap: anywhere;
+}
+
+.evidence-actions {
+  display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.evidence-thumbnail-button {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(226, 232, 240, 0.65);
+  cursor: zoom-in;
+}
+
+.evidence-thumbnail-button:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.evidence-thumbnail-button img {
+  display: block;
+  width: 100%;
+  max-height: 320px;
+  object-fit: contain;
+}
+
+.evidence-thumbnail-button + .evidence-actions {
+  margin-top: 12px;
+}
+
+.evidence-item > .code-block {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin: 12px 0 0;
+  box-sizing: border-box;
+  text-align: left;
+}
+
+.evidence-image-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 1100;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(6px);
+}
+
+.evidence-image-preview-panel {
+  width: min(1200px, 100%);
+  max-height: calc(100vh - 48px);
+  padding: 20px;
+  border: var(--glass-border);
+  border-radius: var(--radius);
+  background: var(--bg-dark);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
+}
+
+.evidence-image-preview-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.evidence-image-preview-header h3,
+.evidence-image-preview-caption {
+  margin: 0;
+}
+
+.evidence-image-preview-content {
+  display: block;
+  width: 100%;
+  max-height: calc(100vh - 180px);
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(226, 232, 240, 0.7);
+}
+
+.evidence-image-preview-caption {
+  margin-top: 12px;
+  color: var(--text-muted);
   text-align: center;
+  overflow-wrap: anywhere;
 }
 
 /* Analytics Panel */

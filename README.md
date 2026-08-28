@@ -59,6 +59,7 @@ docs/                         Requirements, plans, prompts, and traceability
 .auth/                        Generated storage state (ignored)
 playwright-report/            Generated HTML report (ignored)
 test-results/                 Generated Playwright artifacts (ignored)
+evidence/                     Persistent evidence archive (ignored)
 allure-results/               Generated Allure raw results (ignored)
 ```
 
@@ -81,9 +82,10 @@ Không commit `.env`, OAuth token, mật khẩu, OTP, storage state hoặc repor
 
 ## Môi trường và người dùng
 
-`TEST_ENV` nhận một trong ba giá trị `dev`, `staging`, `production`; Base URL được lấy tương ứng từ
-`DEV_BASE_URL`, `STAGING_BASE_URL`, `PRODUCTION_BASE_URL`. Cấu hình không hợp lệ sẽ dừng trước khi
-Playwright khởi chạy.
+`TEST_ENV` là bắt buộc và target website hiện tại duy nhất là `production`; đặt
+`TEST_ENV=production` cùng `PRODUCTION_BASE_URL`. Cấu hình thiếu hoặc dùng target khác sẽ dừng trước
+khi Playwright khởi chạy. Explicit production target does not grant mutation permission; các gate
+mutation/OTP riêng bên dưới vẫn phải được phê duyệt rõ ràng.
 
 Người dùng mặc định dùng `DEFAULT_USER_EMAIL` và `DEFAULT_USER_PASSWORD`. Người dùng phụ (nếu cần)
 dùng `SECONDARY_USER_EMAIL` và `SECONDARY_USER_PASSWORD`. `test-data/static/users.json` chỉ giữ tên
@@ -144,8 +146,9 @@ Email template phải chứa đúng một `{unique}`. Production registration d�
 chia sẻ ở phần dưới, bao gồm `OTP_MAILBOX_ADDRESS`, sender, subject, pattern, timeout và poll interval;
 không có bộ biến `GMAIL_OTP_TIMEOUT_MS` hoặc `GMAIL_OTP_POLL_INTERVAL_MS` riêng.
 
-Chỉ bật mutating trên môi trường kiểm thử được phép. Không dùng tài khoản cá nhân. Cấu hình một tài
-khoản automation chuyên dụng, có thể khôi phục qua Gmail, bằng:
+Chỉ bật mutating khi production target và nghiệp vụ cụ thể đã được phê duyệt; target selection không
+tự cấp quyền mutation. Không dùng tài khoản cá nhân. Cấu hình một tài khoản automation chuyên dụng,
+có thể khôi phục qua Gmail, bằng:
 
 ```dotenv
 MUTATING_USER_EMAIL=replace-with-mutating-user@example.test
@@ -200,7 +203,7 @@ npm run lint
 npm run format:check
 ```
 
-Chạy unit/component không cần website thật:
+Chạy unit/component trong isolated framework test environment, không cần website thật:
 
 ```bash
 npx playwright test --project=framework
@@ -269,9 +272,43 @@ Các project browser thông thường chụp screenshot khi fail, giữ video kh
 retry đầu tiên. Project mutating tắt ba artifact này theo chính sách bảo vệ secret.
 
 - HTML report: `playwright-report/`
-- Playwright artifacts: `test-results/`
+- Playwright artifacts tạm thời: `test-results/`
+- Persistent evidence archive: `evidence/`
 - Allure raw results: `allure-results/`
 - Allure report: `allure-report/`
+
+### Persistent evidence lifecycle
+
+`test-results/` thuộc lifecycle tạm thời của Playwright và có thể bị dọn ở lần chạy kế tiếp. Reporter
+nhận attachment tại `onTestEnd`, persist screenshot, video, trace và LOG được hỗ trợ sang
+`EVIDENCE_ROOT/<runId>/...`, sau đó finalize atomically thành
+`EVIDENCE_ROOT/<runId>/run-result.json` tại `onEnd`. Database chỉ import finalized manifest và chỉ lưu
+POSIX relative path dưới `EVIDENCE_ROOT`; dashboard/API không fallback về `test-results/`.
+
+Screenshot là evidence mặc định cho kết quả failed. Expected browser failure có `page` được chụp chủ
+động nhưng không giữ video chỉ vì `test.fail(...)`; unexpected browser failure giữ screenshot/video
+theo Playwright policy. Trace được persist khi Playwright sinh trace. LOG, bao gồm `error-context.md`,
+là evidence bổ sung. Markdown/LOG chỉ hiển thị dưới dạng plain text, không render Markdown thành HTML.
+
+Thiết lập kho evidence và import duy nhất từ finalized manifest:
+
+```powershell
+$env:EVIDENCE_ROOT = 'evidence'
+npm run db:import -- evidence/<runId>/run-result.json
+```
+
+Retention mặc định là **unlimited** và không có cleanup tự động trong reporter, API, startup hoặc
+scheduler. Luôn xem trước phạm vi trước khi áp dụng cleanup:
+
+```powershell
+npm run evidence:cleanup -- --days 90 --dry-run
+npm run evidence:cleanup -- --days 90 --apply
+```
+
+Chỉ chạy `--apply` trong maintenance window khi API đã dừng. Cleanup giữ nguyên `test_runs` và
+`test_results`, chỉ xóa evidence của toàn bộ finalized run đủ tuổi. Historical evidence có DB record
+nhưng file đã mất được hiển thị là unavailable và không thể khôi phục tự động; hệ thống không tổng hợp
+file giả hoặc tìm lại trong `test-results/`.
 
 ```bash
 npm run report:html

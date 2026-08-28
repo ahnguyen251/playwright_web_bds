@@ -13,6 +13,7 @@ storage-state/
 # Playwright and Allure artifacts
 playwright-report/
 test-results/
+/evidence/
 blob-report/
 allure-results/
 allure-report/
@@ -28,6 +29,14 @@ coverage/
 tmp/
 temp/
 *.tmp
+
+# Local SQLite runtime and root-level legacy test artifacts
+/data/*.db
+/data/*.db-wal
+/data/*.db-shm
+/.temp-*.db
+/.temp-*.db-wal
+/.temp-*.db-shm
 
 # IDE, logs, and operating-system metadata
 .vscode/

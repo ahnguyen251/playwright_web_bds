@@ -22,14 +22,12 @@ const otpPattern = z
   .min(1)
   .max(500)
   .refine((value) => value.split('{otp}').length === 2, {
-    message: 'GMAIL_OTP_PATTERN must contain exactly one literal {otp} placeholder',
+    message: 'GMAIL_OTP_PATTERN phải chứa đúng một placeholder {otp} dạng literal',
   });
 
 export const environmentSchema = z
   .object({
-    TEST_ENV: z.enum(['dev', 'staging', 'production']).default('production'),
-    DEV_BASE_URL: absoluteUrl,
-    STAGING_BASE_URL: absoluteUrl,
+    TEST_ENV: z.literal('production'),
     PRODUCTION_BASE_URL: absoluteUrl,
     API_BASE_URL: absoluteUrl.optional(),
     DEFAULT_USER_EMAIL: z.string().trim().pipe(z.email()),
@@ -61,7 +59,7 @@ export const environmentSchema = z
       context.addIssue({
         code: 'custom',
         path: ['LOCKED_USER_PASSWORD'],
-        message: 'LOCKED_USER_PASSWORD is required when LOCKED_USER_EMAIL is configured',
+        message: 'LOCKED_USER_PASSWORD là bắt buộc khi LOCKED_USER_EMAIL được cấu hình',
       });
     }
 
@@ -69,7 +67,7 @@ export const environmentSchema = z
       context.addIssue({
         code: 'custom',
         path: ['LOCKED_USER_EMAIL'],
-        message: 'LOCKED_USER_EMAIL is required when LOCKED_USER_PASSWORD is configured',
+        message: 'LOCKED_USER_EMAIL là bắt buộc khi LOCKED_USER_PASSWORD được cấu hình',
       });
     }
 
@@ -89,7 +87,7 @@ export const environmentSchema = z
           context.addIssue({
             code: 'custom',
             path: [key],
-            message: `${key} is required when RUN_OTP_E2E is enabled`,
+            message: `${key} là bắt buộc khi RUN_OTP_E2E được bật`,
           });
         }
       }
@@ -100,12 +98,11 @@ export const environmentSchema = z
         context.addIssue({
           code: 'custom',
           path: ['RUN_MUTATING_E2E'],
-          message: 'RUN_MUTATING_E2E requires RUN_OTP_E2E',
+          message: 'RUN_MUTATING_E2E yêu cầu RUN_OTP_E2E',
         });
       }
 
       if (
-        environment.TEST_ENV === 'production' &&
         !environment.RUN_PRODUCTION_REGISTRATION_E2E &&
         !environment.RUN_PRODUCTION_MUTATING_E2E
       ) {
@@ -113,7 +110,7 @@ export const environmentSchema = z
           code: 'custom',
           path: ['RUN_PRODUCTION_REGISTRATION_E2E'],
           message:
-            'A flow-specific production registration or existing-account mutation approval is required',
+            'Bắt buộc phê duyệt riêng cho đăng ký production hoặc thao tác thay đổi dữ liệu tài khoản hiện có',
         });
       }
 
@@ -128,21 +125,18 @@ export const environmentSchema = z
           context.addIssue({
             code: 'custom',
             path: [key],
-            message: `${key} is required when RUN_MUTATING_E2E is enabled`,
+            message: `${key} là bắt buộc khi RUN_MUTATING_E2E được bật`,
           });
         }
       }
     }
 
-    if (
-      environment.TEST_ENV === 'production' &&
-      environment.ALLOW_MUTATING_E2E &&
-      !environment.RUN_PRODUCTION_MUTATING_E2E
-    ) {
+    if (environment.ALLOW_MUTATING_E2E && !environment.RUN_PRODUCTION_MUTATING_E2E) {
       context.addIssue({
         code: 'custom',
         path: ['RUN_PRODUCTION_MUTATING_E2E'],
-        message: 'RUN_PRODUCTION_MUTATING_E2E=true is required for listing mutations in production',
+        message:
+          'RUN_PRODUCTION_MUTATING_E2E=true là bắt buộc để thay đổi tin đăng trên môi trường production',
       });
     }
   });

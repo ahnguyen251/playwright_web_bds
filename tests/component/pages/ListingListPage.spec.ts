@@ -161,7 +161,7 @@ test('kết hợp bộ lọc người đăng, giá và diện tích tùy chỉnh
   expect((await listPage.summaries()).map(({ poster }) => poster)).toEqual(['owner']);
 });
 
-test(listingCaseTitle('LIST-UC17-002'), async ({ page }) => {
+test(listingCaseTitle('TC-LIST-FILTER-001') + ' - Môi giới', async ({ page }) => {
   await page.setContent(publicListingFixture());
   const listPage = new ListingListPage(page);
 
@@ -171,7 +171,7 @@ test(listingCaseTitle('LIST-UC17-002'), async ({ page }) => {
   expect((await listPage.summaries()).map(({ poster }) => poster)).toEqual(['broker', 'broker']);
 });
 
-test(listingCaseTitle('LIST-UC17-003'), async ({ page }) => {
+test(listingCaseTitle('TC-LIST-FILTER-001') + ' - Khoảng giá', async ({ page }) => {
   await page.setContent(publicListingFixture());
   const listPage = new ListingListPage(page);
 
@@ -180,7 +180,7 @@ test(listingCaseTitle('LIST-UC17-003'), async ({ page }) => {
   expect((await listPage.summaries()).map(({ price }) => price)).toEqual([3, 4]);
 });
 
-test(listingCaseTitle('LIST-UC17-005'), async ({ page }) => {
+test(listingCaseTitle('TC-LIST-FILTER-001') + ' - Diện tích', async ({ page }) => {
   await page.setContent(publicListingFixture());
   const listPage = new ListingListPage(page);
 
@@ -189,7 +189,7 @@ test(listingCaseTitle('LIST-UC17-005'), async ({ page }) => {
   expect((await listPage.summaries()).map(({ area }) => area)).toEqual([60, 70]);
 });
 
-test(listingCaseTitle('LIST-UC17-008'), async ({ page }) => {
+test(listingCaseTitle('TC-LIST-FILTER-001') + ' - Số lượng', async ({ page }) => {
   await page.setContent(publicListingFixture());
   const listPage = new ListingListPage(page);
 

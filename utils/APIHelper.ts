@@ -30,7 +30,7 @@ export class APIHelper {
 
   private async parse<TResponse>(response: APIResponse): Promise<TResponse> {
     if (!response.ok()) {
-      throw new Error(`API request failed with status ${String(response.status())}`);
+      throw new Error(`Yêu cầu API thất bại với mã trạng thái ${String(response.status())}`);
     }
 
     return (await response.json()) as TResponse;

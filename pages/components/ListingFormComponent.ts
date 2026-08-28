@@ -223,7 +223,7 @@ export class ListingFormComponent {
     const feedback = await this.successMessage();
     const statuses = Object.values(LISTING_STATUS_LABELS);
     const status = statuses.find((candidate) => feedback.includes(candidate));
-    if (status === undefined) throw new Error(`Listing status is not visible: ${feedback}`);
+    if (status === undefined) throw new Error(`Không hiển thị trạng thái tin đăng: ${feedback}`);
     return status;
   }
 

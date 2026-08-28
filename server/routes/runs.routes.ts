@@ -2,9 +2,9 @@ import { Router } from 'express';
 import { ReportingService } from '../services/ReportingService';
 import { validateQuery } from '../middlewares/validate';
 import { RunFilterSchema, ResultFilterSchema } from '../schemas';
-import { DatabaseConnection } from '../../database/sqlite';
+import type { DatabaseConnection } from '../../database/sqlite';
 
-export default function runRoutes(db?: DatabaseConnection) {
+export default function runRoutes(db: DatabaseConnection) {
   const router = Router();
   const reportingService = new ReportingService(db);
 
@@ -42,6 +42,6 @@ export default function runRoutes(db?: DatabaseConnection) {
       next(err);
     }
   });
-  
+
   return router;
 }

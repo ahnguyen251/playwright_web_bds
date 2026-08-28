@@ -42,7 +42,7 @@ export interface RegistrationDataOverrides {
 const sanitizeUniqueId = (value: string): string => {
   const sanitized = value.toLowerCase().replace(/[^a-z0-9]+/g, '');
   if (!sanitized) {
-    throw new Error('Registration unique ID must contain a letter or number');
+    throw new Error('ID đăng ký duy nhất phải chứa chữ cái hoặc chữ số');
   }
   return sanitized;
 };
@@ -61,14 +61,14 @@ const getGmailLocalPart = (mailbox: string): string => {
 
 const getNonexistentEmailSource = (): 'unique-unregistered' => {
   if (authentication.nonexistentEmailSource !== 'unique-unregistered') {
-    throw new Error('Unsupported nonexistent-email data source');
+    throw new Error('Không hỗ trợ nguồn dữ liệu email không tồn tại');
   }
   return authentication.nonexistentEmailSource;
 };
 
 const getGoogleOAuthExecutionMode = (): 'mock-only' => {
   if (authentication.googleOAuthExecutionMode !== 'mock-only') {
-    throw new Error('Unsupported Google OAuth execution mode');
+    throw new Error('Không hỗ trợ chế độ thực thi Google OAuth');
   }
   return authentication.googleOAuthExecutionMode;
 };
@@ -76,7 +76,7 @@ const getGoogleOAuthExecutionMode = (): 'mock-only' => {
 const getGoogleOAuthExpectedOutcome =
   (): AuthenticationValidationData['googleOAuthExpectedOutcome'] => {
     if (authentication.googleOAuthExpectedOutcome.redirectsTo !== 'home') {
-      throw new Error('Unsupported Google OAuth redirect target');
+      throw new Error('Không hỗ trợ đích chuyển hướng Google OAuth');
     }
     return Object.freeze({
       receivesAccessToken: authentication.googleOAuthExpectedOutcome.receivesAccessToken,

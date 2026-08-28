@@ -1,9 +1,9 @@
 import { Router } from 'express';
 import { ReportingService } from '../services/ReportingService';
 import { EvidenceService } from '../services/EvidenceService';
-import { DatabaseConnection } from '../../database/sqlite';
+import type { DatabaseConnection } from '../../database/sqlite';
 
-export default function resultRoutes(db?: DatabaseConnection, evidenceRoot?: string) {
+export default function resultRoutes(db: DatabaseConnection, evidenceRoot: string) {
   const router = Router();
   const reportingService = new ReportingService(db);
   const evidenceService = new EvidenceService(db, evidenceRoot);
@@ -30,6 +30,6 @@ export default function resultRoutes(db?: DatabaseConnection, evidenceRoot?: str
       next(err);
     }
   });
-  
+
   return router;
 }

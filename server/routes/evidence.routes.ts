@@ -1,30 +1,32 @@
 import { Router } from 'express';
 import fs from 'fs';
-import { EvidenceService, UnsupportedEvidenceTypeError, InvalidEvidencePathError } from '../services/EvidenceService';
-import { DatabaseConnection } from '../../database/sqlite';
+import {
+  EvidenceService,
+  UnsupportedEvidenceTypeError,
+  InvalidEvidencePathError,
+} from '../services/EvidenceService';
+import type { DatabaseConnection } from '../../database/sqlite';
 import { AppError } from '../utils/errors';
 
-export default function evidenceRoutes(db?: DatabaseConnection, evidenceRoot?: string) {
+export default function evidenceRoutes(db: DatabaseConnection, evidenceRoot: string) {
   const router = Router();
   const service = new EvidenceService(db, evidenceRoot);
 
   router.get('/:evidenceId/content', (req, res, next) => {
     try {
-      const evidenceId = req.params.evidenceId as string;
+      const evidenceId = req.params.evidenceId;
       const descriptor = service.getEvidenceStreamDescriptor(evidenceId);
 
-      // Map disposition based on type
-      let disposition = 'inline';
-      if (descriptor.type === 'TRACE') {
-        disposition = 'attachment';
-      }
-      
+      const disposition =
+        descriptor.type === 'TRACE' || descriptor.type === 'OTHER' ? 'attachment' : 'inline';
+
       res.setHeader('Content-Type', descriptor.mimeType);
       res.setHeader('Content-Disposition', `${disposition}; filename="${descriptor.safeFilename}"`);
+      res.setHeader('X-Content-Type-Options', 'nosniff');
 
       const stream = fs.createReadStream(descriptor.filePath);
 
-      stream.on('error', (err: any) => {
+      stream.on('error', () => {
         if (!res.headersSent) {
           next(new AppError(500, 'STREAM_ERROR', 'Failed to read evidence file'));
         } else {

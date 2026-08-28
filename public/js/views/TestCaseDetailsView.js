@@ -251,13 +251,13 @@ export class TestCaseDetailsViewClass {
     const trendHtml = data.trend.map(t => {
       const heightPercent = maxDuration > 0 ? ((t.durationMs || 0) / maxDuration) * 100 : 0;
       const height = Math.max(heightPercent, 5);
-      const flakyMarker = t.retryFlaky ? '<div class="flaky-marker" title="Retry Flaky" aria-label="Retry Flaky"></div>' : '';
+      const flakyMarker = t.retryFlaky ? '<div class="flaky-marker" title="Không ổn định khi thử lại" aria-label="Không ổn định khi thử lại"></div>' : '';
       return `
         <div class="trend-point">
           <div class="trend-bar-wrapper">
             <div class="trend-bar" style="height: ${height}%" title="${t.durationMs || 0} ms"></div>
           </div>
-          <div class="status-dot ${t.finalStatus.toLowerCase()}" title="${t.finalStatus} at ${new Date(t.executedAt).toLocaleString()}" aria-label="${t.finalStatus}"></div>
+          <div class="status-dot ${t.finalStatus.toLowerCase()}" title="${t.finalStatus} lúc ${new Date(t.executedAt).toLocaleString()}" aria-label="${t.finalStatus}"></div>
           ${flakyMarker}
         </div>
       `;

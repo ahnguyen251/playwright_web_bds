@@ -1,11 +1,11 @@
 import { ReportingRepository } from '../../database/repositories/ReportingRepository';
-import { getDefaultDatabase, DatabaseConnection } from '../../database/sqlite';
+import type { DatabaseConnection } from '../../database/sqlite';
 
 export class DashboardService {
   private repo: ReportingRepository;
 
-  constructor(conn?: DatabaseConnection) {
-    this.repo = new ReportingRepository(conn || getDefaultDatabase());
+  constructor(conn: DatabaseConnection) {
+    this.repo = new ReportingRepository(conn);
   }
 
   public getSummary() {

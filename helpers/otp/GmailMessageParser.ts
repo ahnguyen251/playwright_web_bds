@@ -72,9 +72,12 @@ export class GmailMessageParser {
   }
 
   public static extractOtp(body: string, pattern: string): string | undefined {
+    const [prefix = '', suffix = ''] = pattern.split('{otp}');
+    const escapeRegularExpression = (value: string): string =>
+      value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const plainText = body.replace(/<[^>]+>/g, ' ');
     const expression = new RegExp(
-      `(?<![\\p{L}\\p{N}_])(?<otp>\\d(?:\\s*\\d){5})(?![\\p{L}\\p{N}_])`,
+      `${escapeRegularExpression(prefix)}(?<![\\p{L}\\p{N}_])(?<otp>\\d(?:\\s*\\d){5})(?![\\p{L}\\p{N}_])${escapeRegularExpression(suffix)}`,
       'u',
     );
     const match = expression.exec(plainText);

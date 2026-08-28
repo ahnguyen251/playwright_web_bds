@@ -14,7 +14,7 @@ const registrationSchema = z
       context.addIssue({
         code: 'custom',
         path: ['REGISTRATION_EMAIL_TEMPLATE'],
-        message: 'must contain exactly one {unique} token',
+        message: 'phải chứa đúng một token {unique}',
       });
     }
   });

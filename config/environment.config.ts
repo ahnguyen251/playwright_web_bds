@@ -1,5 +1,3 @@
-import 'dotenv/config';
-
 import { environmentSchema } from './environment.schema';
 import type { EnvironmentConfig } from '../types/environment.types';
 
@@ -10,20 +8,12 @@ const formatInvalidKeys = (issues: readonly { readonly path: PropertyKey[] }[]):
   return [...keys].sort().join(', ');
 };
 
-export const loadEnvironmentConfig = (
-  source: NodeJS.ProcessEnv = process.env,
-): EnvironmentConfig => {
+export const loadEnvironmentConfig = (source: NodeJS.ProcessEnv): EnvironmentConfig => {
   const parsed = environmentSchema.safeParse(source);
 
   if (!parsed.success) {
-    throw new Error(`Invalid environment configuration: ${formatInvalidKeys(parsed.error.issues)}`);
+    throw new Error(`Cấu hình môi trường không hợp lệ: ${formatInvalidKeys(parsed.error.issues)}`);
   }
-
-  const baseUrls = {
-    dev: parsed.data.DEV_BASE_URL,
-    staging: parsed.data.STAGING_BASE_URL,
-    production: parsed.data.PRODUCTION_BASE_URL,
-  } as const;
 
   const gmail =
     parsed.data.GMAIL_CLIENT_ID &&
@@ -65,7 +55,7 @@ export const loadEnvironmentConfig = (
 
   return Object.freeze({
     environment: parsed.data.TEST_ENV,
-    baseUrl: baseUrls[parsed.data.TEST_ENV],
+    baseUrl: parsed.data.PRODUCTION_BASE_URL,
     ...(parsed.data.API_BASE_URL === undefined ? {} : { apiBaseUrl: parsed.data.API_BASE_URL }),
     defaultUserEmail: parsed.data.DEFAULT_USER_EMAIL,
     defaultUserPassword: parsed.data.DEFAULT_USER_PASSWORD,

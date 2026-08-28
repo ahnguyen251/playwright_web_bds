@@ -178,7 +178,7 @@ test('xóa đúng media theo tên và giữ nguyên media còn lại', async ({ 
   expect((await form.currentValues()).imageCount).toBe(0);
 });
 
-test(listingCaseTitle('LIST-UC08-001'), async ({ page }) => {
+test(listingCaseTitle('TC-LIST-CREATE-001'), async ({ page }) => {
   await page.setContent(listingFormFixture('Đăng tin'));
   const createPage = new CreateListingPage(page);
 
@@ -190,7 +190,7 @@ test(listingCaseTitle('LIST-UC08-001'), async ({ page }) => {
   expect(await createPage.status()).toBe('Chờ duyệt');
 });
 
-test(listingCaseTitle('LIST-UC08-002'), async ({ page }) => {
+test(listingCaseTitle('TC-LIST-CREATE-001') + ' - Có video', async ({ page }) => {
   await page.setContent(listingFormFixture('Đăng tin'));
   const createPage = new CreateListingPage(page);
 
@@ -207,7 +207,7 @@ test(listingCaseTitle('LIST-UC08-002'), async ({ page }) => {
   expect(await createPage.status()).toBe('Chờ duyệt');
 });
 
-test(listingCaseTitle('LIST-UC11-EDIT-001'), async ({ page }) => {
+test(listingCaseTitle('TC-LIST-EDIT-001'), async ({ page }) => {
   await page.setContent(listingFormFixture('Cập nhật'));
   const editPage = new EditListingPage(page);
 

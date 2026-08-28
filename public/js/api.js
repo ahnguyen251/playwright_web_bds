@@ -10,7 +10,7 @@ async function fetchJSON(url, options = {}) {
   const data = await response.json();
   
   if (!response.ok) {
-    const error = new Error(data?.error?.message || 'Unknown API error');
+    const error = new Error(data?.error?.message || 'Lỗi API không xác định');
     error.code = data?.error?.code || 'UNKNOWN_ERROR';
     error.status = response.status;
     throw error;
