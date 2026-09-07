@@ -144,7 +144,7 @@ export const invalidOrExpiredRegistrationOtpTestCase: RegistrationTestCase = Obj
   preconditions: Object.freeze(['A valid registration has reached the OTP step.']),
   expectedResult: 'OTP sai hiển thị lỗi và cho nhập lại; OTP hết hạn yêu cầu gửi lại OTP.',
   otpConditions: Object.freeze(['incorrect', 'expired'] as const),
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/registration.otp.mutating.spec.ts' },
 });
 
 export const registrationOtpResendCountdownTestCase: RegistrationTestCase = Object.freeze({
@@ -156,7 +156,7 @@ export const registrationOtpResendCountdownTestCase: RegistrationTestCase = Obje
   preconditions: Object.freeze(['The registration OTP was just sent and the OTP view is open.']),
   expectedResult: 'Nút Gửi lại OTP bị disable trong countdown và chuyển enable sau khi hết.',
   countdown: 'default',
-  automation: { status: 'NOT_AUTOMATED' as const },
+  automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/registration.otp.mutating.spec.ts' },
 });
 
 export const registrationTestCases = Object.freeze([

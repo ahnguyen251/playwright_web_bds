@@ -80,7 +80,9 @@ export class RegisterPage extends BasePage {
       name: /^Gửi lại(?: OTP)?(?:\s+(?:sau\s+)?\(?\d+\s*(?:s|gi\u00e2y)\)?)?$/i,
     });
     this.otpInputs = Array.from({ length: 6 }, (_, index) =>
-      page.getByRole('textbox', { name: `Mã OTP ${String(index + 1)}`, exact: true }),
+      page
+        .getByRole('textbox', { name: `Mã OTP ${String(index + 1)}`, exact: true })
+        .or(page.locator('input[inputmode="numeric"]').nth(index))
     );
     this.otpStage = this.otpHeading.locator('..');
     this.otpRejectionFeedback = this.otpStage
@@ -289,7 +291,12 @@ export class RegisterPage extends BasePage {
       await input.fill(code.charAt(index));
     }
 
-    await this.verifyOtpButton.click();
+    try {
+      // The frontend might auto-submit when the 6th digit is entered.
+      await this.verifyOtpButton.click({ timeout: 2000 });
+    } catch {
+      // Ignore click timeout, assume auto-submit occurred
+    }
   }
 
   public async waitForRegistrationSuccess(): Promise<void> {

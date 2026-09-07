@@ -105,7 +105,7 @@ test('reports discovery separately from zero execution attempts in list mode', (
   expect(summary.Execution.Ids[0]?.Status).toBe('NOT_RUN');
 });
 
-test('real catalog business baseline aggregates to 34 automated and 49 backlog IDs', () => {
+test('real catalog business baseline aggregates to 35 automated and 48 backlog IDs', () => {
   const automated = allTestCases.filter(({ automation }) => automation.status === 'AUTOMATED');
   const discoveredTests = automated.map(({ id }, index) =>
     discovered(id, `variant-${String(index)}`),
@@ -114,12 +114,12 @@ test('real catalog business baseline aggregates to 34 automated and 49 backlog I
 
   expect(summary.Coverage).toMatchObject({
     CatalogTotal: 83,
-    AutomatedTotal: 34,
-    NotAutomatedTotal: 49,
+    AutomatedTotal: 35,
+    NotAutomatedTotal: 48,
     MissingAutomatedIds: [],
     UnknownIds: [],
   });
-  expect(summary.Execution.NotRunVariants).toBe(34);
+  expect(summary.Execution.NotRunVariants).toBe(35);
 });
 
 test('classifies every non-automated catalog state as backlog in deterministic order', () => {

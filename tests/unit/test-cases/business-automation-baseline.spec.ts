@@ -19,6 +19,8 @@ const expectedAutomatedIds = [
   'TC-AUTH-REGISTER-004',
   'TC-AUTH-REGISTER-005',
   'TC-AUTH-REGISTER-006',
+  'TC-AUTH-REGISTER-007',
+  'TC-AUTH-REGISTER-008',
   'TC-LIST-CREATE-001',
   'TC-LIST-CREATE-002',
   'TC-LIST-DETAIL-001',
@@ -46,6 +48,6 @@ test('catalog records the current executable business coverage baseline', () => 
 
   expect(allTestCases).toHaveLength(83);
   expect(automatedIds).toEqual([...expectedAutomatedIds].sort());
-  expect(allTestCases.length - automatedIds.length).toBe(50);
+  expect(allTestCases.length - automatedIds.length).toBe(48);
   expect(() => new TestCaseRegistry().validate(allTestCases)).not.toThrow();
 });

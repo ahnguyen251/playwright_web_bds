@@ -56,7 +56,17 @@ test(
     page,
     registerPage,
     registrationWorkflow,
-  }) => {
+  }, testInfo) => {
+    testInfo.annotations.push({
+      type: 'CONDITIONAL',
+      description: 'Automated - Conditional: Requires Gmail OTP and mutating E2E environment gates.',
+    });
+    testInfo.annotations.push({
+      type: 'BLOCKED',
+      description:
+        'Trạng thái tài khoản PENDING sau khi nhập OTP sai: Backend chưa cung cấp public API/body schema/query để xác minh trạng thái PENDING.',
+    });
+
     const submission = await registrationWorkflow.submitRegistration(
       authenticationData.registration,
     );
@@ -85,7 +95,7 @@ blockedTest(
   () => {
     blockedTest.skip(
       true,
-      'BLOCKED: no server clock, TTL override, expired-OTP seed, or fault injection.',
+      'BLOCKED: no server clock control, OTP TTL override, expired-OTP seed, or fault injection. Không coi đây là lỗi của automation framework.',
     );
   },
 );
@@ -93,7 +103,12 @@ blockedTest(
 test(
   `${registrationOtpResendCountdownTestCase.id} ${registrationOtpResendCountdownTestCase.title}`,
   { tag: [...registrationOtpResendCountdownTestCase.tags] },
-  async ({ authenticationData, registerPage, registrationWorkflow }) => {
+  async ({ authenticationData, registerPage, registrationWorkflow }, testInfo) => {
+    testInfo.annotations.push({
+      type: 'CONDITIONAL',
+      description: 'Automated - Conditional: Requires Gmail OTP provider and mutating E2E environment flags.',
+    });
+
     test.setTimeout(TIMEOUTS.registrationOtpResendTest);
     await registrationWorkflow.submitRegistration(authenticationData.registration);
 
