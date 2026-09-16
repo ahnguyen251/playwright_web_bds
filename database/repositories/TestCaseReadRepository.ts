@@ -1,4 +1,4 @@
-import { DatabaseConnection } from '../sqlite';
+import type { DatabaseConnection } from '../sqlite';
 
 export class TestCaseReadRepository {
   constructor(private conn: DatabaseConnection) {}
@@ -91,4 +91,30 @@ export class TestCaseReadRepository {
       }
     };
   }
+
+  public getModulesSummary(): ModuleSummary[] {
+    const { db } = this.conn;
+    const sql = `
+      SELECT 
+        module,
+        COUNT(*) as totalTestCases,
+        SUM(CASE WHEN automation_status = 'AUTOMATED' THEN 1 ELSE 0 END) as automatedCount,
+        SUM(CASE WHEN automation_status = 'NOT_AUTOMATED' THEN 1 ELSE 0 END) as notAutomatedCount,
+        SUM(CASE WHEN automation_status = 'IN_PROGRESS' THEN 1 ELSE 0 END) as inProgressCount,
+        SUM(CASE WHEN automation_status = 'BLOCKED' THEN 1 ELSE 0 END) as blockedCount
+      FROM test_cases
+      GROUP BY module
+      ORDER BY module ASC
+    `;
+    return db.prepare(sql).all() as ModuleSummary[];
+  }
+}
+
+export interface ModuleSummary {
+  module: string;
+  totalTestCases: number;
+  automatedCount: number;
+  notAutomatedCount: number;
+  inProgressCount: number;
+  blockedCount: number;
 }

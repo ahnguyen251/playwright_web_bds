@@ -19,6 +19,10 @@ export class ReportingService {
     return this.testCaseRepo.getTestCases(filters, limit, offset);
   }
 
+  public getModulesSummary() {
+    return this.testCaseRepo.getModulesSummary();
+  }
+
   public getTestCaseById(id: string) {
     const testCase = this.testCaseRepo.getTestCaseById(id);
     if (!testCase) {

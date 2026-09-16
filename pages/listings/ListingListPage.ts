@@ -49,7 +49,10 @@ export class ListingListPage extends BasePage {
       )
       .first();
     this.validation = page.locator('[data-filter-validation]').or(page.getByRole('alert')).first();
-    this.posterControls = page.getByRole('region', { name: /Người đăng/i });
+    this.posterControls = page
+      .locator('div:has(> button:has-text("Môi giới"))')
+      .or(page.getByRole('region', { name: /Người đăng/i }))
+      .first();
     this.priceScope = page
       .locator('[data-range="price"]')
       .or(page.getByRole('heading', { name: /Khoảng giá|Mức giá/i }).locator('xpath=..'));
@@ -66,7 +69,29 @@ export class ListingListPage extends BasePage {
     this.transactionType = transactionType;
     this.lastResultTotal = undefined;
     this.lastResultPageSize = undefined;
+    const responsePromise = this.page
+      .waitForResponse(
+        (response) => {
+          const url = new URL(response.url());
+          return (
+            response.request().method() === 'GET' &&
+            url.pathname === '/api/v1/listings' &&
+            url.searchParams.get('demand_type') === this.transactionType.toUpperCase()
+          );
+        },
+        { timeout: 10_000 },
+      )
+      .catch(() => null);
     await this.navigate(transactionType === 'sale' ? ROUTES.sales : ROUTES.rent);
+    const response = await responsePromise;
+    if (response) {
+      const payload: unknown = await response.json().catch(() => null);
+      const pagination = this.listingPagination(payload);
+      if (pagination !== undefined) {
+        this.lastResultTotal = pagination.total;
+        this.lastResultPageSize = pagination.perPage;
+      }
+    }
   }
 
   public async search(criteria: ListingSearchCriteria): Promise<void> {
@@ -93,22 +118,51 @@ export class ListingListPage extends BasePage {
   }
 
   public async resetFilters(): Promise<void> {
-    if ((await this.resetButton.count()) > 0) {
-      await this.resetButton.click();
+    if ((await this.resetButton.count()) > 0 && (await this.resetButton.isVisible())) {
+      await this.runAndWaitForListings(
+        () => this.resetButton.click(),
+        (parameters) =>
+          !parameters.has('poster_type') &&
+          !parameters.has('min_price') &&
+          !parameters.has('max_price') &&
+          !parameters.has('min_area') &&
+          !parameters.has('max_area'),
+      );
       return;
     }
     await this.searchInput.fill('');
-    await this.selectPoster('all');
-    await this.priceScope
-      .locator('input[type="radio"][value="all"]')
-      .filter({ visible: true })
-      .first()
-      .check({ force: true });
-    await this.areaScope
-      .locator('input[type="radio"][value="all"]')
-      .filter({ visible: true })
-      .first()
-      .check({ force: true });
+    const activePoster = this.posterControls
+      .locator('button[class*="bg-"]')
+      .filter({ hasText: /Chính chủ|Chủ nhà|Môi giới/i });
+    if ((await activePoster.count()) > 0 && (await activePoster.first().isVisible())) {
+      await this.selectPoster('all');
+    }
+    if ((await this.priceScope.count()) > 0) {
+      const priceAll = this.priceScope.locator('input[type="radio"][value="all"]').filter({ visible: true });
+      if ((await priceAll.count()) > 0 && !(await priceAll.first().isChecked())) {
+        await this.runAndWaitForListings(
+          () => priceAll.first().check({ force: true }),
+          (parameters) => !parameters.has('min_price') && !parameters.has('max_price'),
+        );
+      }
+      const priceFrom = this.priceScope.locator('input[placeholder*="Từ"], input[name*="from"]').first();
+      const priceTo = this.priceScope.locator('input[placeholder*="Đến"], input[name*="to"]').first();
+      if ((await priceFrom.count()) > 0 && (await priceFrom.inputValue()) !== '') await priceFrom.fill('');
+      if ((await priceTo.count()) > 0 && (await priceTo.inputValue()) !== '') await priceTo.fill('');
+    }
+    if ((await this.areaScope.count()) > 0) {
+      const areaAll = this.areaScope.locator('input[type="radio"][value="all"]').filter({ visible: true });
+      if ((await areaAll.count()) > 0 && !(await areaAll.first().isChecked())) {
+        await this.runAndWaitForListings(
+          () => areaAll.first().check({ force: true }),
+          (parameters) => !parameters.has('min_area') && !parameters.has('max_area'),
+        );
+      }
+      const areaFrom = this.areaScope.locator('input[placeholder*="Từ"], input[name*="from"]').first();
+      const areaTo = this.areaScope.locator('input[placeholder*="Đến"], input[name*="to"]').first();
+      if ((await areaFrom.count()) > 0 && (await areaFrom.inputValue()) !== '') await areaFrom.fill('');
+      if ((await areaTo.count()) > 0 && (await areaTo.inputValue()) !== '') await areaTo.fill('');
+    }
   }
 
   public async sort(label: string): Promise<void> {
@@ -170,11 +224,11 @@ export class ListingListPage extends BasePage {
   }
 
   private async selectPoster(poster: NonNullable<ListingFilterCriteria['poster']>): Promise<void> {
-    const labels = { all: 'Tất cả', owner: 'Chủ nhà', broker: 'Môi giới' } as const;
+    const labels = { all: /Tất cả/i, owner: /Chính chủ|Chủ nhà/i, broker: /Môi giới/i } as const;
     const values = { all: 'ALL', owner: 'OWNER', broker: 'BROKER' } as const;
     const scope = (await this.posterControls.count()) > 0 ? this.posterControls : this.page;
     await this.runAndWaitForListings(
-      () => scope.getByRole('button', { name: labels[poster], exact: true }).click({ force: true }),
+      () => scope.getByRole('button', { name: labels[poster] }).first().click({ force: true }),
       (parameters) =>
         poster === 'all'
           ? !parameters.has('poster_type')

@@ -3,8 +3,10 @@ import type { Locator, Page } from '@playwright/test';
 import { ROUTES } from '../../constants/routes';
 import type { ListingDetailSnapshot, ListingReference } from '../../types/listing.types';
 import { BasePage } from '../base/BasePage';
+import { ReportModalComponent } from '../components/ReportModalComponent';
 
 export class ListingDetailPage extends BasePage {
+  public readonly reportModal: ReportModalComponent;
   private readonly titleHeading: Locator;
   private readonly description: Locator;
   private readonly contactName: Locator;
@@ -16,6 +18,10 @@ export class ListingDetailPage extends BasePage {
   private readonly appointmentButton: Locator;
   private readonly favoriteButton: Locator;
   private readonly notFoundAlert: Locator;
+  private readonly reportSection: Locator;
+  private readonly reportCheckboxes: Locator;
+  private readonly openReportButton: Locator;
+  private readonly toastItem: Locator;
 
   public constructor(page: Page) {
     super(page);
@@ -70,11 +76,71 @@ export class ListingDetailPage extends BasePage {
       .filter({ hasText: /Không tìm thấy|không tồn tại/i })
       .or(page.getByText(/Không tìm thấy tin đăng|Tin đăng không tồn tại/i))
       .first();
+    this.reportModal = new ReportModalComponent(page);
+    this.reportSection = page
+      .locator('section')
+      .filter({ has: page.getByRole('heading', { name: /Báo cáo tin đăng/i }) })
+      .first();
+    this.reportCheckboxes = this.reportSection.locator('input[type="checkbox"][name="listing-report"]');
+    this.openReportButton = this.reportSection.getByRole('button', {
+      name: 'Gửi phản ánh',
+      exact: true,
+    });
+    this.toastItem = page.locator('div.toast-item');
   }
 
   public async open(listing: string | number | ListingReference): Promise<void> {
     const id = typeof listing === 'object' ? listing.id : listing;
     await this.navigate(ROUTES.listingDetail(id));
+  }
+
+  public async isReportSectionVisible(): Promise<boolean> {
+    return this.reportSection.isVisible();
+  }
+
+  public async reportReasonLabels(): Promise<string[]> {
+    const labels = this.reportSection.locator('form div label span');
+    return (await labels.allInnerTexts()).map((text) => text.trim()).filter(Boolean);
+  }
+
+  public async selectReportReason(reason: string): Promise<void> {
+    const label = this.reportSection.locator('label').filter({ hasText: reason }).locator('input[type="checkbox"]');
+    if ((await label.count()) > 0) {
+      await label.first().check();
+      return;
+    }
+    const byValue = this.reportSection.locator(`input[type="checkbox"][value="${reason}"]`);
+    await byValue.first().check();
+  }
+
+  public async unselectReportReason(reason: string): Promise<void> {
+    const label = this.reportSection.locator('label').filter({ hasText: reason }).locator('input[type="checkbox"]');
+    if ((await label.count()) > 0) {
+      await label.first().uncheck();
+      return;
+    }
+    const byValue = this.reportSection.locator(`input[type="checkbox"][value="${reason}"]`);
+    await byValue.first().uncheck();
+  }
+
+  public async isReportSubmitEnabled(): Promise<boolean> {
+    return !(await this.openReportButton.isDisabled());
+  }
+
+  public async openReportModal(): Promise<void> {
+    await this.openReportButton.click();
+  }
+
+  public async toastMessage(): Promise<string> {
+    const count = await this.toastItem.count();
+    if (count === 0) return '';
+    return (await this.toastItem.last().innerText()).trim();
+  }
+
+  public async isToastVisible(): Promise<boolean> {
+    const count = await this.toastItem.count();
+    if (count === 0) return false;
+    return this.toastItem.last().isVisible();
   }
 
   public async title(): Promise<string> {

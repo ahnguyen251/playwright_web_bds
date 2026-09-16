@@ -23,6 +23,17 @@ const expectedAutomatedIds = [
   'TC-AUTH-REGISTER-008',
   'TC-LIST-CREATE-001',
   'TC-LIST-CREATE-002',
+  'TC-LIST-CREATE-003',
+  'TC-LIST-CREATE-004',
+  'TC-LIST-CREATE-005',
+  'TC-LIST-CREATE-006',
+  'TC-LIST-CREATE-007',
+  'TC-LIST-CREATE-008',
+  'TC-LIST-CREATE-009',
+  'TC-LIST-CREATE-010',
+  'TC-LIST-CREATE-011',
+  'TC-LIST-CREATE-012',
+  'TC-LIST-CREATE-013',
   'TC-LIST-DETAIL-001',
   'TC-LIST-DETAIL-002',
   'TC-LIST-EDIT-001',
@@ -31,9 +42,14 @@ const expectedAutomatedIds = [
   'TC-LIST-FAVORITE-002',
   'TC-LIST-FILTER-001',
   'TC-LIST-FILTER-002',
+  'TC-LIST-FILTER-003',
   'TC-LIST-REMOVE-001',
   'TC-LIST-REMOVE-002',
+  'TC-LIST-REPORT-001',
+  'TC-LIST-REPORT-002',
   'TC-LIST-SEARCH-001',
+  'TC-LIST-VERIFY-001',
+  'TC-LIST-VERIFY-002',
   'TC-LIST-VIEW-001',
   'TC-LIST-VIEW-002',
   'TC-PROFILE-CHANGEPW-004',
@@ -48,6 +64,6 @@ test('catalog records the current executable business coverage baseline', () => 
 
   expect(allTestCases).toHaveLength(83);
   expect(automatedIds).toEqual([...expectedAutomatedIds].sort());
-  expect(allTestCases.length - automatedIds.length).toBe(48);
+  expect(allTestCases.length - automatedIds.length).toBe(32);
   expect(() => new TestCaseRegistry().validate(allTestCases)).not.toThrow();
 });

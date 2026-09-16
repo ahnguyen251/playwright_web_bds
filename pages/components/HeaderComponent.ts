@@ -22,7 +22,10 @@ export class HeaderComponent {
     });
     this.profileLink = page.getByRole('link', { name: 'Thông tin tài khoản', exact: true });
     this.logoutButton = page.getByRole('button', { name: 'Đăng xuất', exact: true });
-    this.createListingButton = page.getByRole('button', { name: 'Đăng tin', exact: true });
+    this.createListingButton = page
+      .getByRole('button', { name: /Đăng tin/i })
+      .or(page.getByRole('link', { name: /Đăng tin/i }))
+      .first();
   }
 
   public async openLogin(): Promise<void> {

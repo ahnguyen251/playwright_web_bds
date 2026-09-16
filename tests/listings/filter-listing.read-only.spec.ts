@@ -45,3 +45,13 @@ test(listingCaseTitle('TC-LIST-FILTER-001') + ' - Không có kết quả', async
   await expect.poll(() => listingListPage.resultCount()).toBe(0);
   expect(await listingListPage.emptyMessage()).not.toBe('');
 });
+
+test(listingCaseTitle('TC-LIST-FILTER-003'), async ({ listingListPage }) => {
+  await listingListPage.open('sale');
+  await expect.poll(() => listingListPage.resultCount()).toBeGreaterThan(0);
+  const initialCount = await listingListPage.resultCount();
+
+  await listingListPage.applyFilters({ poster: 'owner' });
+  await listingListPage.resetFilters();
+  await expect.poll(() => listingListPage.resultCount()).toBe(initialCount);
+});

@@ -1,0 +1,64 @@
+<section id="table-filter-layout">
+  <h2>Chọn bố cục cho bảng và bộ lọc</h2>
+  <p class="subtitle">Cả hai phương án đều hỗ trợ tìm nhanh, lọc trạng thái và thao tác nhiều test case. Hãy chọn phương án giúp bạn làm việc hằng ngày nhanh hơn.</p>
+
+  <div class="cards">
+    <article class="card" data-choice="command-bar" onclick="toggleSelect(this)" role="button" aria-label="Chọn phương án A: Thanh lệnh tập trung">
+      <div class="mockup">
+        <div class="mockup-header">A · Thanh lệnh tập trung</div>
+        <div class="mockup-body">
+          <div class="mock-nav">Danh sách test case <span class="viz-badge">83</span><button class="mock-button">Chạy đã chọn</button></div>
+          <div class="viz-controls">
+            <label class="form-label">Tìm kiếm<input class="form-control" value="Mã test, tiêu đề, selector..." readonly></label>
+            <label class="form-label">Mô-đun<select class="form-select"><option>Tất cả mô-đun</option><option>Listings</option></select></label>
+            <label class="form-label">Tự động hoá<select class="form-select"><option>Tất cả trạng thái</option><option>Chưa tự động hoá</option></select></label>
+          </div>
+          <div class="viz-row"><span class="viz-badge">Listings ×</span><span class="viz-badge">Chưa tự động hoá ×</span><button class="btn btn-ghost" type="button">Xóa bộ lọc</button></div>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead><tr><th><input type="checkbox" aria-label="Chọn tất cả"></th><th>Mã test</th><th>Tiêu đề</th><th>Trạng thái</th><th>Lần chạy</th></tr></thead>
+              <tbody>
+                <tr><td><input type="checkbox" aria-label="Chọn TC-LIST-FILTER-003"></td><td><code>TC-LIST-FILTER-003</code></td><td>Đặt lại bộ lọc về mặc định</td><td>Chưa tự động</td><td>—</td></tr>
+                <tr><td><input type="checkbox" aria-label="Chọn TC-LIST-REPORT-001"></td><td><code>TC-LIST-REPORT-001</code></td><td>Gửi báo cáo vi phạm tin đăng</td><td>Chưa tự động</td><td>—</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div class="card-body"><h3>Thanh lệnh tập trung</h3><p>Tìm kiếm và mọi bộ lọc ở cùng một hàng; phù hợp khi thường xuyên đổi điều kiện và chạy/chỉnh nhiều test.</p></div>
+    </article>
+
+    <article class="card" data-choice="filter-workbench" onclick="toggleSelect(this)" role="button" aria-label="Chọn phương án B: Vùng lọc phân tích">
+      <div class="mockup">
+        <div class="mockup-header">B · Vùng lọc phân tích</div>
+        <div class="mockup-body">
+          <div class="mock-nav">Danh sách test case <span class="viz-badge">31 kết quả</span><button class="mock-button">Chạy đã chọn</button></div>
+          <div class="split">
+            <aside class="mock-sidebar">
+              <strong>Bộ lọc</strong>
+              <p class="text-small">Mô-đun</p>
+              <label class="form-check"><input class="form-check-input" type="checkbox" checked> Listings <span class="viz-badge">31</span></label>
+              <label class="form-check"><input class="form-check-input" type="checkbox"> Profile <span class="viz-badge">9</span></label>
+              <p class="text-small">Trạng thái</p>
+              <label class="form-check"><input class="form-check-input" type="checkbox" checked> Chưa tự động <span class="viz-badge">7</span></label>
+              <label class="form-check"><input class="form-check-input" type="checkbox"> Đã tự động <span class="viz-badge">24</span></label>
+            </aside>
+            <div class="mock-content">
+              <label class="form-label">Tìm kiếm<input class="form-control" value="Mã test, tiêu đề, selector..." readonly></label>
+              <div class="table-responsive">
+                <table class="table table-sm">
+                  <thead><tr><th><input type="checkbox" aria-label="Chọn tất cả"></th><th>Mã test</th><th>Tiêu đề</th><th>Trạng thái</th></tr></thead>
+                  <tbody>
+                    <tr><td><input type="checkbox" aria-label="Chọn TC-LIST-FILTER-003"></td><td><code>TC-LIST-FILTER-003</code></td><td>Đặt lại bộ lọc</td><td>Chưa tự động</td></tr>
+                    <tr><td><input type="checkbox" aria-label="Chọn TC-LIST-REPORT-001"></td><td><code>TC-LIST-REPORT-001</code></td><td>Gửi báo cáo vi phạm</td><td>Chưa tự động</td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body"><h3>Vùng lọc phân tích</h3><p>Bộ lọc luôn nhìn thấy theo nhóm; phù hợp khi rà soát coverage, failure hoặc các nhóm test theo mô-đun.</p></div>
+    </article>
+  </div>
+</section>

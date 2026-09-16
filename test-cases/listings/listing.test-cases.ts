@@ -38,7 +38,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Chuyển đổi qua lại 2 radio',
     testSteps: '1. Chọn "Cho thuê", quan sát form. 2. Chọn "Mua bán", quan sát form.',
     expectedResult: 'Cho thuê: hiện "Tiền cọc", nhãn đổi "Giá thuê". Mua bán: ẩn "Tiền cọc", hiện "Pháp lý", nhãn đổi "Giá bán".',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-CREATE-004',
@@ -50,7 +53,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Tiêu đề hoặc Loại nhà đất: để trống',
     testSteps: '1. Điền các trường khác hợp lệ, bỏ trống 1 trong 2 trường trên. 2. Blur/submit.',
     expectedResult: 'Hiển thị lỗi bắt buộc tương ứng, không gọi API.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-CREATE-005',
@@ -62,7 +68,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Tiêu đề: paste 140 ký tự (giới hạn 120); Họ tên liên hệ: paste 65 ký tự (giới hạn 50)',
     testSteps: '1. Paste chuỗi vượt giới hạn vào từng field tương ứng.',
     expectedResult: 'Tiêu đề: tự động cắt còn 120 ký tự. Họ tên liên hệ: tự động cắt còn 50 ký tự, loại bỏ khoảng trắng đầu/cuối.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-CREATE-006',
@@ -74,7 +83,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Mô tả: "Nhà đẹp" (<20 ký tự); Diện tích: "0"; Giá: "0"',
     testSteps: '1. Nhập từng giá trị không hợp lệ vào field tương ứng. 2. Blur khỏi field.',
     expectedResult: 'Hiển thị đúng lỗi cho từng field: Mô tả chưa đạt tối thiểu 20 ký tự; "Diện tích không hợp lệ hoặc vượt giới hạn"; "Giá phải lớn hơn 0".',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-CREATE-007',
@@ -86,7 +98,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Đã nhập số vào Giá, sau đó chọn "Thương lượng"',
     testSteps: '1. Nhập số vào trường Giá. 2. Chọn "Thương lượng".',
     expectedResult: 'Input Giá chuyển disabled và giá trị vừa nhập bị xóa về rỗng.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-CREATE-008',
@@ -98,7 +113,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: '10 ảnh hợp lệ + thử ảnh thứ 11; 1 file sai định dạng; 1 file >30MB',
     testSteps: '1. Upload đủ 10 ảnh, thử thêm ảnh 11. 2. Upload file sai định dạng. 3. Upload file >30MB.',
     expectedResult: 'Case 1: chặn không cho thêm. Case 2 & 3: hiển thị lỗi upload tương ứng, không thêm vào preview.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-CREATE-009',
@@ -110,7 +128,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: '6 ảnh hợp lệ; hoặc 1 ảnh 15MB',
     testSteps: '1. Kéo/thả 6 ảnh vào mục Giấy tờ pháp lý. 2. Thử upload 1 ảnh 15MB.',
     expectedResult: 'Hệ thống chặn file thừa/vượt dung lượng ngay tại UI, hiển thị lỗi "Cho phép tối đa 5 ảnh, mỗi file ≤10MB".',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-CREATE-010',
@@ -122,7 +143,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Nhập lần lượt: `-5`, `2.5`, `abc`',
     testSteps: '1. Nhập từng giá trị vào ô Số phòng ngủ/tắm. 2. Blur khỏi field.',
     expectedResult: 'Hệ thống xóa ký tự không hợp lệ hoặc báo lỗi "Chỉ cho phép nhập số tự nhiên".',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-CREATE-011',
@@ -134,7 +158,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'SĐT: "12345" (sai đầu số, thiếu số)',
     testSteps: '1. Nhập SĐT sai định dạng. 2. Blur khỏi field.',
     expectedResult: 'Hiển thị lỗi định dạng số điện thoại không hợp lệ.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-CREATE-012',
@@ -146,7 +173,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Dữ liệu đăng tin hợp lệ',
     testSteps: '1. Truy cập "Đăng tin" hoặc cố submit bằng tài khoản chưa có SĐT.',
     expectedResult: 'Hệ thống chặn hành động đăng tin, yêu cầu bổ sung SĐT trước, dừng luồng.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-CREATE-013',
@@ -158,7 +188,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Tiền cọc: để trống, các trường khác hợp lệ',
     testSteps: '1. Chọn "Cho thuê". 2. Điền đủ các trường khác, bỏ trống "Tiền cọc". 3. Click "Đăng tin".',
     expectedResult: 'Hệ thống chặn gọi API, hiển thị lỗi "Tiền cọc là trường bắt buộc đối với loại hình cho thuê".',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/create-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-VIEW-001',
@@ -290,7 +323,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'CCCD 2 mặt + giấy tờ pháp lý hợp lệ',
     testSteps: '1. Upload CCCD mặt trước/sau, giấy tờ pháp lý. 2. Nhấn "Đăng lại tin".',
     expectedResult: 'Hồ sơ lưu, trạng thái xác thực → "Chờ duyệt".',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/listing-verification.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-VERIFY-002',
@@ -302,7 +338,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Thiếu 1 trong 3 ảnh bắt buộc; hoặc file sai định dạng/>30MB',
     testSteps: '1. Bỏ qua 1 ảnh bắt buộc hoặc upload sai định dạng/quá dung lượng. 2. Nhấn "Đăng lại tin".',
     expectedResult: 'Hiển thị lỗi tương ứng, không lưu hồ sơ.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/listing-verification.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-REPORT-001',
@@ -314,7 +353,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Lý do: "Giá không đúng thực tế, tin ảo"',
     testSteps: '1. Nhấn "Báo cáo tin đăng". 2. Chọn lý do, nhập mô tả chi tiết. 3. Nhấn "Gửi phản ánh".',
     expectedResult: 'Báo cáo lưu vào DB thành công; popup tự đóng; hiển thị toast thành công; tin bị gắn cờ cảnh báo.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/report-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-REPORT-002',
@@ -326,7 +368,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Lý do: ""',
     testSteps: '1. Để trống ô lý do. 2. Nhấn xác nhận.',
     expectedResult: 'Hệ thống chặn gửi (nguồn: kết quả kiểm thử thực tế "chặn gửi chuỗi rỗng").',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/report-listing.validation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-FILTER-001',
@@ -362,7 +407,10 @@ export const listingTestCases: readonly TestCaseDefinition[] = [
     testData: '-',
     testSteps: '1. Nhấn "Đặt lại bộ lọc".',
     expectedResult: 'Toàn bộ điều kiện về mặc định, danh sách trở về ban đầu.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/listings/filter-listing.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-LIST-SEARCH-001',

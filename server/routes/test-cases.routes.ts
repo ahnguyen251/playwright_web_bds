@@ -20,6 +20,15 @@ export default function testCaseRoutes(db: DatabaseConnection) {
     }
   });
 
+  router.get('/modules', (req, res, next) => {
+    try {
+      const result = reportingService.getModulesSummary();
+      res.json(result);
+    } catch (err) {
+      next(err);
+    }
+  });
+
   router.get('/:testCaseId', (req, res, next) => {
     try {
       const testCaseId = req.params.testCaseId as string;

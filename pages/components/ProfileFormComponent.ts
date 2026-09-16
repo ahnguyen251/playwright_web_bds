@@ -67,10 +67,13 @@ export class ProfileFormComponent {
       exact: true,
     });
     this.emailInput = profileView.getByRole('textbox', { name: 'Email*', exact: true });
-    this.phoneInput = profileView.getByRole('textbox', {
-      name: 'Số điện thoại',
-      exact: true,
-    });
+    this.phoneInput = profileView
+      .getByRole('textbox', {
+        name: 'Số điện thoại',
+        exact: true,
+      })
+      .or(profileView.locator('#phone'))
+      .first();
     this.editButton = profileView.getByRole('button', { name: 'Chỉnh sửa', exact: true });
     this.cancelButton = profileView.getByRole('button', { name: 'Hủy', exact: true });
     this.saveButton = profileView.getByRole('button', {
@@ -182,6 +185,35 @@ export class ProfileFormComponent {
     return (await this.successFeedback.isVisible())
       ? (await this.successFeedback.innerText()).trim()
       : undefined;
+  }
+
+  public async isPhoneInputFocused(): Promise<boolean> {
+    return this.phoneInput.evaluate((el: HTMLInputElement) => el === document.activeElement);
+  }
+
+  public async isPhoneInputVisible(): Promise<boolean> {
+    return this.phoneInput.isVisible();
+  }
+
+  public async phoneValidationAlert(): Promise<string | undefined> {
+    const alertEl = this.page.locator('.bg-red-50').first();
+    return (await alertEl.isVisible()) ? (await alertEl.innerText()).trim() : undefined;
+  }
+
+  public async fillPhone(phone: string): Promise<void> {
+    await this.phoneInput.fill(phone);
+  }
+
+  public async isSaveDisabled(): Promise<boolean> {
+    return this.saveButton.isDisabled();
+  }
+
+  public async requirePhoneNotice(): Promise<string | undefined> {
+    const banner = this.page
+      .locator('div')
+      .filter({ hasText: /Bạn cần cập nhật số điện thoại trước khi đăng tin/i })
+      .last();
+    return (await banner.isVisible()) ? (await banner.innerText()).trim() : undefined;
   }
 
   public async captureAvatarBaseline(): Promise<AvatarFilePayload> {

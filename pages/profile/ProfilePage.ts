@@ -47,4 +47,32 @@ export class ProfilePage extends BasePage {
     ]);
     return profileSource !== '' && profileSource === summarySource;
   }
+
+  public async isPhoneInputFocused(): Promise<boolean> {
+    return this.profileForm.isPhoneInputFocused();
+  }
+
+  public async isPhoneInputVisible(): Promise<boolean> {
+    return this.profileForm.isPhoneInputVisible();
+  }
+
+  public async phoneValidationAlert(): Promise<string | undefined> {
+    return this.profileForm.phoneValidationAlert();
+  }
+
+  public async save(): Promise<void> {
+    await this.profileForm.save();
+  }
+
+  public async fillPhone(phone: string): Promise<void> {
+    await this.profileForm.fillPhone(phone);
+  }
+
+  public async isSaveDisabled(): Promise<boolean> {
+    return this.profileForm.isSaveDisabled();
+  }
+
+  public async requirePhoneNotice(): Promise<string | undefined> {
+    return this.profileForm.requirePhoneNotice();
+  }
 }

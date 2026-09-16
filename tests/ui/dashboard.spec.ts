@@ -178,6 +178,46 @@ test.describe.serial('Dashboard UI Tests', () => {
       await expect(page.locator('tbody tr')).toHaveCount(1);
       await expect(page.locator('tbody tr').first()).toContainText('TC-01');
     });
+
+    test('Module tabs render and filter test cases correctly', async ({ page }) => {
+      // Seed an additional test case in 'Listings' module
+      const insertTc = conn.db.prepare(
+        'INSERT INTO test_cases (test_case_id, title, module, automation_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
+      );
+      insertTc.run(
+        'TC-03',
+        'Create Listing Check',
+        'Listings',
+        'AUTOMATED',
+        '2026-01-01T10:00Z',
+        '2026-01-01T10:00Z',
+      );
+
+      await page.goto(`http://localhost:${port}/#test-cases`);
+
+      // Verify module tabs render: "Tất cả", "Auth", "Listings"
+      await expect(page.locator('.module-tab')).toHaveCount(3);
+      await expect(page.locator('.module-tab.active')).toContainText('Tất cả');
+
+      // Default shows all 3 items
+      await expect(page.locator('tbody tr')).toHaveCount(3);
+
+      // Click on 'Listings' module tab
+      await page.click('.module-tab[data-module="Listings"]');
+      await expect(page.locator('.module-tab[data-module="Listings"]')).toHaveClass(/active/);
+      await expect(page.locator('tbody tr')).toHaveCount(1);
+      await expect(page.locator('tbody tr').first()).toContainText('TC-03');
+      await expect(page.locator('.module-info-title')).toContainText('Mô-đun: Listings');
+
+      // Click on 'Auth' module tab
+      await page.click('.module-tab[data-module="Auth"]');
+      await expect(page.locator('.module-tab[data-module="Auth"]')).toHaveClass(/active/);
+      await expect(page.locator('tbody tr')).toHaveCount(2);
+
+      // Click back to 'Tất cả'
+      await page.click('.module-tab[data-module=""]');
+      await expect(page.locator('tbody tr')).toHaveCount(3);
+    });
   });
 
   test('API failure renders an error state instead of crashing', async ({ page }) => {

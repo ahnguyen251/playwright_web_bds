@@ -22,9 +22,16 @@ async function fetchJSON(url, options = {}) {
 export const api = {
   getSummary: (options) => fetchJSON(`${API_BASE}/dashboard/summary`, options),
   
-  getTestCases: (page = 1, pageSize = 20, search = '', options) => {
+  getModules: (options) => fetchJSON(`${API_BASE}/test-cases/modules`, options),
+
+  getTestCases: (page = 1, pageSize = 20, search = '', module = '', options = {}) => {
+    if (typeof module === 'object' && module !== null && ('signal' in module)) {
+      options = module;
+      module = '';
+    }
     const params = new URLSearchParams({ page, pageSize });
     if (search) params.append('search', search);
+    if (module) params.append('module', module);
     return fetchJSON(`${API_BASE}/test-cases?${params.toString()}`, options);
   },
 
