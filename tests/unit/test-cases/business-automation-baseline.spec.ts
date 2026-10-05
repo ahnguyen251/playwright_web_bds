@@ -3,8 +3,14 @@ import { allTestCases } from '../../../test-cases';
 import { TestCaseRegistry } from '../../../utils/TestCaseRegistry';
 
 const expectedAutomatedIds = [
+  'TC-APT-CANCEL-001',
+  'TC-APT-CANCEL-002',
+  'TC-APT-CANCEL-003',
+  'TC-APT-CONFIRM-001',
   'TC-APT-CREATE-001',
+  'TC-APT-CREATE-002',
   'TC-APT-CREATE-003',
+  'TC-APT-REJECT-001',
   'TC-AUTH-FORGOT-001',
   'TC-AUTH-FORGOT-002',
   'TC-AUTH-FORGOT-003',
@@ -21,6 +27,12 @@ const expectedAutomatedIds = [
   'TC-AUTH-REGISTER-006',
   'TC-AUTH-REGISTER-007',
   'TC-AUTH-REGISTER-008',
+  'TC-CHAT-CREATE-001',
+  'TC-CHAT-CREATE-002',
+  'TC-HOME-FAVORITE-001',
+  'TC-HOME-FILTER-001',
+  'TC-HOME-FILTER-002',
+  'TC-HOME-SEARCH-001',
   'TC-LIST-CREATE-001',
   'TC-LIST-CREATE-002',
   'TC-LIST-CREATE-003',
@@ -52,8 +64,28 @@ const expectedAutomatedIds = [
   'TC-LIST-VERIFY-002',
   'TC-LIST-VIEW-001',
   'TC-LIST-VIEW-002',
-  'TC-PROFILE-CHANGEPW-004',
+  'TC-PKG-UPGRADE-001',
+  'TC-PKG-UPGRADE-002',
+  'TC-PKG-UPGRADE-003',
+  'TC-PKG-UPGRADE-004',
+  'TC-PKG-UPGRADE-005',
+  'TC-PROFILE-CHANGEPW-001',
+  'TC-PROFILE-CHANGEPW-002',
   'TC-PROFILE-CHANGEPW-003',
+  'TC-PROFILE-CHANGEPW-004',
+  'TC-PROFILE-EDIT-001',
+  'TC-PROFILE-EDIT-002',
+  'TC-PROFILE-EDIT-003',
+  'TC-PROFILE-VIEW-001',
+  'TC-PROFILE-VIEW-002',
+  'TC-RANK-ORDER-001',
+  'TC-RANK-ORDER-002',
+  'TC-RANK-ORDER-003',
+  'TC-RANK-ORDER-004',
+  'TC-RANK-ORDER-005',
+  'TC-RANK-QUAL-001',
+  'TC-TRANS-FILTER-001',
+  'TC-TRANS-VIEW-001',
 ] as const;
 
 test('catalog records the current executable business coverage baseline', () => {
@@ -64,6 +96,6 @@ test('catalog records the current executable business coverage baseline', () => 
 
   expect(allTestCases).toHaveLength(83);
   expect(automatedIds).toEqual([...expectedAutomatedIds].sort());
-  expect(allTestCases.length - automatedIds.length).toBe(32);
+  expect(allTestCases.length - automatedIds.length).toBe(0);
   expect(() => new TestCaseRegistry().validate(allTestCases)).not.toThrow();
 });

@@ -14,6 +14,7 @@ import {
   parseListingPriceInBillions,
 } from '../components/ListingCardComponent';
 import { EditListingPage } from './EditListingPage';
+import { PackageUpgradeModalComponent } from '../components/PackageUpgradeModalComponent';
 
 export class MyListingsPage extends BasePage {
   private readonly searchInput: Locator;
@@ -45,7 +46,11 @@ export class MyListingsPage extends BasePage {
       .locator('[data-empty]')
       .or(page.getByText(/Không có tin đăng|Không có kết quả|Bạn chưa có tin đăng nào/i))
       .first();
-    this.feedbackRegion = page.getByRole('status').or(page.getByRole('alert')).first();
+    this.feedbackRegion = page
+      .getByRole('status')
+      .or(page.getByRole('alert'))
+      .or(page.locator('.mb-4.rounded-lg.text-sm.border'))
+      .first();
     this.nextButton = page.getByRole('button', { name: /Trang tiếp theo|Tiếp/i }).first();
     this.previousButton = page.getByRole('button', { name: /Trang trước|Trước/i }).first();
   }
@@ -123,6 +128,46 @@ export class MyListingsPage extends BasePage {
       .last()
       .click();
     return new EditListingPage(this.page);
+  }
+
+  public async openPackageUpgrade(
+    reference: ListingReference,
+  ): Promise<PackageUpgradeModalComponent> {
+    await this.openActions(reference);
+    const upgradeButton = this.menu
+      .getByRole('button', { name: /Nâng cấp gói tin/i })
+      .or(this.page.getByRole('button', { name: /Nâng cấp gói tin/i }))
+      .last();
+    await upgradeButton.click();
+    return new PackageUpgradeModalComponent(this.page);
+  }
+
+  public async openPackageUpgradeByIndex(
+    index = 0,
+  ): Promise<PackageUpgradeModalComponent> {
+    const row = this.rows.nth(index);
+    const actionButton = row.getByRole('button').last();
+    await actionButton.click();
+    const upgradeButton = this.menu
+      .getByRole('button', { name: /Nâng cấp gói tin/i })
+      .or(this.page.getByRole('button', { name: /Nâng cấp gói tin/i }))
+      .last();
+    await upgradeButton.click();
+    return new PackageUpgradeModalComponent(this.page);
+  }
+
+  public async openPackageUpgradeForStatus(
+    statusText: string,
+  ): Promise<PackageUpgradeModalComponent> {
+    const row = this.rows.filter({ hasText: statusText }).first();
+    const actionButton = row.getByRole('button').last();
+    await actionButton.click();
+    const upgradeButton = this.menu
+      .getByRole('button', { name: /Nâng cấp gói tin/i })
+      .or(this.page.getByRole('button', { name: /Nâng cấp gói tin/i }))
+      .last();
+    await upgradeButton.click();
+    return new PackageUpgradeModalComponent(this.page);
   }
 
   public async requestWithdraw(reference: ListingReference): Promise<boolean> {

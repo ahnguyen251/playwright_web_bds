@@ -16,7 +16,7 @@ export const profileViewTestCase1: TestCaseDefinition = Object.freeze({
   expectedResult:
     'UI kết xuất chính xác từ DB: Avatar, Họ tên, Email, SĐT, Badge trạng thái Active.',
   automation: {
-    status: 'IN_PROGRESS' as const,
+    status: 'AUTOMATED' as const,
     scriptPath: 'tests/profile/profile.positive.spec.ts',
   },
 });
@@ -32,7 +32,7 @@ export const profileViewTestCase2: TestCaseDefinition = Object.freeze({
   testSteps: '1. Với token invalid, truy cập "Thông tin tài khoản".',
   expectedResult: 'Redirect về trang đăng nhập.',
   automation: {
-    status: 'IN_PROGRESS' as const,
+    status: 'AUTOMATED' as const,
     scriptPath: 'tests/profile/profile.negative.spec.ts',
   },
 });
@@ -49,7 +49,7 @@ export const profileEditTestCase1: TestCaseDefinition = Object.freeze({
   expectedResult:
     'Dữ liệu cập nhật thành công vào DB; hiển thị Toast thông báo hoàn tất; avatar mới cập nhật ngay trên header.',
   automation: {
-    status: 'IN_PROGRESS' as const,
+    status: 'AUTOMATED' as const,
     scriptPath: 'tests/profile/profile.mutating.spec.ts',
   },
 });
@@ -65,7 +65,7 @@ export const profileEditTestCase2: TestCaseDefinition = Object.freeze({
   testSteps: '1. Click "Lưu" mà không chỉnh sửa gì.',
   expectedResult: 'Hiển thị "Không có thay đổi dữ liệu"; không gọi API Update.',
   automation: {
-    status: 'IN_PROGRESS' as const,
+    status: 'AUTOMATED' as const,
     scriptPath: 'tests/profile/profile.validation.spec.ts',
   },
 });
@@ -81,7 +81,7 @@ export const profileEditTestCase3: TestCaseDefinition = Object.freeze({
   testSteps: '1. Copy chuỗi 60 ký tự. 2. Paste vào field "Họ và tên".',
   expectedResult: 'Trường tự động cắt, chỉ giữ chính xác 50 ký tự đầu.',
   automation: {
-    status: 'IN_PROGRESS' as const,
+    status: 'AUTOMATED' as const,
     scriptPath: 'tests/profile/profile.validation.spec.ts',
   },
 });
@@ -104,7 +104,7 @@ export const profileChangePwTestCase1: TestCaseDefinition = Object.freeze({
   expectedResult:
     'Mật khẩu cập nhật vào DB; token hiện tại trong LocalStorage/Cookie bị thu hồi; tự động đẩy về trang Đăng nhập.',
   automation: {
-    status: 'IN_PROGRESS' as const,
+    status: 'AUTOMATED' as const,
     scriptPath: 'tests/profile/change-password.mutating.spec.ts',
   },
 });
@@ -126,7 +126,7 @@ export const profileChangePwTestCase2: TestCaseDefinition = Object.freeze({
   testSteps: '1. Nhập sai MK hiện tại, các trường còn lại đúng. 2. Nhấn "Xác nhận".',
   expectedResult: 'Lỗi "Mật khẩu hiện tại không chính xác"; giữ nguyên form, không đổi dữ liệu.',
   automation: {
-    status: 'IN_PROGRESS' as const,
+    status: 'AUTOMATED' as const,
     scriptPath: 'tests/profile/change-password.mutating.spec.ts',
   },
 });

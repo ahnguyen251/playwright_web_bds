@@ -82,4 +82,38 @@ export class AppointmentWorkflow {
       await this.appointmentPage.filterByStatus(status);
     }
   }
+
+  public async cancelAppointment(options: {
+    cardIndex?: number;
+    reason: string;
+    customReason?: string;
+  }): Promise<void> {
+    const cardIndex = options.cardIndex ?? 0;
+    const modal = await this.appointmentPage.clickCancelButton(cardIndex);
+    await modal.selectReason(options.reason);
+    if (options.reason === 'Khác' && options.customReason !== undefined) {
+      await modal.fillCustomReason(options.customReason);
+    }
+    await modal.submit();
+  }
+
+  public async confirmAppointment(cardIndex = 0): Promise<void> {
+    const modal = await this.appointmentPage.clickConfirmButton(cardIndex);
+    await modal.submit();
+  }
+
+  public async rejectAppointment(options: {
+    cardIndex?: number;
+    reason: string;
+    customReason?: string;
+  }): Promise<void> {
+    const cardIndex = options.cardIndex ?? 0;
+    const modal = await this.appointmentPage.clickRejectButton(cardIndex);
+    await modal.selectReason(options.reason);
+    if (options.reason === 'Khác' && options.customReason !== undefined) {
+      await modal.fillCustomReason(options.customReason);
+    }
+    await modal.submit();
+  }
 }
+

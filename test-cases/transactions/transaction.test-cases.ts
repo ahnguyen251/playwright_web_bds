@@ -14,7 +14,10 @@ export const transactionTestCases: readonly TestCaseDefinition[] = [
     testData: 'User A có giao dịch',
     testSteps: '1. Nhấn "Lịch sử giao dịch" tại menu tài khoản.',
     expectedResult: 'Hiển thị khối tổng quan (Thành công/Chờ thanh toán/Tổng chi) + bảng giao dịch, mặc định sắp xếp thời gian giảm dần.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/transactions/transaction-history.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-TRANS-FILTER-001',
@@ -26,6 +29,20 @@ export const transactionTestCases: readonly TestCaseDefinition[] = [
     testData: 'Trạng thái: "Thành công"; Loại gói: "Ruby"',
     testSteps: '1. Nhập mã giao dịch/áp dụng lọc trạng thái "Thành công". 2. Chọn loại gói "Ruby", tìm kiếm.',
     expectedResult: 'Kết quả lọc real-time đúng điều kiện; số tiền hiển thị khớp với cấu hình gói.',
-    automation: { status: 'NOT_AUTOMATED' as const },
-  }
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/transactions/transaction-history.read-only.spec.ts',
+    },
+  },
 ];
+
+export const getTransactionTestCase = (id: string): TestCaseDefinition => {
+  const testCase = transactionTestCases.find((candidate) => candidate.id === id);
+  if (testCase === undefined) throw new Error(`Unknown transaction test case: ${id}`);
+  return testCase;
+};
+
+export const transactionCaseTitle = (id: string): string => {
+  const testCase = getTransactionTestCase(id);
+  return `${testCase.id} ${testCase.title} ${testCase.tags.join(' ')}`;
+};

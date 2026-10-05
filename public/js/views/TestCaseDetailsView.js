@@ -1,5 +1,4 @@
 import { api } from '../api.js';
-import { Badge } from '../components/Badge.js';
 import { Pagination } from '../components/Pagination.js';
 import { LoadingState } from '../components/LoadingState.js';
 import { EmptyState } from '../components/EmptyState.js';
@@ -11,8 +10,13 @@ export class TestCaseDetailsViewClass {
     this.root = null;
     this.testCaseId = null;
     this.page = 1;
+    this.pageSize = 20;
     this.statusFilter = '';
+    this.searchTerm = '';
     this.abortController = null;
+    this.cachedTestCase = null;
+    this.cachedAnalytics = null;
+    this.cachedResults = null;
     this.modal = new ResultDetailsModalClass();
   }
 
@@ -20,10 +24,16 @@ export class TestCaseDetailsViewClass {
     this.root = rootElement;
     this.testCaseId = params.testCaseId;
     this.page = 1;
+    this.pageSize = 20;
     this.statusFilter = '';
+    this.searchTerm = '';
 
-    this.renderContainer();
-    await this.fetchAndRender();
+    const pageTitle = document.getElementById('page-title');
+    if (pageTitle) {
+      pageTitle.textContent = `Chi Tiết Test Case`;
+    }
+
+    await this.fetchAndRenderAll();
   }
 
   unmount() {
@@ -31,61 +41,15 @@ export class TestCaseDetailsViewClass {
       this.abortController.abort();
     }
     this.root = null;
+    this.cachedTestCase = null;
+    this.cachedAnalytics = null;
+    this.cachedResults = null;
   }
 
-  renderContainer() {
+  async fetchAndRenderAll() {
+    if (!this.root) return;
     this.root.innerHTML = '';
-
-    const backBtn = document.createElement('button');
-    backBtn.className = 'btn';
-    backBtn.textContent = '← Quay lại Danh Sách Test Case';
-    backBtn.style.marginBottom = '24px';
-    backBtn.onclick = () => {
-      window.location.hash = '#test-cases';
-    };
-    this.root.appendChild(backBtn);
-
-    this.headerArea = document.createElement('div');
-    this.headerArea.className = 'card';
-    this.headerArea.style.marginBottom = '24px';
-    this.root.appendChild(this.headerArea);
-
-    this.analyticsArea = document.createElement('div');
-    this.analyticsArea.style.marginBottom = '24px';
-    this.root.appendChild(this.analyticsArea);
-
-    const controls = document.createElement('div');
-    controls.className = 'filter-controls';
-    controls.style.marginBottom = '16px';
-
-    const statusSelect = document.createElement('select');
-    statusSelect.className = 'input';
-    statusSelect.style.width = '200px';
-    statusSelect.innerHTML = `
-      <option value="">Tất Cả Trạng Thái</option>
-      <option value="PASSED">Thành Công</option>
-      <option value="FAILED">Thất Bại</option>
-      <option value="SKIPPED">Bỏ Qua</option>
-    `;
-    statusSelect.value = this.statusFilter;
-    statusSelect.addEventListener('change', (e) => {
-      this.statusFilter = e.target.value;
-      this.page = 1;
-      this.fetchResultsOnly();
-    });
-
-    controls.appendChild(statusSelect);
-    this.root.appendChild(controls);
-
-    this.resultsArea = document.createElement('div');
-    this.root.appendChild(this.resultsArea);
-  }
-
-  async fetchAndRender() {
-    this.headerArea.innerHTML = '';
-    this.headerArea.appendChild(LoadingState('Đang tải dữ liệu test case...'));
-    this.resultsArea.innerHTML = '';
-    this.resultsArea.appendChild(LoadingState('Đang tải lịch sử...'));
+    this.root.appendChild(LoadingState('Đang tải dữ liệu kịch bản kiểm thử và phân tích...'));
 
     if (this.abortController) {
       this.abortController.abort();
@@ -94,215 +58,549 @@ export class TestCaseDetailsViewClass {
     const signal = this.abortController.signal;
 
     try {
-      const tc = await api.getTestCaseById(this.testCaseId, { signal });
-      this.renderHeader(tc);
-      await this.fetchResultsOnly(signal);
-      this.fetchAnalytics(signal); // Fire and forget, catches its own errors
+      const [tcData, analyticsData, resultsData] = await Promise.all([
+        api.getTestCaseById(this.testCaseId, { signal }),
+        api.getTestCaseAnalytics(this.testCaseId, { signal }).catch(() => null),
+        api.getTestCaseResults(this.testCaseId, this.page, this.pageSize, this.statusFilter, { signal })
+      ]);
+
+      this.cachedTestCase = tcData;
+      this.cachedAnalytics = analyticsData;
+      this.cachedResults = resultsData;
+
+      this.render();
     } catch (error) {
       if (error.name === 'AbortError') return;
-      this.headerArea.innerHTML = '';
-      this.resultsArea.innerHTML = '';
+      if (!this.root) return;
+      this.root.innerHTML = '';
       if (error.code === 'TEST_CASE_NOT_FOUND') {
-        this.headerArea.appendChild(EmptyState('Không tìm thấy Test Case.'));
+        this.root.appendChild(EmptyState(`Không tìm thấy Test Case ID: ${this.testCaseId}`));
       } else {
-        this.headerArea.appendChild(ErrorState(error));
+        this.root.appendChild(ErrorState(error));
       }
     }
   }
 
-  renderHeader(tc) {
-    this.headerArea.innerHTML = `
-      <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
-        <h2 style="margin: 0;" id="tc-title-id"></h2>
-        <span id="tc-status-badge"></span>
+  render() {
+    if (!this.root || !this.cachedTestCase) return;
+    this.root.innerHTML = '';
+
+    const tc = this.cachedTestCase;
+    const analytics = this.cachedAnalytics || {
+      summary: { totalExecutions: 0, passed: 0, failed: 0, passRatePercent: 0, averageDurationMs: null, retryFlakyRatePercent: 0 },
+      stability: { statusChanges: 0, statusChangeRatePercent: 0 },
+      trend: [],
+      window: { trendLimit: 20 }
+    };
+    const results = this.cachedResults || { items: [], pagination: {} };
+    const items = results.items || [];
+
+    const isAutomated = tc.automation_status === 'AUTOMATED';
+    const totalExecs = analytics.summary.totalExecutions || 0;
+    const passRate = analytics.summary.passRatePercent != null ? analytics.summary.passRatePercent : 0;
+    const flakyRate = analytics.summary.retryFlakyRatePercent != null ? analytics.summary.retryFlakyRatePercent : 0;
+    const avgDuration = analytics.summary.averageDurationMs != null 
+      ? `${(analytics.summary.averageDurationMs / 1000).toFixed(1)}s` 
+      : 'N/A';
+
+    const container = document.createElement('div');
+    container.className = 'tc-details-wrapper';
+
+    // 1. Header & Breadcrumbs
+    const headerSection = document.createElement('div');
+    headerSection.className = 'apm-header-container';
+    headerSection.innerHTML = `
+      <div class="apm-breadcrumb-row">
+        <div class="apm-breadcrumb">
+          <a href="#summary" class="apm-breadcrumb-link">Bảng điều khiển</a>
+          <span class="breadcrumb-sep">›</span>
+          <a href="#test-cases" class="apm-breadcrumb-link">Danh Sách Test Case</a>
+          <span class="breadcrumb-sep">›</span>
+          <span style="color: var(--text-main); font-weight: 600;">${tc.test_case_id}</span>
+        </div>
+        <div class="apm-header-actions">
+          <a href="#test-cases" class="btn btn-export-file" style="padding: 7px 14px; font-size: 0.8125rem;">
+            ← Quay Lại Danh Sách
+          </a>
+          <button type="button" class="btn btn-export-file" id="btn-export-tc-json" style="padding: 7px 14px; font-size: 0.8125rem;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Xuất Phân Tích JSON</span>
+          </button>
+        </div>
       </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
-        <div><strong>Module:</strong> <span id="tc-module"></span></div>
-        <div><strong>Testcase:</strong> <span id="tc-title"></span></div>
+
+      <div class="apm-title-row">
+        <div>
+          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px; flex-wrap: wrap;">
+            <h1 class="apm-title-main" style="font-family: Consolas, monospace;">${tc.test_case_id}</h1>
+            <button type="button" class="btn-copy-id" id="btn-copy-tc-id" title="Sao chép Test Case ID">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+            <span class="status-pill ${tc.automation_status.toLowerCase().replace('_', '-')}" style="font-size: 0.75rem;">
+              <span class="status-dot-circle"></span>
+              <span>${tc.automation_status}</span>
+            </span>
+          </div>
+          <p class="apm-subtitle" style="font-size: 1rem; color: #1e293b; font-weight: 500;">
+            ${tc.title}
+          </p>
+          <div class="detail-meta-list" style="margin-top: 10px;">
+            <div class="meta-chip-item">
+              <span>Mô-đun:</span>
+              <strong>${tc.module || 'N/A'}</strong>
+            </div>
+            ${tc.script_path ? `
+              <div class="meta-chip-item">
+                <span>File kịch bản:</span>
+                <span class="code-path-chip" id="script-path-text">${tc.script_path}</span>
+                <button type="button" class="btn-copy-id" id="btn-copy-script-path" title="Sao chép đường dẫn kịch bản" style="padding: 1px 3px;">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+              </div>
+            ` : ''}
+            <div class="meta-chip-item">
+              <span>Cập nhật:</span>
+              <strong>${tc.updated_at ? new Date(tc.updated_at).toLocaleDateString('vi-VN') : 'Không rõ'}</strong>
+            </div>
+          </div>
+        </div>
       </div>
     `;
+    container.appendChild(headerSection);
 
-    // Safely insert textContent
-    this.headerArea.querySelector('#tc-title-id').textContent = tc.test_case_id;
-    const badgeContainer = this.headerArea.querySelector('#tc-status-badge');
-    badgeContainer.appendChild(Badge(tc.automation_status, tc.automation_status));
-    this.headerArea.querySelector('#tc-module').textContent = tc.module || 'N/A';
-    this.headerArea.querySelector('#tc-title').textContent = tc.title || 'N/A';
-  }
-
-  async fetchResultsOnly(passedSignal) {
-    let signal = passedSignal;
-    if (!signal) {
-      if (this.abortController) this.abortController.abort();
-      this.abortController = new AbortController();
-      signal = this.abortController.signal;
-    }
-
-    this.resultsArea.innerHTML = '';
-    this.resultsArea.appendChild(LoadingState('Đang tải lịch sử thực thi...'));
-
-    try {
-      const data = await api.getTestCaseResults(this.testCaseId, this.page, 20, this.statusFilter, { signal });
-      this.resultsArea.innerHTML = '';
-
-      const totalExecutions = document.createElement('div');
-      totalExecutions.style.marginBottom = '16px';
-      totalExecutions.innerHTML = `<strong>Tổng Số Lần Chạy:</strong> <span id="tc-total-execs"></span>`;
-      totalExecutions.querySelector('#tc-total-execs').textContent = data.pagination.totalItems;
-      this.resultsArea.appendChild(totalExecutions);
-
-      if (!data.items || data.items.length === 0) {
-        this.resultsArea.appendChild(EmptyState('Không tìm thấy lịch sử thực thi.'));
-        return;
-      }
-
-      const tableContainer = document.createElement('div');
-      tableContainer.className = 'table-container';
-
-      const table = document.createElement('table');
-      const thead = document.createElement('thead');
-      thead.innerHTML = `
-        <tr>
-          <th>Mã Lần Chạy</th>
-          <th>Thời Gian Chạy</th>
-          <th>Dự Án</th>
-          <th>Thời Gian</th>
-          <th>Trạng Thái</th>
-          <th>Hành Động</th>
-        </tr>
-      `;
-      table.appendChild(thead);
-
-      const tbody = document.createElement('tbody');
-      data.items.forEach(res => {
-        const tr = document.createElement('tr');
-
-        const tdRun = document.createElement('td');
-        const aRun = document.createElement('a');
-        aRun.href = `#runs/${encodeURIComponent(res.runId)}`;
-        aRun.textContent = res.runId;
-        aRun.className = 'link';
-        tdRun.appendChild(aRun);
-
-        const tdTime = document.createElement('td');
-        tdTime.textContent = new Date(res.runTimestamp).toLocaleString();
-
-        const tdProj = document.createElement('td');
-        tdProj.textContent = res.projectName || 'N/A';
-
-        const tdDur = document.createElement('td');
-        tdDur.textContent = (res.durationMs / 1000).toFixed(1) + 's';
-
-        const tdStatus = document.createElement('td');
-        tdStatus.appendChild(Badge(res.status, res.status));
-
-        const tdActions = document.createElement('td');
-        const btnDetails = document.createElement('button');
-        btnDetails.className = 'btn';
-        btnDetails.textContent = 'Xem Chi Tiết';
-        btnDetails.onclick = () => this.modal.open(res.resultId);
-        tdActions.appendChild(btnDetails);
-
-        tr.appendChild(tdRun);
-        tr.appendChild(tdTime);
-        tr.appendChild(tdProj);
-        tr.appendChild(tdDur);
-        tr.appendChild(tdStatus);
-        tr.appendChild(tdActions);
-
-        tbody.appendChild(tr);
+    // Copy handlers
+    const copyTcIdBtn = headerSection.querySelector('#btn-copy-tc-id');
+    if (copyTcIdBtn) {
+      copyTcIdBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(tc.test_case_id).then(() => {
+          copyTcIdBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#10b981" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          `;
+          setTimeout(() => {
+            copyTcIdBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            `;
+          }, 1800);
+        });
       });
+    }
 
-      table.appendChild(tbody);
-      tableContainer.appendChild(table);
-      this.resultsArea.appendChild(tableContainer);
-
-      const paginationEl = Pagination(data.pagination, (newPage) => {
-        this.page = newPage;
-        this.fetchResultsOnly();
+    const copyScriptBtn = headerSection.querySelector('#btn-copy-script-path');
+    if (copyScriptBtn && tc.script_path) {
+      copyScriptBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(tc.script_path).then(() => {
+          copyScriptBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#10b981" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          `;
+          setTimeout(() => {
+            copyScriptBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            `;
+          }, 1800);
+        });
       });
-      this.resultsArea.appendChild(paginationEl);
-
-    } catch (error) {
-      if (error.name === 'AbortError') return;
-      this.resultsArea.innerHTML = '';
-      this.resultsArea.appendChild(ErrorState(error));
     }
-  }
-  async fetchAnalytics(signal) {
-    this.analyticsArea.innerHTML = '';
-    this.analyticsArea.appendChild(LoadingState('Đang tải phân tích...'));
-    try {
-      const data = await api.getTestCaseAnalytics(this.testCaseId, { signal });
-      this.renderAnalyticsPanel(data);
-    } catch (error) {
-      if (error.name === 'AbortError') return;
-      this.analyticsArea.innerHTML = '';
-      this.analyticsArea.appendChild(ErrorState(error));
-    }
-  }
 
-  renderAnalyticsPanel(data) {
-    const formatPercent = (val) => val != null ? `${val}%` : 'N/A';
-    const formatMs = (val) => val != null ? `${val} ms` : 'N/A';
+    // Export JSON
+    headerSection.querySelector('#btn-export-tc-json').addEventListener('click', () => {
+      const exportObj = { testCase: tc, analytics, results: items };
+      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `test-case-${tc.test_case_id}-analytics.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
 
-    const maxDuration = data.trend.reduce((max, t) => Math.max(max, t.durationMs || 0), 0);
+    // 2. 4 Modern KPI Cards Grid
+    const kpiGrid = document.createElement('div');
+    kpiGrid.className = 'summary-kpi-grid';
+    kpiGrid.innerHTML = `
+      <div class="kpi-modern-card">
+        <div class="kpi-header-row">
+          <span class="kpi-header-label">TRẠNG THÁI TỰ ĐỘNG</span>
+          <div class="kpi-icon-box ${isAutomated ? 'green' : 'amber'}">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-big-num" style="font-size: 1.625rem;">${isAutomated ? 'ĐÃ HOÀN TẤT' : 'CHƯA TỰ ĐỘNG'}</span>
+        </div>
+        <div class="kpi-card-footer">
+          <span class="dot ${isAutomated ? 'green' : 'amber'}"></span>
+          <span>${isAutomated ? 'Script Playwright sẵn sàng chạy CI' : 'Cần ưu tiên viết script kiểm thử'}</span>
+        </div>
+      </div>
 
-    const trendHtml = data.trend.map(t => {
+      <div class="kpi-modern-card">
+        <div class="kpi-header-row">
+          <span class="kpi-header-label">LƯỢT CHẠY (30 NGÀY)</span>
+          <div class="kpi-icon-box gray">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-big-num">${totalExecs}</span>
+          <span class="kpi-unit-text">phiên</span>
+        </div>
+        <div class="kpi-card-footer">
+          <span class="dot blue"></span>
+          <span>${analytics.summary.passed || 0} Pass • ${analytics.summary.failed || 0} Fail</span>
+        </div>
+      </div>
+
+      <div class="kpi-modern-card">
+        <div class="kpi-header-row">
+          <span class="kpi-header-label">TỶ LỆ PASS RATE</span>
+          <div class="kpi-icon-box green">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-big-num text-green">${passRate}%</span>
+        </div>
+        <div class="kpi-card-footer">
+          <span class="dot green"></span>
+          <span>Tính trên toàn bộ các lần chạy gần nhất</span>
+        </div>
+      </div>
+
+      <div class="kpi-modern-card">
+        <div class="kpi-header-row">
+          <span class="kpi-header-label">THỜI LƯỢNG TRUNG BÌNH</span>
+          <div class="kpi-icon-box amber">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-big-num">${avgDuration}</span>
+        </div>
+        <div class="kpi-card-footer">
+          <span class="dot amber"></span>
+          <span>Tỷ lệ Flaky (chạy lại mới pass): <strong>${flakyRate}%</strong></span>
+        </div>
+      </div>
+    `;
+    container.appendChild(kpiGrid);
+
+    // 3. Analytics Stability & Trend Panel
+    const analyticsBox = document.createElement('div');
+    analyticsBox.className = 'analytics-modern-box';
+
+    const maxDuration = analytics.trend ? analytics.trend.reduce((max, t) => Math.max(max, t.durationMs || 0), 0) : 0;
+    const trendHtml = (analytics.trend && analytics.trend.length > 0) ? analytics.trend.map(t => {
       const heightPercent = maxDuration > 0 ? ((t.durationMs || 0) / maxDuration) * 100 : 0;
-      const height = Math.max(heightPercent, 5);
+      const height = Math.max(heightPercent, 8);
       const flakyMarker = t.retryFlaky ? '<div class="flaky-marker" title="Không ổn định khi thử lại" aria-label="Không ổn định khi thử lại"></div>' : '';
       return `
         <div class="trend-point">
           <div class="trend-bar-wrapper">
             <div class="trend-bar" style="height: ${height}%" title="${t.durationMs || 0} ms"></div>
           </div>
-          <div class="status-dot ${t.finalStatus.toLowerCase()}" title="${t.finalStatus} lúc ${new Date(t.executedAt).toLocaleString()}" aria-label="${t.finalStatus}"></div>
+          <div class="status-dot ${t.finalStatus ? t.finalStatus.toLowerCase() : 'skipped'}" title="${t.finalStatus} lúc ${new Date(t.executedAt).toLocaleString()}" aria-label="${t.finalStatus}"></div>
           ${flakyMarker}
         </div>
       `;
-    }).join('');
+    }).join('') : '';
 
-    this.analyticsArea.innerHTML = `
-      <div class="card analytics-panel">
-        <h3 style="margin-bottom: 16px;">Phân Tích Độ Ổn Định (30 Ngày)</h3>
-        <div class="analytics-grid">
-          <div class="stat-card">
-            <div class="stat-label">Số Lần Chạy Logic</div>
-            <div class="stat-value">${data.summary.totalExecutions}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Tỷ Lệ Pass</div>
-            <div class="stat-value">${formatPercent(data.summary.passRatePercent)}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label" title="Các lần chạy ban đầu bị lỗi nhưng thành công sau khi chạy lại.">Tỷ Lệ Lỗi (Flaky) ℹ️</div>
-            <div class="stat-value">${formatPercent(data.summary.retryFlakyRatePercent)}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label" title="Tần suất kết quả thay đổi giữa các lần chạy liên tiếp.">Tỷ Lệ Thay Đổi Trạng Thái ℹ️</div>
-            <div class="stat-value">${formatPercent(data.stability.statusChangeRatePercent)}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Thời Gian Trung Bình</div>
-            <div class="stat-value">${formatMs(data.summary.averageDurationMs)}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Trạng Thái Mới Nhất</div>
-            <div class="stat-value">${data.summary.latestStatus || 'N/A'}</div>
-          </div>
-        </div>
-        
-        <div style="margin-top: 24px;">
-          <h4 style="margin-bottom: 8px;">Xu Hướng Thực Thi (Mới Nhất ${data.window.trendLimit})</h4>
-          ${data.trend.length > 0 ? `
-            <div class="trend-chart">
-              ${trendHtml}
-            </div>
-          ` : '<div class="text-muted">Không có dữ liệu xu hướng.</div>'}
+    analyticsBox.innerHTML = `
+      <div class="analytics-modern-header">
+        <div>
+          <h3 class="analytics-modern-title">Phân Tích Độ Ổn Định & Xu Hướng Thực Thi (30 Ngày)</h3>
+          <p class="bottom-card-subtitle">Đo lường tính ổn định, độ tin cậy và tốc độ phản hồi qua các phiên kiểm thử</p>
         </div>
       </div>
+
+      <div class="analytics-grid">
+        <div class="analytics-stat-pill">
+          <span class="analytics-stat-label">Số Lần Chạy Logic</span>
+          <span class="analytics-stat-val">${totalExecs}</span>
+        </div>
+        <div class="analytics-stat-pill">
+          <span class="analytics-stat-label">Tỷ Lệ Pass</span>
+          <span class="analytics-stat-val text-green">${passRate}%</span>
+        </div>
+        <div class="analytics-stat-pill">
+          <span class="analytics-stat-label" title="Các lần chạy ban đầu lỗi nhưng thành công sau khi chạy lại.">Tỷ Lệ Lỗi (Flaky) ℹ️</span>
+          <span class="analytics-stat-val">${flakyRate}%</span>
+        </div>
+        <div class="analytics-stat-pill">
+          <span class="analytics-stat-label" title="Tần suất kết quả thay đổi giữa các lần chạy liên tiếp.">Tỷ Lệ Đổi Trạng Thái ℹ️</span>
+          <span class="analytics-stat-val">${analytics.stability.statusChangeRatePercent || 0}%</span>
+        </div>
+        <div class="analytics-stat-pill">
+          <span class="analytics-stat-label">Thời Lượng TB</span>
+          <span class="analytics-stat-val">${avgDuration}</span>
+        </div>
+        <div class="analytics-stat-pill">
+          <span class="analytics-stat-label">Trạng Thái Gần Nhất</span>
+          <span class="analytics-stat-val">${analytics.summary.latestStatus || 'N/A'}</span>
+        </div>
+      </div>
+
+      <div class="trend-section-title">
+        Xu Hướng Thực Thi Gần Nhất (${analytics.trend ? analytics.trend.length : 0} phiên)
+      </div>
+      ${trendHtml ? `
+        <div class="trend-chart">
+          ${trendHtml}
+        </div>
+      ` : '<div style="color: var(--text-muted); font-size: 0.8125rem; padding: 12px 0;">Chưa có dữ liệu xu hướng thực thi trong 30 ngày qua.</div>'}
     `;
+    container.appendChild(analyticsBox);
+
+    // 4. Results Section Header & Toolbar
+    const resultsHeader = document.createElement('div');
+    resultsHeader.className = 'runner-section-header';
+    resultsHeader.style.marginTop = '28px';
+    resultsHeader.innerHTML = `
+      <div class="runner-section-title">
+        <span class="section-bullet"></span>
+        <span>Lịch Sử Các Lần Thực Thi Kịch Bản Này</span>
+      </div>
+    `;
+    container.appendChild(resultsHeader);
+
+    const toolbar = document.createElement('div');
+    toolbar.className = 'command-toolbar';
+    toolbar.innerHTML = `
+      <div class="search-input-wrap">
+        <svg class="search-icon-inside" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input 
+          type="text" 
+          class="search-input-field" 
+          id="tc-results-search" 
+          placeholder="Tìm kiếm theo mã Run ID hoặc Dự án..." 
+          value="${this.searchTerm}"
+        />
+      </div>
+
+      <select class="filter-dropdown-select" id="tc-results-status-filter">
+        <option value="" ${this.statusFilter === '' ? 'selected' : ''}>Tất Cả Trạng Thái</option>
+        <option value="PASSED" ${this.statusFilter === 'PASSED' ? 'selected' : ''}>Thành Công (PASSED)</option>
+        <option value="FAILED" ${this.statusFilter === 'FAILED' ? 'selected' : ''}>Thất Bại (FAILED)</option>
+        <option value="SKIPPED" ${this.statusFilter === 'SKIPPED' ? 'selected' : ''}>Bỏ Qua (SKIPPED)</option>
+      </select>
+    `;
+    container.appendChild(toolbar);
+
+    // Toolbar events
+    toolbar.querySelector('#tc-results-search').addEventListener('input', (e) => {
+      this.searchTerm = e.target.value.trim().toLowerCase();
+      this.renderResultsTable(tableContainer, paginationEl, items);
+    });
+
+    toolbar.querySelector('#tc-results-status-filter').addEventListener('change', async (e) => {
+      this.statusFilter = e.target.value;
+      this.page = 1;
+      await this.fetchResultsOnly();
+    });
+
+    // 5. Results Table Container
+    const tableContainer = document.createElement('div');
+    tableContainer.className = 'data-table-card';
+    container.appendChild(tableContainer);
+
+    // 6. Pagination Container
+    const paginationEl = document.createElement('div');
+    container.appendChild(paginationEl);
+
+    this.renderResultsTable(tableContainer, paginationEl, items);
+
+    this.root.appendChild(container);
+  }
+
+  async fetchResultsOnly() {
+    try {
+      const data = await api.getTestCaseResults(this.testCaseId, this.page, this.pageSize, this.statusFilter);
+      this.cachedResults = data;
+      this.render();
+    } catch (err) {
+      console.error('Failed to fetch test case results', err);
+    }
+  }
+
+  renderResultsTable(tableContainer, paginationContainer, allItems) {
+    tableContainer.innerHTML = '';
+    paginationContainer.innerHTML = '';
+
+    const filteredItems = allItems.filter(res => {
+      return !this.searchTerm || 
+        (res.runId && res.runId.toLowerCase().includes(this.searchTerm)) ||
+        (res.projectName && res.projectName.toLowerCase().includes(this.searchTerm));
+    });
+
+    if (filteredItems.length === 0) {
+      tableContainer.appendChild(EmptyState(
+        this.searchTerm || this.statusFilter
+          ? 'Không tìm thấy kết quả thực thi nào phù hợp với bộ lọc.'
+          : 'Chưa có dữ liệu lịch sử thực thi nào cho kịch bản này.'
+      ));
+      return;
+    }
+
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'table-responsive';
+
+    const table = document.createElement('table');
+    table.className = 'testcase-table';
+
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th style="width: 260px;">Mã Lần Chạy (Run ID)</th>
+        <th style="width: 200px;">Thời Gian Chạy</th>
+        <th style="width: 170px;">Dự Án</th>
+        <th style="width: 120px;">Thời Lượng</th>
+        <th style="width: 130px;">Trạng Thái</th>
+        <th style="width: 160px; text-align: right;">Bằng Chứng & Chi Tiết</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    filteredItems.forEach(res => {
+      const tr = document.createElement('tr');
+      const isPass = res.status === 'PASSED';
+      const isFail = res.status === 'FAILED';
+      const durationSec = ((res.durationMs || 0) / 1000).toFixed(1);
+      const dateStr = res.runTimestamp ? new Date(res.runTimestamp).toLocaleString('vi-VN') : 'Không rõ';
+
+      tr.innerHTML = `
+        <!-- Mã Lần Chạy -->
+        <td>
+          <div class="run-id-cell">
+            <a href="#runs/${encodeURIComponent(res.runId)}" class="run-id-text">
+              ${res.runId}
+            </a>
+            <button type="button" class="btn-copy-id" title="Sao chép Run ID" data-run-id="${res.runId}">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+          </div>
+        </td>
+
+        <!-- Thời Gian Chạy -->
+        <td>
+          <div class="time-cell-main">${dateStr}</div>
+        </td>
+
+        <!-- Dự Án -->
+        <td>
+          <span class="project-pill">${res.projectName || 'Chromium'}</span>
+        </td>
+
+        <!-- Thời Lượng -->
+        <td>
+          <div class="duration-pill">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>${durationSec}s</span>
+          </div>
+        </td>
+
+        <!-- Trạng Thái -->
+        <td>
+          <span class="status-badge-chip ${isPass ? 'success' : isFail ? 'failed' : ''}">
+            <span class="dot-indicator ${isPass ? 'green' : isFail ? 'red' : ''}" style="width: 6px; height: 6px; border-radius: 50%; background: ${isPass ? '#10b981' : isFail ? '#ef4444' : '#94a3b8'};"></span>
+            <span>${res.status}</span>
+          </span>
+        </td>
+
+        <!-- Thao Tác -->
+        <td style="text-align: right;">
+          <button type="button" class="btn-detail-link btn-open-modal" data-result-id="${res.resultId}">
+            <span>Xem Chi Tiết</span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </td>
+      `;
+
+      // Copy run ID
+      const copyBtn = tr.querySelector('.btn-copy-id');
+      if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+          navigator.clipboard.writeText(res.runId).then(() => {
+            copyBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#10b981" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            `;
+            setTimeout(() => {
+              copyBtn.innerHTML = `
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                </svg>
+              `;
+            }, 1800);
+          });
+        });
+      }
+
+      // Modal
+      const modalBtn = tr.querySelector('.btn-open-modal');
+      if (modalBtn) {
+        modalBtn.addEventListener('click', () => {
+          this.modal.open(res.resultId);
+        });
+      }
+
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    tableWrapper.appendChild(table);
+    tableContainer.appendChild(tableWrapper);
+
+    // Pagination
+    if (this.cachedResults && this.cachedResults.pagination) {
+      const paginationEl = Pagination(this.cachedResults.pagination, (newPage) => {
+        this.page = newPage;
+        this.fetchResultsOnly();
+      });
+      paginationContainer.appendChild(paginationEl);
+    }
   }
 }
 

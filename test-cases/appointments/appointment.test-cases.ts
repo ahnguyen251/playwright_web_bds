@@ -26,7 +26,10 @@ export const appointmentTestCases: readonly TestCaseDefinition[] = [
     testData: 'Căn hộ của chính mình; căn hộ đã có lịch trước đó',
     testSteps: '1. Thử đặt lịch cho căn hộ của chính mình. 2. Thử đặt thêm lịch cho căn hộ đã có lịch chưa hoàn thành.',
     expectedResult: 'Case 1: "Bạn không thể đặt lịch căn hộ của chính mình". Case 2: "Bạn đã có lịch hẹn với căn hộ này. Vui lòng xem lại."',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/appointments/appointment-lifecycle.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-APT-CREATE-003',
@@ -50,7 +53,10 @@ export const appointmentTestCases: readonly TestCaseDefinition[] = [
     testData: 'Bản ghi lịch hẹn có sẵn',
     testSteps: '1. (Context B) Vào danh sách lịch hẹn, click "Xác nhận lịch hẹn". 2. (Context A) Reload/quan sát.',
     expectedResult: 'Trạng thái chuyển "Đã xác nhận" ngay lập tức; đồng bộ trên cả 2 giao diện.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/appointments/appointment-lifecycle.mutating.spec.ts',
+    },
   },
   {
     id: 'TC-APT-REJECT-001',
@@ -62,7 +68,10 @@ export const appointmentTestCases: readonly TestCaseDefinition[] = [
     testData: 'Lý do: "Khung giờ này tôi có lịch bàn giao căn hộ khác"',
     testSteps: '1. Click "Từ chối lịch hẹn". 2. Để trống lý do, nhấn "Gửi" → quan sát lỗi. 3. Nhập lý do hợp lệ, nhấn "Gửi".',
     expectedResult: 'Bước 2: chặn, báo lỗi bắt buộc nhập lý do. Bước 3: trạng thái → "Bị từ chối", Khách xem được lý do.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/appointments/appointment-lifecycle.mutating.spec.ts',
+    },
   },
   {
     id: 'TC-APT-CANCEL-001',
@@ -74,7 +83,10 @@ export const appointmentTestCases: readonly TestCaseDefinition[] = [
     testData: 'Lý do hủy hợp lệ',
     testSteps: '1. (Context A) Vào "Lịch hẹn của tôi", nhấn "Hủy lịch", xác nhận. 2. (Context B) Vào "Quản lý lịch hẹn", nhấn "Hủy lịch", xác nhận (test riêng biệt cho từng bên).',
     expectedResult: 'Trạng thái chuyển "Khách hủy" (nếu Khách thao tác) hoặc "Chủ nhà hủy" (nếu Chủ nhà thao tác); bên còn lại nhận thông báo.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/appointments/appointment-cancellation.mutating.spec.ts',
+    },
   },
   {
     id: 'TC-APT-CANCEL-002',
@@ -86,7 +98,10 @@ export const appointmentTestCases: readonly TestCaseDefinition[] = [
     testData: 'Lịch cận giờ; lý do hủy: ""',
     testSteps: '1. Nhấn "Hủy lịch" khi còn <2h → quan sát. 2. Ở điều kiện đủ hủy, để trống lý do, xác nhận → quan sát.',
     expectedResult: 'Case 1: chặn, giữ nguyên "Đã xác nhận", lỗi "chỉ được hủy trước giờ hẹn tối thiểu 2 giờ". Case 2: chặn lưu, cảnh báo "Vui lòng cung cấp lý do hủy lịch".',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/appointments/appointment-cancellation.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-APT-CANCEL-003',
@@ -98,7 +113,10 @@ export const appointmentTestCases: readonly TestCaseDefinition[] = [
     testData: 'Thao tác API/UI can thiệp',
     testSteps: '1. Cố gắng kích hoạt Hủy (UI hoặc API request) trên bản ghi đã đóng.',
     expectedResult: 'Hệ thống từ chối thực thi, báo lỗi "Trạng thái lịch hẹn không hợp lệ để thực hiện thao tác", giữ nguyên trạng thái.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/appointments/appointment-cancellation.read-only.spec.ts',
+    },
   },
 ];
 

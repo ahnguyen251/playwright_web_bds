@@ -3,6 +3,7 @@ import type { Express } from 'express';
 
 import { openDatabase } from '../database/sqlite';
 import { initializeSchema } from '../database/schema';
+import { syncCatalogToConnection } from '../scripts/sync-test-cases';
 import { createApp } from './app';
 
 export interface ReportingRuntimeOptions {
@@ -72,6 +73,7 @@ export const startReportingServer = async (
 
   try {
     factories.initializeSchema(database);
+    syncCatalogToConnection(database);
     const app = factories.createApp({ database, evidenceRoot: options.evidenceRoot });
     const server = await factories.listen(app, options.port);
     let shutdownPromise: Promise<void> | undefined;

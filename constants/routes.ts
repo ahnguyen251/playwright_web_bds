@@ -10,5 +10,6 @@ export const ROUTES = Object.freeze({
   myListings: '/profile?tab=listings',
   appointments: '/profile?tab=appointments',
   transactions: '/profile?tab=transactions',
+  chat: '/chat',
   listingDetail: (listingId: string | number): string => `/listings/${String(listingId)}`,
 });

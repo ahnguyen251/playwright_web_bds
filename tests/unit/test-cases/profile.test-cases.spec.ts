@@ -46,31 +46,31 @@ test('publishes automation status only from fresh executable verification eviden
     ),
   ).toEqual({
     'TC-PROFILE-VIEW-001': {
-      status: 'IN_PROGRESS',
+      status: 'AUTOMATED',
       scriptPath: 'tests/profile/profile.positive.spec.ts',
     },
     'TC-PROFILE-VIEW-002': {
-      status: 'IN_PROGRESS',
+      status: 'AUTOMATED',
       scriptPath: 'tests/profile/profile.negative.spec.ts',
     },
     'TC-PROFILE-EDIT-001': {
-      status: 'IN_PROGRESS',
+      status: 'AUTOMATED',
       scriptPath: 'tests/profile/profile.mutating.spec.ts',
     },
     'TC-PROFILE-EDIT-002': {
-      status: 'IN_PROGRESS',
+      status: 'AUTOMATED',
       scriptPath: 'tests/profile/profile.validation.spec.ts',
     },
     'TC-PROFILE-EDIT-003': {
-      status: 'IN_PROGRESS',
+      status: 'AUTOMATED',
       scriptPath: 'tests/profile/profile.validation.spec.ts',
     },
     'TC-PROFILE-CHANGEPW-001': {
-      status: 'IN_PROGRESS',
+      status: 'AUTOMATED',
       scriptPath: 'tests/profile/change-password.mutating.spec.ts',
     },
     'TC-PROFILE-CHANGEPW-002': {
-      status: 'IN_PROGRESS',
+      status: 'AUTOMATED',
       scriptPath: 'tests/profile/change-password.mutating.spec.ts',
     },
     'TC-PROFILE-CHANGEPW-003': {

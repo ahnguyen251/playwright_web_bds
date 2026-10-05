@@ -1,6 +1,4 @@
 import { api } from '../api.js';
-import { Badge } from '../components/Badge.js';
-import { MetricCard } from '../components/MetricCard.js';
 import { Pagination } from '../components/Pagination.js';
 import { LoadingState } from '../components/LoadingState.js';
 import { EmptyState } from '../components/EmptyState.js';
@@ -12,7 +10,12 @@ export class RunDetailsViewClass {
     this.root = null;
     this.runId = null;
     this.page = 1;
+    this.pageSize = 20;
     this.statusFilter = '';
+    this.searchTerm = '';
+    this.traceFilter = '';
+    this.cachedRun = null;
+    this.cachedResults = null;
   }
 
   async mount(rootElement, params) {
@@ -20,8 +23,9 @@ export class RunDetailsViewClass {
     this.runId = params.runId;
     this.page = 1;
     this.statusFilter = '';
-    
-    // Change page title to include runId securely
+    this.searchTerm = '';
+    this.traceFilter = '';
+
     const pageTitle = document.getElementById('page-title');
     if (pageTitle) {
       pageTitle.textContent = `Chi Tiết Lần Chạy`;
@@ -32,136 +36,471 @@ export class RunDetailsViewClass {
 
   unmount() {
     this.root = null;
+    this.cachedRun = null;
+    this.cachedResults = null;
   }
 
   async fetchAndRender() {
+    if (!this.root) return;
     this.root.innerHTML = '';
-    this.root.appendChild(LoadingState('Đang tải chi tiết lần chạy...'));
+    this.root.appendChild(LoadingState('Đang tải thông tin chi tiết lần chạy...'));
 
     try {
-      const runData = await api.getRunById(this.runId);
-      const resultsData = await api.getRunResults(this.runId, this.page, 20, this.statusFilter);
-      
+      const [runData, resultsData] = await Promise.all([
+        api.getRunById(this.runId),
+        api.getRunResults(this.runId, this.page, this.pageSize, this.statusFilter)
+      ]);
+
+      this.cachedRun = runData;
+      this.cachedResults = resultsData;
+      this.render();
+    } catch (error) {
+      if (!this.root) return;
       this.root.innerHTML = '';
+      this.root.appendChild(ErrorState(error));
+    }
+  }
 
-      // Back button
-      const backBtn = document.createElement('button');
-      backBtn.className = 'btn';
-      backBtn.textContent = '← Quay lại Lịch Sử Chạy';
-      backBtn.style.marginBottom = '24px';
-      backBtn.onclick = () => window.location.hash = 'runs';
-      this.root.appendChild(backBtn);
+  render() {
+    if (!this.root || !this.cachedRun) return;
+    this.root.innerHTML = '';
 
-      // Summary Header
-      const headerTitle = document.createElement('h3');
-      headerTitle.textContent = runData.run_id;
-      headerTitle.style.marginBottom = '16px';
-      this.root.appendChild(headerTitle);
+    const run = this.cachedRun;
+    const results = this.cachedResults || { items: [], pagination: {} };
+    const items = results.items || [];
 
-      const grid = document.createElement('div');
-      grid.className = 'metrics-grid';
-      grid.appendChild(MetricCard('Bắt Đầu', new Date(runData.started_at).toLocaleString()));
-      grid.appendChild(MetricCard('Thời Gian', `${(runData.duration_ms / 1000).toFixed(1)}s`));
-      grid.appendChild(MetricCard('Tổng Cộng', runData.total_executions));
-      grid.appendChild(MetricCard('Thành Công', runData.passed_executions));
-      grid.appendChild(MetricCard('Thất Bại', runData.failed_executions));
-      grid.appendChild(MetricCard('Bỏ Qua', runData.skipped_executions));
-      this.root.appendChild(grid);
+    const total = run.total_executions || 0;
+    const passed = run.passed_executions || 0;
+    const failed = run.failed_executions || 0;
+    const skipped = run.skipped_executions || 0;
+    const passRate = total > 0 ? Math.round((passed / total) * 100) : 100;
+    const isSuccess = failed === 0;
 
-      // Filters
-      const controls = document.createElement('div');
-      controls.className = 'search-container';
-      controls.style.marginTop = '32px';
-      
-      const select = document.createElement('select');
-      select.className = 'input';
-      select.innerHTML = `
-        <option value="">Tất Cả Trạng Thái</option>
-        <option value="PASSED">Thành Công</option>
-        <option value="FAILED">Thất Bại</option>
-        <option value="SKIPPED">Bỏ Qua</option>
-      `;
-      select.value = this.statusFilter;
-      select.onchange = (e) => {
-        this.statusFilter = e.target.value;
-        this.page = 1;
-        this.fetchAndRender();
-      };
-      controls.appendChild(select);
-      this.root.appendChild(controls);
+    const startDateStr = run.started_at ? new Date(run.started_at).toLocaleString('vi-VN') : 'Không rõ';
+    const finishDateStr = run.finished_at ? new Date(run.finished_at).toLocaleString('vi-VN') : 'Không rõ';
+    const durationSec = ((run.duration_ms || 0) / 1000).toFixed(1);
 
-      // Results Table
-      if (!resultsData.items || resultsData.items.length === 0) {
-        this.root.appendChild(EmptyState('Không tìm thấy kết quả test nào cho lần chạy này.'));
-        return;
+    const container = document.createElement('div');
+    container.className = 'run-details-wrapper';
+
+    // 1. Header & Breadcrumbs
+    const headerSection = document.createElement('div');
+    headerSection.className = 'apm-header-container';
+    headerSection.innerHTML = `
+      <div class="apm-breadcrumb-row">
+        <div class="apm-breadcrumb">
+          <a href="#summary" class="apm-breadcrumb-link">Bảng điều khiển</a>
+          <span class="breadcrumb-sep">›</span>
+          <a href="#runs" class="apm-breadcrumb-link">Lịch Sử Chạy Test</a>
+          <span class="breadcrumb-sep">›</span>
+          <span style="color: var(--text-main); font-weight: 600;">${run.run_id}</span>
+        </div>
+        <div class="apm-header-actions">
+          <a href="#runs" class="btn btn-export-file" style="padding: 7px 14px; font-size: 0.8125rem;">
+            ← Quay Lại Lịch Sử
+          </a>
+          <button type="button" class="btn btn-export-file" id="btn-export-run-detail" style="padding: 7px 14px; font-size: 0.8125rem;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Xuất Dữ Liệu JSON</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="apm-title-row">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+            <h1 class="apm-title-main" style="font-family: Consolas, monospace;">${run.run_id}</h1>
+            <button type="button" class="btn-copy-id" id="btn-copy-header-id" title="Sao chép Run ID">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+            <span class="status-badge-chip ${isSuccess ? 'success' : 'failed'}">
+              <span class="dot-indicator ${isSuccess ? 'green' : 'red'}" style="width: 6px; height: 6px; border-radius: 50%;"></span>
+              <span>${isSuccess ? 'Thành công (100% Pass)' : `${failed} Test Thất Bại`}</span>
+            </span>
+          </div>
+          <p class="apm-subtitle">Nhật ký thực thi chi tiết, danh sách kịch bản test và bằng chứng kiểm thử (traces, screenshots, logs).</p>
+        </div>
+        <div class="apm-sync-pill">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+          <span>Bắt đầu: <strong>${startDateStr}</strong></span>
+        </div>
+      </div>
+    `;
+    container.appendChild(headerSection);
+
+    // Copy Run ID event
+    const copyHeaderBtn = headerSection.querySelector('#btn-copy-header-id');
+    if (copyHeaderBtn) {
+      copyHeaderBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(run.run_id).then(() => {
+          copyHeaderBtn.innerHTML = `
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#10b981" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"/>
+            </svg>
+          `;
+          setTimeout(() => {
+            copyHeaderBtn.innerHTML = `
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            `;
+          }, 1800);
+        });
+      });
+    }
+
+    // Export JSON event
+    headerSection.querySelector('#btn-export-run-detail').addEventListener('click', () => {
+      const exportObj = { run, results: items };
+      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `run-${run.run_id}-details.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    // 2. 4 Modern KPI Cards Grid
+    const kpiGrid = document.createElement('div');
+    kpiGrid.className = 'summary-kpi-grid';
+    kpiGrid.innerHTML = `
+      <div class="kpi-modern-card">
+        <div class="kpi-header-row">
+          <span class="kpi-header-label">TỔNG TEST EXECUTIONS</span>
+          <div class="kpi-icon-box gray">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-big-num">${total}</span>
+          <span class="kpi-unit-text">kịch bản</span>
+        </div>
+        <div class="kpi-card-footer">
+          <span class="dot green"></span>
+          <span>${passed} Pass • ${failed} Fail • ${skipped} Skip</span>
+        </div>
+      </div>
+
+      <div class="kpi-modern-card">
+        <div class="kpi-header-row">
+          <span class="kpi-header-label">TỶ LỆ PASS RATE</span>
+          <div class="kpi-icon-box green">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-big-num text-green">${passRate}%</span>
+          <span class="kpi-badge badge-green">${isSuccess ? '100% Sạch' : 'Có lỗi'}</span>
+        </div>
+        <div class="kpi-card-footer">
+          <span class="dot green"></span>
+          <span>${passed}/${total} test executions hoàn thành</span>
+        </div>
+      </div>
+
+      <div class="kpi-modern-card">
+        <div class="kpi-header-row">
+          <span class="kpi-header-label">THỜI LƯỢNG PHIÊN CHẠY</span>
+          <div class="kpi-icon-box amber">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-big-num">${durationSec}s</span>
+          <span class="kpi-unit-text">tổng thời gian</span>
+        </div>
+        <div class="kpi-card-footer">
+          <span class="dot amber"></span>
+          <span>Tốc độ phản hồi Worker Pool</span>
+        </div>
+      </div>
+
+      <div class="kpi-modern-card">
+        <div class="kpi-header-row">
+          <span class="kpi-header-label">TRACEABILITY (LIÊN KẾT ID)</span>
+          <div class="kpi-icon-box blue">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+            </svg>
+          </div>
+        </div>
+        <div class="kpi-value-row">
+          <span class="kpi-big-num text-blue">${run.mapped_executions || 0}/${total}</span>
+          <span class="kpi-unit-text">đã gắn mã</span>
+        </div>
+        <div class="kpi-card-footer">
+          <span class="dot blue"></span>
+          <span><strong>${run.unique_mapped_test_case_ids_executed || 0}</strong> unique test case ID đã chạy</span>
+        </div>
+      </div>
+    `;
+    container.appendChild(kpiGrid);
+
+    // 3. Execution Environment Overview Card
+    const overviewCard = document.createElement('div');
+    overviewCard.className = 'detail-overview-card';
+    overviewCard.innerHTML = `
+      <div class="detail-overview-top">
+        <div>
+          <span style="font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.05em;">
+            THÔNG TIN MÔI TRƯỜNG & PHIÊN THỰC THI
+          </span>
+          <h3 style="font-size: 1.125rem; font-weight: 700; color: #0f172a; margin-top: 4px;">
+            Worker Pool #1 • Playwright Test Suite
+          </h3>
+        </div>
+        <div class="detail-meta-list" style="margin-top: 0;">
+          <div class="meta-chip-item">
+            <span>Bắt đầu:</span>
+            <strong>${startDateStr}</strong>
+          </div>
+          <div class="meta-chip-item">
+            <span>Kết thúc:</span>
+            <strong>${finishDateStr}</strong>
+          </div>
+          <div class="meta-chip-item">
+            <span>Báo cáo HTML:</span>
+            <strong>${run.report_path ? run.report_path : 'Allure / HTML'}</strong>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(overviewCard);
+
+    // 4. Command Toolbar: Search & Filters
+    const toolbar = document.createElement('div');
+    toolbar.className = 'command-toolbar';
+    toolbar.innerHTML = `
+      <div class="search-input-wrap">
+        <svg class="search-icon-inside" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <input 
+          type="text" 
+          class="search-input-field" 
+          id="detail-search-input" 
+          placeholder="Tìm kiếm theo tiêu đề test, file kịch bản hoặc test case ID..." 
+          value="${this.searchTerm}"
+        />
+      </div>
+
+      <select class="filter-dropdown-select" id="detail-status-filter">
+        <option value="" ${this.statusFilter === '' ? 'selected' : ''}>Tất Cả Trạng Thái</option>
+        <option value="PASSED" ${this.statusFilter === 'PASSED' ? 'selected' : ''}>Thành Công (PASSED)</option>
+        <option value="FAILED" ${this.statusFilter === 'FAILED' ? 'selected' : ''}>Thất Bại (FAILED)</option>
+        <option value="SKIPPED" ${this.statusFilter === 'SKIPPED' ? 'selected' : ''}>Bỏ Qua (SKIPPED)</option>
+      </select>
+
+      <select class="filter-dropdown-select" id="detail-trace-filter" style="min-width: 170px;">
+        <option value="" ${this.traceFilter === '' ? 'selected' : ''}>Tất Cả Liên Kết</option>
+        <option value="MAPPED" ${this.traceFilter === 'MAPPED' ? 'selected' : ''}>Chỉ Đã Map ID</option>
+        <option value="UNMAPPED" ${this.traceFilter === 'UNMAPPED' ? 'selected' : ''}>Chưa Map (UNMAPPED)</option>
+      </select>
+    `;
+    container.appendChild(toolbar);
+
+    // Toolbar Event Listeners
+    toolbar.querySelector('#detail-search-input').addEventListener('input', (e) => {
+      this.searchTerm = e.target.value.trim().toLowerCase();
+      this.renderResultsTable(tableContainer, paginationEl, items);
+    });
+
+    toolbar.querySelector('#detail-status-filter').addEventListener('change', (e) => {
+      this.statusFilter = e.target.value;
+      this.page = 1;
+      this.fetchAndRender();
+    });
+
+    toolbar.querySelector('#detail-trace-filter').addEventListener('change', (e) => {
+      this.traceFilter = e.target.value;
+      this.renderResultsTable(tableContainer, paginationEl, items);
+    });
+
+    // 5. Results Table Container
+    const tableContainer = document.createElement('div');
+    tableContainer.className = 'data-table-card';
+    container.appendChild(tableContainer);
+
+    // 6. Pagination Container
+    const paginationEl = document.createElement('div');
+    container.appendChild(paginationEl);
+
+    this.renderResultsTable(tableContainer, paginationEl, items);
+
+    this.root.appendChild(container);
+  }
+
+  renderResultsTable(tableContainer, paginationContainer, allItems) {
+    tableContainer.innerHTML = '';
+    paginationContainer.innerHTML = '';
+
+    const filteredItems = allItems.filter(res => {
+      const titleMatch = !this.searchTerm || 
+        (res.title && res.title.toLowerCase().includes(this.searchTerm)) ||
+        (res.file_path && res.file_path.toLowerCase().includes(this.searchTerm)) ||
+        (res.test_case_id && res.test_case_id.toLowerCase().includes(this.searchTerm));
+
+      let traceMatch = true;
+      if (this.traceFilter === 'MAPPED') {
+        traceMatch = res.traceability_status === 'MAPPED';
+      } else if (this.traceFilter === 'UNMAPPED') {
+        traceMatch = res.traceability_status !== 'MAPPED';
       }
 
-      const tableContainer = document.createElement('div');
-      tableContainer.className = 'table-container';
+      return titleMatch && traceMatch;
+    });
 
-      const table = document.createElement('table');
-      table.innerHTML = `
-        <thead>
-          <tr>
-            <th>Trạng Thái</th>
-            <th>Tiêu Đề</th>
-            <th>Dự Án</th>
-            <th>Thời Gian</th>
-            <th>Map</th>
-            <th>Hành Động</th>
-          </tr>
-        </thead>
+    if (filteredItems.length === 0) {
+      tableContainer.appendChild(EmptyState(
+        this.searchTerm || this.statusFilter || this.traceFilter
+          ? 'Không tìm thấy kết quả test nào phù hợp với bộ lọc.'
+          : 'Không có kết quả test nào trong lần chạy này.'
+      ));
+      return;
+    }
+
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'table-responsive';
+
+    const table = document.createElement('table');
+    table.className = 'testcase-table';
+
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th style="width: 140px;">Trạng Thái</th>
+        <th>Kịch Bản & Tiêu Đề</th>
+        <th style="width: 160px;">Dự Án</th>
+        <th style="width: 110px;">Thời Lượng</th>
+        <th style="width: 130px;">Traceability</th>
+        <th style="width: 160px; text-align: right;">Bằng Chứng & Chi Tiết</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    filteredItems.forEach(res => {
+      const tr = document.createElement('tr');
+      const isPass = res.status === 'PASSED';
+      const isFail = res.status === 'FAILED';
+      const durationSec = ((res.duration_ms || 0) / 1000).toFixed(1);
+      const tcId = res.test_case_id || res.parsed_test_case_id;
+
+      // Clean file path display
+      let displayPath = res.file_path || '';
+      if (displayPath.includes('tests')) {
+        displayPath = displayPath.substring(displayPath.indexOf('tests'));
+      }
+
+      tr.innerHTML = `
+        <!-- Trạng Thái -->
+        <td>
+          <span class="status-badge-chip ${isPass ? 'success' : isFail ? 'failed' : ''}">
+            <span class="dot-indicator ${isPass ? 'green' : isFail ? 'red' : ''}" style="width: 6px; height: 6px; border-radius: 50%; background: ${isPass ? '#10b981' : isFail ? '#ef4444' : '#94a3b8'};"></span>
+            <span>${res.status}</span>
+          </span>
+        </td>
+
+        <!-- Kịch Bản & Tiêu Đề -->
+        <td>
+          <div class="scenario-title-cell">
+            <div class="scenario-title-text">${res.title}</div>
+            <div class="scenario-tags-row">
+              ${tcId ? `
+                <a href="#test-cases/${encodeURIComponent(tcId)}" class="tc-link-chip" title="Xem chi tiết test case ${tcId}">
+                  <svg viewBox="0 0 24 24" width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+                  </svg>
+                  <span>${tcId}</span>
+                </a>
+              ` : ''}
+              <span class="scenario-file-path" title="${res.file_path}">${displayPath}</span>
+            </div>
+          </div>
+        </td>
+
+        <!-- Dự Án -->
+        <td>
+          <span class="project-pill">${res.project_name || 'Chromium'}</span>
+        </td>
+
+        <!-- Thời Lượng -->
+        <td>
+          <div class="duration-pill">
+            <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+            </svg>
+            <span>${durationSec}s</span>
+          </div>
+        </td>
+
+        <!-- Traceability -->
+        <td>
+          <span class="status-badge-chip ${res.traceability_status === 'MAPPED' ? 'success' : ''}" style="font-size: 0.6875rem;">
+            ${res.traceability_status}
+          </span>
+        </td>
+
+        <!-- Bằng Chứng & Chi Tiết -->
+        <td style="text-align: right;">
+          <button type="button" class="btn-detail-link btn-open-modal" data-result-id="${res.result_id}">
+            <span>Xem Bằng Chứng</span>
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </button>
+        </td>
       `;
 
-      const tbody = document.createElement('tbody');
-      resultsData.items.forEach(res => {
-        const tr = document.createElement('tr');
-        
-        const tdStatus = document.createElement('td');
-        tdStatus.appendChild(Badge(res.status, res.status));
+      // Open Modal Handler
+      const openModalBtn = tr.querySelector('.btn-open-modal');
+      if (openModalBtn) {
+        openModalBtn.addEventListener('click', () => {
+          ResultDetailsModal.open(res.result_id);
+        });
+      }
 
-        const tdTitle = document.createElement('td');
-        tdTitle.textContent = res.title;
+      tbody.appendChild(tr);
+    });
 
-        const tdProject = document.createElement('td');
-        tdProject.textContent = res.project_name || 'N/A';
+    table.appendChild(tbody);
+    tableWrapper.appendChild(table);
+    tableContainer.appendChild(tableWrapper);
 
-        const tdDuration = document.createElement('td');
-        tdDuration.textContent = `${(res.duration_ms / 1000).toFixed(1)}s`;
-
-        const tdTrace = document.createElement('td');
-        tdTrace.appendChild(Badge(res.traceability_status, res.traceability_status));
-
-        const tdAction = document.createElement('td');
-        const viewBtn = document.createElement('button');
-        viewBtn.className = 'btn';
-        viewBtn.textContent = 'Xem';
-        viewBtn.onclick = () => ResultDetailsModal.open(res.result_id);
-        tdAction.appendChild(viewBtn);
-
-        tr.appendChild(tdStatus);
-        tr.appendChild(tdTitle);
-        tr.appendChild(tdProject);
-        tr.appendChild(tdDuration);
-        tr.appendChild(tdTrace);
-        tr.appendChild(tdAction);
-        
-        tbody.appendChild(tr);
-      });
-
-      table.appendChild(tbody);
-      tableContainer.appendChild(table);
-      this.root.appendChild(tableContainer);
-
-      const paginationEl = Pagination(resultsData.pagination, (newPage) => {
+    // Pagination
+    if (this.cachedResults && this.cachedResults.pagination) {
+      const paginationEl = Pagination(this.cachedResults.pagination, (newPage) => {
         this.page = newPage;
         this.fetchAndRender();
       });
-      this.root.appendChild(paginationEl);
-
-    } catch (error) {
-      this.root.innerHTML = '';
-      this.root.appendChild(ErrorState(error));
+      paginationContainer.appendChild(paginationEl);
     }
   }
 }

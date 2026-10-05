@@ -9,6 +9,8 @@ import type {
 import crypto from 'crypto';
 import path from 'node:path';
 import { resolveEvidenceConfiguration } from '../config/evidence.config';
+import { resolveRuntimeDatabasePath } from '../database/runtime-database';
+import { runImportRunResult } from '../scripts/import-run-result';
 import { EvidenceArchiveService } from '../services/evidence/EvidenceArchiveService';
 import type {
   FinalizeRunInput,
@@ -48,6 +50,7 @@ export interface TestTrackingReporterOptions {
   readonly evidenceRoot?: string;
   readonly archiveService?: EvidenceArchiver;
   readonly logger?: ReporterLogger;
+  readonly autoImport?: boolean;
 }
 
 type ReporterEndResult = { status: FullResult['status'] } | undefined;
@@ -63,6 +66,8 @@ class TestTrackingReporter implements AwaitableTestEndReporter {
   private readonly randomSuffix: () => string;
   private readonly archiveService: EvidenceArchiver;
   private readonly logger: ReporterLogger;
+  private readonly autoImport: boolean;
+  private readonly env: NodeJS.ProcessEnv;
   private discoveredTests: BusinessDiscoveredTest[] = [];
   private approvedSourceRoots: string[] = [];
   private archiveInitialization: Promise<void> = Promise.resolve();
@@ -72,6 +77,14 @@ class TestTrackingReporter implements AwaitableTestEndReporter {
 
   constructor(options: TestTrackingReporterOptions = {}) {
     const env = options.env ?? process.env;
+    this.env = env;
+    const isCustomArchiveLocation =
+      options.archiveService !== undefined ||
+      options.evidenceRoot !== undefined ||
+      options.outputRoot !== undefined;
+
+    this.autoImport =
+      options.autoImport ?? (!isCustomArchiveLocation && env.AUTO_IMPORT_DB !== 'false');
     this.businessRun = env.BUSINESS_TEST_RUN === 'true';
     this.suppliedBusinessRunId = env.BUSINESS_RUN_ID;
     this.testCases = options.testCases ?? allTestCases;
@@ -297,6 +310,21 @@ class TestTrackingReporter implements AwaitableTestEndReporter {
       `Test Case ID không xác định: ${String(runResult.UnknownTestCaseIdExecutions)}`,
     );
     this.logger.log(`Đầu ra: ${outputPath}\n`);
+
+    if (this.autoImport) {
+      try {
+        const databasePath = resolveRuntimeDatabasePath(this.env.AUTOTEST_DB_PATH);
+        runImportRunResult(outputPath, databasePath, {
+          logger: {
+            log: (msg: string) => this.logger.log(msg),
+            warn: (msg: string) => this.logger.warn(msg),
+            error: (msg: string, ...args: unknown[]) => this.logger.error(msg, ...args),
+          },
+        });
+      } catch (importError) {
+        this.logger.warn(`Tự động nạp kết quả vào SQLite không thành công: ${String(importError)}`);
+      }
+    }
 
     if (business) {
       for (const line of formatBusinessRunSummary(business)) this.logger.log(line);

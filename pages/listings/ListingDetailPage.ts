@@ -3,10 +3,16 @@ import type { Locator, Page } from '@playwright/test';
 import { ROUTES } from '../../constants/routes';
 import type { ListingDetailSnapshot, ListingReference } from '../../types/listing.types';
 import { BasePage } from '../base/BasePage';
+import { ChatWindowComponent } from '../components/ChatWindowComponent';
 import { ReportModalComponent } from '../components/ReportModalComponent';
 
 export class ListingDetailPage extends BasePage {
   public readonly reportModal: ReportModalComponent;
+  public readonly chatWindow: ChatWindowComponent;
+  public readonly hostChatButton: Locator;
+  public readonly loginModalHeading: Locator;
+  public readonly loginModalEmailInput: Locator;
+  public readonly loginModalPasswordInput: Locator;
   private readonly titleHeading: Locator;
   private readonly description: Locator;
   private readonly contactName: Locator;
@@ -87,11 +93,28 @@ export class ListingDetailPage extends BasePage {
       exact: true,
     });
     this.toastItem = page.locator('div.toast-item');
+    this.chatWindow = new ChatWindowComponent(page);
+    this.hostChatButton = page.locator('button[aria-label="Nhắn tin chủ nhà"]').first();
+    this.loginModalHeading = page.getByRole('heading', { name: 'Xin chào,' }).first();
+    this.loginModalEmailInput = page.getByPlaceholder('Email của bạn').first();
+    this.loginModalPasswordInput = page.getByPlaceholder('Mật khẩu').first();
   }
 
   public async open(listing: string | number | ListingReference): Promise<void> {
     const id = typeof listing === 'object' ? listing.id : listing;
     await this.navigate(ROUTES.listingDetail(id));
+  }
+
+  public async openChatWithHost(): Promise<void> {
+    await this.hostChatButton.click();
+  }
+
+  public async isHostChatButtonVisible(): Promise<boolean> {
+    return this.hostChatButton.isVisible();
+  }
+
+  public async isLoginModalVisible(): Promise<boolean> {
+    return (await this.loginModalHeading.count()) > 0 && (await this.loginModalHeading.isVisible());
   }
 
   public async isReportSectionVisible(): Promise<boolean> {

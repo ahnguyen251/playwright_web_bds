@@ -27,6 +27,10 @@ export class ListingCardComponent {
     this.favoriteButton = root.getByRole('button', { name: /Yêu thích|Bỏ yêu thích/i }).first();
   }
 
+  public async title(): Promise<string> {
+    return (await this.titleHeading.innerText()).trim();
+  }
+
   public async summary(): Promise<ListingSummary> {
     const href = (await this.root.getAttribute('href')) ?? '';
     const id = /\/listings\/([^/?#]+)/.exec(href)?.[1] ?? (await this.dataValue('listingId'));
@@ -36,7 +40,7 @@ export class ListingCardComponent {
 
     return Object.freeze({
       id,
-      title: (await this.titleHeading.innerText()).trim(),
+      title: await this.title(),
       address: await this.textValue('listing-address', /Phường|Xã|Tỉnh|Thành phố/i, 'p'),
       ...(price === undefined ? {} : { price }),
       priceText,
@@ -82,6 +86,10 @@ export class ListingCardComponent {
       const selected = this.root.locator(fallbackSelector).first();
       if ((await selected.count()) > 0) return (await selected.innerText()).trim();
     }
-    return (await this.root.getByText(fallbackPattern).first().innerText()).trim();
+    const matched = this.root.getByText(fallbackPattern).first();
+    if ((await matched.count()) > 0) {
+      return (await matched.innerText()).trim();
+    }
+    return '';
   }
 }

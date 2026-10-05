@@ -24,14 +24,11 @@ export const api = {
   
   getModules: (options) => fetchJSON(`${API_BASE}/test-cases/modules`, options),
 
-  getTestCases: (page = 1, pageSize = 20, search = '', module = '', options = {}) => {
-    if (typeof module === 'object' && module !== null && ('signal' in module)) {
-      options = module;
-      module = '';
-    }
+  getTestCases: (page = 1, pageSize = 20, filters = {}, options = {}) => {
     const params = new URLSearchParams({ page, pageSize });
-    if (search) params.append('search', search);
-    if (module) params.append('module', module);
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) params.set(key, value);
+    });
     return fetchJSON(`${API_BASE}/test-cases?${params.toString()}`, options);
   },
 

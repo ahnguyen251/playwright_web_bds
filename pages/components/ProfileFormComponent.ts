@@ -61,7 +61,7 @@ export class ProfileFormComponent {
     const profileView = page.getByRole('main');
 
     this.avatarImage = profileView.getByRole('img', { name: 'Avatar', exact: true });
-    this.avatarInput = profileView.locator('input[type="file"][accept*=".png"]');
+    this.avatarInput = profileView.locator('input[type="file"]');
     this.fullNameInput = profileView.getByRole('textbox', {
       name: 'Họ và tên',
       exact: true,

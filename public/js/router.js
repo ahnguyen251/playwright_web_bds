@@ -62,6 +62,13 @@ export class Router {
     if (activeNav) activeNav.classList.add('active');
 
     this.pageTitle.textContent = matchedRoute.title;
+    document.title = `${matchedRoute.title} | Bảng Điều Khiển Automation`;
+
+    const breadcrumbLabel = document.getElementById('breadcrumb-current-label');
+    if (breadcrumbLabel) {
+      const cleanTitle = matchedRoute.title.replace(' - Playwright APM', '');
+      breadcrumbLabel.textContent = cleanTitle;
+    }
 
     if (this.currentView && this.currentView.unmount) {
       this.currentView.unmount();

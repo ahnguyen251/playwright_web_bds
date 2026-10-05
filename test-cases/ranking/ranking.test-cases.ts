@@ -14,7 +14,10 @@ export const rankingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Từ khóa tìm kiếm chung để 2 tin cùng xuất hiện',
     testSteps: '1. Tìm kiếm/hiển thị danh sách chứa cả 2 tin. 2. Lấy vị trí DOM của các .listing-card.',
     expectedResult: 'Tin A xuất hiện ở vị trí trước Tin B, dù Final Score thấp hơn nhiều — đúng quy tắc Cấp ưu tiên gói xét trước Điểm hiển thị (Mục 6).',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/ranking/listing-ranking.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-RANK-ORDER-002',
@@ -26,7 +29,10 @@ export const rankingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Danh sách chứa cả 2 tin',
     testSteps: '1. Truy cập danh sách tin đăng. 2. Assert thứ tự DOM Tin A / Tin B.',
     expectedResult: 'Tin A đứng trên Tin B.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/ranking/listing-ranking.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-RANK-ORDER-003',
@@ -38,7 +44,10 @@ export const rankingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Danh sách tin cùng hạng',
     testSteps: '1. Xem danh sách tin VIP Vàng. 2. So sánh thứ tự hiển thị.',
     expectedResult: 'Tin A xếp trên Tin B.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/ranking/listing-ranking.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-RANK-ORDER-004',
@@ -50,7 +59,10 @@ export const rankingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Danh sách tin VIP Bạc',
     testSteps: '1. Kiểm tra vị trí Tin A/Tin B.',
     expectedResult: 'Tin A (mới hơn, Final Score cao hơn) xếp trên Tin B.',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/ranking/listing-ranking.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-RANK-ORDER-005',
@@ -62,7 +74,10 @@ export const rankingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Thời gian đã đăng: 48h',
     testSteps: '1. Gọi API/Request kiểm tra finalScore trả về từ Backend cho cả 2 tin (hoặc suy ra qua vị trí DOM nếu không có API).',
     expectedResult: 'Tỷ lệ giảm điểm của Tin B giảm mạnh hơn nhiều lần so với Tin A — thể hiện đúng cơ chế tốc độ giảm điểm khác nhau theo hạng gói (Mục 4–5).',
-    automation: { status: 'NOT_AUTOMATED' as const },
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/ranking/listing-ranking.read-only.spec.ts',
+    },
   },
   {
     id: 'TC-RANK-QUAL-001',
@@ -74,6 +89,20 @@ export const rankingTestCases: readonly TestCaseDefinition[] = [
     testData: 'Bổ sung 2 ảnh sổ đỏ hợp lệ + mô tả chi tiết',
     testSteps: '1. Sửa tin A, bổ sung giấy tờ pháp lý + mô tả. 2. Nhấn "Cập nhật". 3. Reload danh sách tin cùng hạng.',
     expectedResult: 'Điểm chất lượng Tin A tăng 6→10; Điểm gốc/Điểm hiển thị tăng theo, đẩy Tin A lên trên Tin B.',
-    automation: { status: 'NOT_AUTOMATED' as const },
-  }
+    automation: {
+      status: 'AUTOMATED' as const,
+      scriptPath: 'tests/ranking/listing-ranking.read-only.spec.ts',
+    },
+  },
 ];
+
+export const getRankingTestCase = (id: string): TestCaseDefinition => {
+  const testCase = rankingTestCases.find((candidate) => candidate.id === id);
+  if (testCase === undefined) throw new Error(`Unknown ranking test case: ${id}`);
+  return testCase;
+};
+
+export const rankingCaseTitle = (id: string): string => {
+  const testCase = getRankingTestCase(id);
+  return `${testCase.id} ${testCase.title} ${testCase.tags.join(' ')}`;
+};

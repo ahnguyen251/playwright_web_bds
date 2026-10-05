@@ -185,6 +185,7 @@ export class ListingListPage extends BasePage {
   public async summaries(): Promise<readonly ListingSummary[]> {
     const total = await this.resultCount();
     if (total === 0) return [];
+    await this.listingCards.first().waitFor({ timeout: 10_000 }).catch(() => null);
     const roots = await this.listingCards.all();
     const visibleRoots: Locator[] = [];
     for (const root of roots) {
@@ -196,6 +197,34 @@ export class ListingListPage extends BasePage {
         .slice(0, currentPageSize)
         .map(async (root) => new ListingCardComponent(root).summary()),
     );
+  }
+
+  public async listingTitles(): Promise<readonly string[]> {
+    await this.listingCards.first().waitFor({ timeout: 10_000 }).catch(() => null);
+    const roots = await this.listingCards.all();
+    const titles: string[] = [];
+    for (const root of roots) {
+      if (await root.isVisible()) {
+        const heading = root.getByRole('heading').first();
+        titles.push((await heading.innerText()).trim());
+      }
+    }
+    return Object.freeze(titles);
+  }
+
+  public async indexOfListing(title: string): Promise<number> {
+    const titles = await this.listingTitles();
+    return titles.findIndex((t) => t.includes(title));
+  }
+
+  public async listingOrder(
+    firstTitle: string,
+    secondTitle: string,
+  ): Promise<'before' | 'after' | 'not_found'> {
+    const index1 = await this.indexOfListing(firstTitle);
+    const index2 = await this.indexOfListing(secondTitle);
+    if (index1 === -1 || index2 === -1) return 'not_found';
+    return index1 < index2 ? 'before' : 'after';
   }
 
   public async resultCount(): Promise<number> {
@@ -242,12 +271,17 @@ export class ListingListPage extends BasePage {
     selection: ListingRangeSelection,
   ): Promise<void> {
     if (selection.kind === 'preset') {
-      await this.runAndWaitForListings(() =>
-        scope
-          .getByLabel(selection.label, { exact: true })
-          .filter({ visible: true })
-          .first()
-          .check({ force: true }),
+      await this.runAndWaitForListings(
+        () =>
+          scope
+            .getByLabel(selection.label, { exact: true })
+            .filter({ visible: true })
+            .first()
+            .check({ force: true }),
+        (parameters) =>
+          field === 'price'
+            ? parameters.has('min_price') || parameters.has('max_price')
+            : parameters.has('min_area') || parameters.has('max_area'),
       );
       return;
     }
@@ -273,19 +307,29 @@ export class ListingListPage extends BasePage {
   }
 
   private rangeInput(field: ListingRangeField): Locator {
-    const scope = field.startsWith('price') ? this.priceScope : this.areaScope;
-    return scope
-      .getByPlaceholder(field.endsWith('From') ? 'Từ' : 'Đến', { exact: true })
-      .filter({ visible: true })
-      .first();
+    switch (field) {
+      case 'priceFrom':
+        return this.priceScope.getByPlaceholder('Từ', { exact: true }).first();
+      case 'priceTo':
+        return this.priceScope.getByPlaceholder('Đến', { exact: true }).first();
+      case 'areaFrom':
+        return this.areaScope.getByPlaceholder('Từ', { exact: true }).first();
+      case 'areaTo':
+        return this.areaScope.getByPlaceholder('Đến', { exact: true }).first();
+    }
   }
 
   private matchesRange(
     parameters: URLSearchParams,
     field: 'price' | 'area',
-    selection: Extract<ListingRangeSelection, { kind: 'custom' }>,
+    selection: Extract<ListingRangeSelection, { readonly kind: 'custom' }>,
   ): boolean {
-    const multiplier = field === 'price' ? 1_000_000_000 : 1;
+    const multiplier =
+      field === 'price'
+        ? this.transactionType === 'sale'
+          ? 1_000_000_000
+          : 1_000_000
+        : 1;
     const from = Math.max(0, selection.from) * multiplier;
     const to = Math.max(0, selection.to) * multiplier;
     const minimumKey = field === 'price' ? 'min_price' : 'min_area';
@@ -303,6 +347,11 @@ export class ListingListPage extends BasePage {
     if (!/^https?:/.test(this.page.url())) {
       await action();
       return;
+    }
+    if (this.page.url().includes('/rent')) {
+      this.transactionType = 'rent';
+    } else if (this.page.url().includes('/sales')) {
+      this.transactionType = 'sale';
     }
     const responsePromise = this.page.waitForResponse((response) => {
       const url = new URL(response.url());
@@ -322,7 +371,8 @@ export class ListingListPage extends BasePage {
       this.lastResultPageSize = pagination.perPage;
       await this.resultCountText
         .filter({ hasText: new RegExp(`\\b${String(pagination.total)}\\b`) })
-        .waitFor();
+        .waitFor({ timeout: 5000 })
+        .catch(() => null);
     }
     await this.page.waitForLoadState('networkidle');
   }

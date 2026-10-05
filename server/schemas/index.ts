@@ -8,13 +8,14 @@ export const PaginationSchema = z.object({
 export const TestCaseFilterSchema = PaginationSchema.extend({
   module: z.string().optional(),
   automationStatus: z.enum(['NOT_AUTOMATED', 'IN_PROGRESS', 'AUTOMATED', 'BLOCKED']).optional(),
+  latestRunStatus: z.enum(['PASSED', 'FAILED', 'NOT_RUN']).optional(),
   search: z.string().optional(),
 });
 
 export const RunFilterSchema = PaginationSchema.extend({
   status: z.enum(['PASSED', 'FAILED']).optional(),
-  from: z.string().datetime().optional(),
-  to: z.string().datetime().optional(),
+  from: z.iso.datetime().optional(),
+  to: z.iso.datetime().optional(),
 }).refine(data => {
   if (data.from && data.to) {
     return new Date(data.from) <= new Date(data.to);

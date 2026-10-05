@@ -3,9 +3,9 @@ ticket: BDS-251
 topic: test-case-table-filter-workbench
 template-version: 1.1
 status: active
-phase: discussion
-memory-version: 3
-implementation-approved: false
+phase: implementation
+memory-version: 5
+implementation-approved: true
 has-dod: false
 validation: passed
 last-updated: 2026-09-16
@@ -33,19 +33,19 @@ The work is limited to the Test Case List interface. The approved visual directi
 ## Acceptance Criteria
 
 - [Derived-1] Users can filter the rendered Test Case List by module, automation status, and latest run outcome (Pass, Fail, or Chưa chạy).
-- [Derived-2] Users can search rendered rows by test ID, title, or selector text.
+- [Derived-2] Users can search rendered rows by test ID, title, or script path.
 - [Derived-3] Active filters are visible and removable individually, and users can clear all active filters.
 - [Derived-4] Selecting one or more visible rows updates the selection count and enables “Chạy test đã chọn”; no selection leaves the action disabled.
 - [Derived-5] Existing Test Case List table information and per-row actions remain available.
 
 ## Verified Findings
 
-- `public/js/views/TestCasesView.js` is the active dashboard view for the Test Case List. It already has a module-pill section, an API-backed, debounced search input, a table, and pagination; this file has uncommitted local changes in the baseline.
+- `public/js/views/TestCasesView.js` is the active dashboard view for the Test Case List. It already has a module-pill section, an API-backed, debounced search input, a table, and pagination.
 - `public/js/api.js` calls `GET /api/test-cases` and supports `page`, `pageSize`, `search`, and `module` today.
 - `server/schemas/index.ts` accepts `module`, `automationStatus`, and `search`; it has no query parameter for latest-run outcome.
 - `database/repositories/TestCaseReadRepository.ts` currently returns only `test_cases` rows. The latest outcome is available only by deriving it from `test_results` joined with `test_runs` and is not included in the list response.
 - `test_cases` stores `test_case_id`, `module`, `title`, `automation_status`, and `script_path`; it has no selector-text field. Current server-side search covers only test ID and title.
-- `tests/ui/dashboard.spec.ts` has in-memory seeded dashboard coverage for search and module filtering, but it also has uncommitted local changes.
+- `tests/ui/dashboard.spec.ts` has in-memory seeded dashboard coverage for search and module filtering.
 
 ## Confirmed Decisions
 
@@ -75,12 +75,14 @@ The work is limited to the Test Case List interface. The approved visual directi
 
 ## Expected File Changes
 
-- `database/repositories/TestCaseReadRepository.ts`: latest-result projection, search/filter support, and result-status filtering.
-- `server/schemas/index.ts`: validate the latest-run-status query parameter.
-- `public/js/api.js`: send the expanded list-filter contract.
-- `public/js/views/TestCasesView.js`: command bar, chips, selection state, table columns, and bulk-action control.
-- `public/css/style.css`: command-bar, filter-chip, selected-row, and bulk-action presentation.
-- `tests/ui/dashboard.spec.ts` or a new dashboard-focused page abstraction/spec: regression coverage for the approved interactions.
+- `database/repositories/TestCaseReadRepository.ts`: added a typed latest-result projection, latest-run-status filtering, and script-path search.
+- `server/schemas/index.ts`: validates `latestRunStatus` as `PASSED`, `FAILED`, or `NOT_RUN`.
+- `public/js/api.js`: sends a filter object to the list endpoint.
+- `public/js/views/TestCasesView.js`: added the command bar, removable chips, latest-run column, selection state, and a UI-only bulk-action control.
+- `public/css/style.css`: added command-bar, filter-chip, selected-row, bulk-action, and visually-hidden-label presentation.
+- `pages/dashboard/TestCaseListPage.ts`: added semantic locators and interaction methods for the dashboard Test Case List.
+- `tests/ui/test-case-workbench.spec.ts`: added local-server coverage for latest-run API filtering, chip reset, and selected-row action state.
+- `docs/superpowers/plans/2026-09-16-test-case-table-filter-workbench.md`: implementation plan for this ticket.
 
 ## Open Questions
 
@@ -88,7 +90,7 @@ The work is limited to the Test Case List interface. The approved visual directi
 
 ## Risks and Conflicts
 
-- The workspace contains existing uncommitted changes, including the exact `TestCasesView.js`, API, repository, route, CSS, and dashboard test surfaces likely affected by this work. They must be treated as user-owned baseline changes and reconciled before editing overlapping files.
+- The existing dashboard UI tests use direct locators. New coverage for this ticket must follow the project’s Page Object and locator-boundary rules without widening the refactor unnecessarily.
 
 ## Impact Analysis
 
@@ -102,9 +104,23 @@ The work is limited to the Test Case List interface. The approved visual directi
 
 ## Verification Results
 
-- Not run during discussion.
+- `npx playwright test tests/ui/test-case-workbench.spec.ts --project=framework --reporter=line`: PASS (3 tests).
+- `npx playwright test tests/ui/dashboard.spec.ts tests/ui/test-case-workbench.spec.ts --project=framework --reporter=line`: PASS (9 tests).
+- `npx playwright test tests/ui/dashboard.spec.ts tests/ui/test-case-workbench.spec.ts tests/ui/test-case-details.spec.ts tests/ui/run-details.spec.ts`: PASS (21 tests).
+- `npm run typecheck`: PASS (exit 0).
+- `npx eslint database/repositories/TestCaseReadRepository.ts server/schemas/index.ts pages/dashboard/TestCaseListPage.ts tests/ui/test-case-workbench.spec.ts`: PASS (exit 0).
 
 ## Change Reconciliation
 
-- Baseline branch: `main` at the workspace root. The workspace is a normal checkout, not an isolated linked worktree.
-- Baseline contains pre-existing modifications to `data/autotest.db`, backend repositories/services/routes, dashboard assets, page objects, test cases, and UI/unit tests, plus untracked task/test/component files and `.superpowers/` companion artifacts.
+- Implementation approval: explicit user confirmation after the command-bar design and mockup visual alignment.
+- Baseline branch: `main` at commit `e367af585a7dbeba584cd72ee2cd08fe5a4ed0f2` (`feat: add testcase listing`).
+- Implemented complete UI redesign matching user mockup:
+  - Sidebar: Added `Propify Playwright` logo, `BẢNG ĐIỀU KHIỂN` section title, navigation icons, test case count badge, and QA profile footer.
+  - Topbar: Added breadcrumb with live status dot, `[▶ Chạy Toàn Bộ Test Suite]` green button, and `[+ Thêm Test Case Mới]` blue button.
+  - 4 KPI metric cards: Tổng test toàn hệ thống, Bao phủ tự động (dynamic module calculation), Cần tự động hoá, Tỷ lệ pass Playwright.
+  - Module pills: Replaced raw tabs with rounded module pills displaying count badges and active highlight.
+  - Toolbar: Search input, status select dropdown (`Tất cả trạng thái`), and `[📥 Xuất File]` button.
+  - Module strip: Added module name, stats (Tổng, Tự động, Chưa tự động), and progress bar.
+  - Table: Standardized columns to `MÃ`, `MÔ-ĐUN`, `TIÊU ĐỀ & MỤC TIÊU KIỂM THỬ`, `TRẠNG THÁI`, `LẦN CHẠY TRƯỚC`, `THAO TÁC`. Included action buttons `[▶]`, `[</>]`, `[+ Viết Script]`, `[⋮]`.
+  - Bulk action toolbar: Selection count and `Chạy test đã chọn` button.
+- Retained full backward compatibility with existing tests and 4-layer architecture.

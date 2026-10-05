@@ -8,8 +8,9 @@ import type { TestEnvironment } from './types/environment.types';
 const environment = loadProcessEnvironmentConfig();
 const defaultStorageState = '.auth/defaultUser.json';
 const endToEndTestMatch =
-  /(authentication|profile|listings|appointments|transactions)\/.*\.spec\.ts/;
-const generalMutatingTestMatch = /(authentication|profile|listings)\/.*\.mutating\.spec\.ts/;
+  /(authentication|profile|listings|appointments|transactions|home|ranking|packages|chat)\/.*\.spec\.ts/;
+const generalMutatingTestMatch =
+  /(authentication|profile|listings|home|ranking|packages|chat)\/.*\.mutating\.spec\.ts/;
 const appointmentMutatingTestMatch = /appointments\/.*\.mutating\.spec\.ts/;
 const genericRegistrationTestMatch = /authentication\/registration\.otp\.mutating\.spec\.ts/;
 const productionRegistrationTestMatch = /authentication\/registration\.production\.spec\.ts/;
@@ -32,6 +33,7 @@ export const createGeneralMutatingProject = (testEnvironment: TestEnvironment) =
 });
 
 export default defineConfig({
+  globalSetup: './tests/setup/global.setup.ts',
   testDir: './tests',
   outputDir: 'test-results',
   fullyParallel: true,
