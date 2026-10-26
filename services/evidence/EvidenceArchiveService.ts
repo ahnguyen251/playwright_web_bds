@@ -36,7 +36,7 @@ import {
   toSafeEvidenceSegment,
 } from './evidence-paths';
 
-const SAFE_RUN_ID = /^(?:BUSINESS-)?RUN-\d{14}-[a-f0-9]{4}$/u;
+const SAFE_RUN_ID = /^(?:(?:BUSINESS-)?RUN-\d{14}-[a-f0-9]{4}|adhoc-run-\d+-[a-zA-Z0-9_-]+)$/u;
 
 interface PersistedEvidenceRecord {
   readonly evidence: PersistedEvidence;

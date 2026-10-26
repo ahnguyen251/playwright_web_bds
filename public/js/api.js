@@ -36,14 +36,27 @@ export const api = {
 
   getTestCaseAnalytics: (testCaseId, options) => fetchJSON(`${API_BASE}/test-cases/${testCaseId}/analytics`, options),
 
-  getTestCaseResults: (testCaseId, page = 1, pageSize = 20, status = '', options) => {
+  getTestCaseResults: (testCaseId, page = 1, pageSize = 20, filters = {}, options = {}) => {
     const params = new URLSearchParams({ page, pageSize });
-    if (status) params.append('status', status);
+    if (typeof filters === 'string') {
+      if (filters) params.append('status', filters);
+    } else if (filters && typeof filters === 'object') {
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          params.set(key, value);
+        }
+      });
+    }
     return fetchJSON(`${API_BASE}/test-cases/${testCaseId}/results?${params.toString()}`, options);
   },
   
-  getRuns: (page = 1, pageSize = 20, options) => {
+  getRuns: (page = 1, pageSize = 20, filters = {}, options = {}) => {
     const params = new URLSearchParams({ page, pageSize });
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        params.set(key, value);
+      }
+    });
     return fetchJSON(`${API_BASE}/runs?${params.toString()}`, options);
   },
 
@@ -57,5 +70,11 @@ export const api = {
 
   getResultById: (resultId, options) => fetchJSON(`${API_BASE}/results/${resultId}`, options),
   
-  getResultEvidence: (resultId, options) => fetchJSON(`${API_BASE}/results/${resultId}/evidence`, options)
+  getResultEvidence: (resultId, options) => fetchJSON(`${API_BASE}/results/${resultId}/evidence`, options),
+
+  runTestCase: (testCaseId, options = {}) =>
+    fetchJSON(`${API_BASE}/test-cases/${encodeURIComponent(testCaseId)}/run`, {
+      method: 'POST',
+      ...options,
+    }),
 };

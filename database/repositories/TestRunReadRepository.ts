@@ -33,13 +33,19 @@ export class TestRunReadRepository {
   constructor(private conn: DatabaseConnection) {}
 
   public getRuns(
-    filters: { status?: string; from?: string; to?: string },
+    filters: { status?: string; from?: string; to?: string; runType?: string },
     limit: number,
     offset: number,
   ) {
     const { db } = this.conn;
     let sql = 'SELECT * FROM test_runs WHERE 1=1';
     const params: (string | number)[] = [];
+
+    if (filters.runType === 'SINGLE') {
+      sql += " AND run_id LIKE 'adhoc-%'";
+    } else {
+      sql += " AND run_id NOT LIKE 'adhoc-%'";
+    }
 
     if (filters.status) {
       if (filters.status === 'PASSED') {

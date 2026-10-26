@@ -139,5 +139,22 @@ export default defineConfig({
         trace: 'off',
       },
     },
+    ...(process.env.ADHOC_RUN_ID
+      ? [
+          {
+            name: 'adhoc-runner',
+            testMatch: endToEndTestMatch,
+            fullyParallel: false,
+            workers: 1,
+            retries: 0,
+            dependencies: ['auth-setup'],
+            use: {
+              ...devices['Desktop Chrome'],
+              storageState: defaultStorageState,
+              trace: 'off' as const,
+            },
+          },
+        ]
+      : []),
   ],
 });

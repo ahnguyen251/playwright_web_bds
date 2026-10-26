@@ -502,13 +502,18 @@ export class TestCasesViewClass {
       const mod = this.modules.find((m) => m.module === this.activeModule);
       if (mod) {
         moduleTitle = `Mô-đun: ${mod.module}`;
-        if (mod.module === 'Listings') {
-          moduleSub = '(Bất động sản đăng tin)';
-        } else if (mod.module === 'Appointments') {
-          moduleSub = '(Đặt lịch hẹn xem nhà)';
-        } else if (mod.module === 'Profile') {
-          moduleSub = '(Hồ sơ người dùng)';
-        }
+        const subMap = {
+          'Authentication': '(Xác thực & Tài khoản)',
+          'Profile': '(Hồ sơ người dùng)',
+          'Home': '(Trang chủ & Tìm kiếm)',
+          'Ranking': '(Xếp hạng & Điểm hiển thị tin)',
+          'Listings': '(Bất động sản đăng tin)',
+          'Appointments': '(Đặt lịch hẹn xem nhà)',
+          'Transactions': '(Lịch sử giao dịch)',
+          'Packages': '(Gói tin & Thanh toán)',
+          'Chat': '(Nhắn tin trực tuyến)'
+        };
+        moduleSub = subMap[mod.module] || '';
         total = mod.totalTestCases;
         automated = mod.automatedCount;
         notAutomated = mod.notAutomatedCount;
@@ -688,31 +693,7 @@ export class TestCasesViewClass {
 
         // 6. LẦN CHẠY TRƯỚC
         const tdLatestRun = document.createElement('td');
-        const runOutcome = document.createElement('div');
-        if (tc.latest_run_status === 'PASSED') {
-          runOutcome.className = 'run-outcome-cell passed';
-          const duration = this.formatDuration(tc.latest_run_duration_ms || 940);
-          runOutcome.innerHTML = `
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
-            <span>Passed (${duration})</span>
-          `;
-        } else if (tc.latest_run_status === 'FAILED') {
-          runOutcome.className = 'run-outcome-cell failed';
-          const duration = this.formatDuration(tc.latest_run_duration_ms || 1200);
-          runOutcome.innerHTML = `
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-            <span>Failed (${duration})</span>
-          `;
-        } else {
-          runOutcome.className = 'run-outcome-cell unrun';
-          runOutcome.textContent = 'Chưa thực thi';
-        }
-        tdLatestRun.appendChild(runOutcome);
+        this.renderLatestRunCell(tdLatestRun, tc.latest_run_status, tc.latest_run_duration_ms);
 
         // 7. THAO TÁC
         const tdActions = document.createElement('td');
@@ -733,8 +714,39 @@ export class TestCasesViewClass {
               <path d="M8 5v14l11-7z"/>
             </svg>
           `;
-          runBtn.addEventListener('click', () => {
-            this.showToast(`Đã gửi lệnh chạy ${tc.test_case_id} tới Playwright Test Runner.`);
+          runBtn.addEventListener('click', async () => {
+            if (runBtn.disabled) return;
+            runBtn.disabled = true;
+            const originalIcon = runBtn.innerHTML;
+            runBtn.innerHTML = `
+              <svg class="spinner" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+                <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+              </svg>
+            `;
+            this.showToast(`Đang chạy ${tc.test_case_id} bằng Playwright (Headed)...`);
+
+            try {
+              const res = await api.runTestCase(tc.test_case_id);
+              if (res.status === 'PASSED') {
+                this.showToast(`✓ ${tc.test_case_id} chạy THÀNH CÔNG (${this.formatDuration(res.durationMs)})`);
+                this.renderLatestRunCell(tdLatestRun, 'PASSED', res.durationMs);
+              } else if (res.status === 'SKIPPED') {
+                this.showToast(`⚠️ ${tc.test_case_id}: SKIPPED (Bỏ qua do chính sách an toàn)`);
+                this.renderLatestRunCell(tdLatestRun, 'SKIPPED', res.durationMs);
+              } else if (res.status === 'FAILED') {
+                this.showToast(`✕ ${tc.test_case_id} chạy THẤT BẠI: ${res.errorMessage || 'Lỗi kiểm thử'}`);
+                this.renderLatestRunCell(tdLatestRun, 'FAILED', res.durationMs);
+              } else {
+                this.showToast(`⚠️ ${tc.test_case_id}: ${res.status}`);
+                this.renderLatestRunCell(tdLatestRun, res.status, res.durationMs);
+              }
+            } catch (err) {
+              this.showToast(`✕ Lỗi thực thi ${tc.test_case_id}: ${err.message || 'Lỗi không xác định'}`);
+            } finally {
+              runBtn.disabled = false;
+              runBtn.innerHTML = originalIcon;
+            }
           });
 
           // Code button (View script path)
@@ -907,6 +919,35 @@ export class TestCasesViewClass {
       return `${(ms / 1000).toFixed(1)}s`;
     }
     return `${ms}ms`;
+  }
+
+  renderLatestRunCell(tdLatestRun, status, durationMs) {
+    tdLatestRun.innerHTML = '';
+    const runOutcome = document.createElement('div');
+    if (status === 'PASSED') {
+      runOutcome.className = 'run-outcome-cell passed';
+      const duration = this.formatDuration(durationMs || 940);
+      runOutcome.innerHTML = `
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Passed (${duration})</span>
+      `;
+    } else if (status === 'FAILED') {
+      runOutcome.className = 'run-outcome-cell failed';
+      const duration = this.formatDuration(durationMs || 1200);
+      runOutcome.innerHTML = `
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        <span>Failed (${duration})</span>
+      `;
+    } else {
+      runOutcome.className = 'run-outcome-cell unrun';
+      runOutcome.textContent = status === 'SKIPPED' ? 'Skipped' : 'Chưa thực thi';
+    }
+    tdLatestRun.appendChild(runOutcome);
   }
 
   exportCurrentData() {

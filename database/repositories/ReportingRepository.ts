@@ -28,7 +28,7 @@ export class ReportingRepository {
     };
 
     // Latest Run metrics from actual test_results instead of trusting test_runs cache
-    const latestRunRow = db.prepare('SELECT run_id FROM test_runs ORDER BY created_at DESC, run_id DESC LIMIT 1').get() as { run_id: string } | undefined;
+    const latestRunRow = db.prepare("SELECT run_id FROM test_runs WHERE run_id NOT LIKE 'adhoc-%' ORDER BY created_at DESC, run_id DESC LIMIT 1").get() as { run_id: string } | undefined;
     
     let latestRun = null;
 

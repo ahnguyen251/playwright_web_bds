@@ -106,10 +106,16 @@ class TestTrackingReporter implements AwaitableTestEndReporter {
     const shortRandom = this.randomSuffix();
     const suppliedRunId = this.suppliedBusinessRunId;
     const safeBusinessRunId = /^BUSINESS-RUN-\d{14}-[a-f0-9]{4}$/;
-    this.runId =
-      this.businessRun && suppliedRunId && safeBusinessRunId.test(suppliedRunId)
-        ? suppliedRunId
-        : `RUN-${dateStr}-${shortRandom}`;
+    const suppliedAdhocRunId = this.env.ADHOC_RUN_ID;
+    const safeAdhocRunId = /^adhoc-run-\d+-[a-zA-Z0-9_-]+$/;
+
+    if (suppliedAdhocRunId && safeAdhocRunId.test(suppliedAdhocRunId)) {
+      this.runId = suppliedAdhocRunId;
+    } else if (this.businessRun && suppliedRunId && safeBusinessRunId.test(suppliedRunId)) {
+      this.runId = suppliedRunId;
+    } else {
+      this.runId = `RUN-${dateStr}-${shortRandom}`;
+    }
 
     this.approvedSourceRoots = [
       ...new Set(config.projects.map(({ outputDir }) => path.resolve(outputDir))),

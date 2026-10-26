@@ -14,6 +14,7 @@ export const TestCaseFilterSchema = PaginationSchema.extend({
 
 export const RunFilterSchema = PaginationSchema.extend({
   status: z.enum(['PASSED', 'FAILED']).optional(),
+  runType: z.enum(['SUITE', 'SINGLE']).optional(),
   from: z.iso.datetime().optional(),
   to: z.iso.datetime().optional(),
 }).refine(data => {
@@ -32,4 +33,5 @@ export const ResultFilterSchema = PaginationSchema.extend({
   projectName: z.string().optional(),
   testCaseId: z.string().optional(),
   search: z.string().optional(),
+  runType: z.enum(['SUITE', 'SINGLE']).optional(),
 });

@@ -26,7 +26,7 @@ const signedOutLoginPreconditions = Object.freeze([
 export const activeAccountLoginTestCase: LoginTestCase = Object.freeze({
   id: 'TC-AUTH-LOGIN-001',
   title: '[Happy Path / Smoke] Đăng nhập thành công với tài khoản Active',
-  module: 'Authentication Login',
+  module: 'Authentication',
   priority: 'critical',
   tags: Object.freeze([TAGS.smoke, ...authenticationTags]),
   preconditions: Object.freeze([
@@ -41,7 +41,7 @@ export const activeAccountLoginTestCase: LoginTestCase = Object.freeze({
 export const incorrectPasswordLoginTestCase: LoginTestCase = Object.freeze({
   id: 'TC-AUTH-LOGIN-002',
   title: '[Negative] Đăng nhập thất bại khi sai mật khẩu',
-  module: 'Authentication Login',
+  module: 'Authentication',
   priority: 'high',
   tags: authenticationTags,
   preconditions: Object.freeze(['An active configured Propify account exists.']),
@@ -56,7 +56,7 @@ export const incorrectPasswordLoginTestCase: LoginTestCase = Object.freeze({
 export const lockedAccountLoginTestCase: LoginTestCase = Object.freeze({
   id: 'TC-AUTH-LOGIN-003',
   title: '[State / Rule] Chặn đăng nhập với tài khoản bị khóa',
-  module: 'Authentication Login',
+  module: 'Authentication',
   priority: 'high',
   tags: authenticationTags,
   preconditions: Object.freeze([
@@ -71,7 +71,7 @@ export const lockedAccountLoginTestCase: LoginTestCase = Object.freeze({
 export const requiredLoginFieldsTestCase: LoginTestCase = Object.freeze({
   id: 'TC-AUTH-LOGIN-004',
   title: '[Required Validation] Bỏ trống Email/SĐT hoặc Mật khẩu',
-  module: 'Authentication Login',
+  module: 'Authentication',
   priority: 'medium',
   tags: authenticationTags,
   preconditions: signedOutLoginPreconditions,
@@ -83,7 +83,7 @@ export const requiredLoginFieldsTestCase: LoginTestCase = Object.freeze({
 export const googleOAuthLoginTestCase: LoginTestCase = Object.freeze({
   id: 'TC-AUTH-LOGIN-005',
   title: '[Happy Path / OAuth] Đăng nhập qua Google (mock)',
-  module: 'Authentication Login',
+  module: 'Authentication',
   priority: 'low',
   tags: Object.freeze([...authenticationTags, TAGS.external]),
   preconditions: Object.freeze(['A repository-owned Google OAuth mock contract is available.']),

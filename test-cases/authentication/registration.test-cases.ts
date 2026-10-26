@@ -20,17 +20,6 @@ interface RegistrationTestCase extends TestCaseDefinition {
   readonly countdown?: 'default';
 }
 
-interface RegistrationValidationTestCase extends TestCaseDefinition {
-  readonly data: RegistrationData;
-  readonly expectedMessages: readonly string[];
-  readonly expectedSubmitEnabled: boolean;
-}
-
-interface RegistrationOtpTestCase extends TestCaseDefinition {
-  readonly code?: string;
-  readonly expectedValues?: readonly string[];
-}
-
 const validationData = AuthenticationDataFactory.getValidationData();
 const registrationTags = Object.freeze([TAGS.regression, TAGS.authentication]);
 const externalRegistrationTags = Object.freeze([
@@ -47,7 +36,7 @@ export const registrationSuccessTestCase: RegistrationTestCase = Object.freeze({
   id: 'TC-AUTH-REGISTER-001',
   title:
     '[Happy Path] Đăng ký tài khoản thành công với thông tin hợp lệ, hoàn tất xác thực OTP',
-  module: 'Authentication Registration',
+  module: 'Authentication',
   priority: 'critical',
   tags: externalRegistrationTags,
   preconditions: Object.freeze([
@@ -63,7 +52,7 @@ export const registrationSuccessTestCase: RegistrationTestCase = Object.freeze({
 export const requiredRegistrationFieldsTestCase: RegistrationTestCase = Object.freeze({
   id: 'TC-AUTH-REGISTER-002',
   title: '[Required Validation] Chặn đăng ký khi bỏ trống các trường bắt buộc',
-  module: 'Authentication Registration',
+  module: 'Authentication',
   priority: 'high',
   tags: registrationTags,
   preconditions: signedOutRegistrationPreconditions,
@@ -77,7 +66,7 @@ export const requiredRegistrationFieldsTestCase: RegistrationTestCase = Object.f
 export const invalidRegistrationEmailTestCase: RegistrationTestCase = Object.freeze({
   id: 'TC-AUTH-REGISTER-003',
   title: '[Input Validation] Chặn đăng ký khi Email sai định dạng',
-  module: 'Authentication Registration',
+  module: 'Authentication',
   priority: 'high',
   tags: registrationTags,
   preconditions: signedOutRegistrationPreconditions,
@@ -91,7 +80,7 @@ export const invalidRegistrationEmailTestCase: RegistrationTestCase = Object.fre
 export const duplicateRegistrationEmailTestCase: RegistrationTestCase = Object.freeze({
   id: 'TC-AUTH-REGISTER-004',
   title: '[Business Rule] Chặn đăng ký khi Email đã tồn tại',
-  module: 'Authentication Registration',
+  module: 'Authentication',
   priority: 'high',
   tags: registrationTags,
   preconditions: Object.freeze(['An existing account is available for the configured email.']),
@@ -104,7 +93,7 @@ export const duplicateRegistrationEmailTestCase: RegistrationTestCase = Object.f
 export const invalidRegistrationPasswordTestCase: RegistrationTestCase = Object.freeze({
   id: 'TC-AUTH-REGISTER-005',
   title: '[Input Validation] Báo lỗi biên độ dài và định dạng ký tự của Mật khẩu',
-  module: 'Authentication Registration',
+  module: 'Authentication',
   priority: 'high',
   tags: registrationTags,
   preconditions: signedOutRegistrationPreconditions,
@@ -119,7 +108,7 @@ export const invalidRegistrationPasswordTestCase: RegistrationTestCase = Object.
 export const registrationConfirmationMismatchTestCase: RegistrationTestCase = Object.freeze({
   id: 'TC-AUTH-REGISTER-006',
   title: '[Business Rule] Báo lỗi khi Xác nhận mật khẩu không khớp',
-  module: 'Authentication Registration',
+  module: 'Authentication',
   priority: 'high',
   tags: registrationTags,
   preconditions: signedOutRegistrationPreconditions,
@@ -138,7 +127,7 @@ export const registrationConfirmationMismatchTestCase: RegistrationTestCase = Ob
 export const invalidOrExpiredRegistrationOtpTestCase: RegistrationTestCase = Object.freeze({
   id: 'TC-AUTH-REGISTER-007',
   title: '[Negative / State] OTP sai hoặc hết hạn',
-  module: 'Authentication Registration',
+  module: 'Authentication',
   priority: 'high',
   tags: externalRegistrationTags,
   preconditions: Object.freeze(['A valid registration has reached the OTP step.']),
@@ -150,7 +139,7 @@ export const invalidOrExpiredRegistrationOtpTestCase: RegistrationTestCase = Obj
 export const registrationOtpResendCountdownTestCase: RegistrationTestCase = Object.freeze({
   id: 'TC-AUTH-REGISTER-008',
   title: '[Boundary] Nút "Gửi lại OTP" bị disable trong countdown, enable sau khi hết',
-  module: 'Authentication Registration',
+  module: 'Authentication',
   priority: 'medium',
   tags: externalRegistrationTags,
   preconditions: Object.freeze(['The registration OTP was just sent and the OTP view is open.']),

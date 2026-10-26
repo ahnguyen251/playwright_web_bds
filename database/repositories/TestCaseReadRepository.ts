@@ -141,7 +141,7 @@ export class TestCaseReadRepository {
       | undefined;
   }
 
-  public getTestCaseResults(testCaseId: string, limit: number, offset: number, filters?: { status?: string }) {
+  public getTestCaseResults(testCaseId: string, limit: number, offset: number, filters?: { status?: string; runType?: string }) {
     const { db } = this.conn;
 
     let sql = `
@@ -161,6 +161,13 @@ export class TestCaseReadRepository {
     `;
 
     const params: SqlParameter[] = [testCaseId];
+
+    if (filters?.runType === 'SINGLE') {
+      sql += " AND r.run_id LIKE 'adhoc-%'";
+    } else {
+      sql += " AND r.run_id NOT LIKE 'adhoc-%'";
+    }
+
 
     if (filters?.status) {
       sql += ' AND tr.status = ?';
@@ -198,7 +205,20 @@ export class TestCaseReadRepository {
         SUM(CASE WHEN automation_status = 'BLOCKED' THEN 1 ELSE 0 END) as blockedCount
       FROM test_cases
       GROUP BY module
-      ORDER BY module ASC
+      ORDER BY 
+        CASE module
+          WHEN 'Authentication' THEN 1
+          WHEN 'Profile' THEN 2
+          WHEN 'Home' THEN 3
+          WHEN 'Ranking' THEN 4
+          WHEN 'Listings' THEN 5
+          WHEN 'Appointments' THEN 6
+          WHEN 'Transactions' THEN 7
+          WHEN 'Packages' THEN 8
+          WHEN 'Chat' THEN 9
+          ELSE 100
+        END ASC,
+        module ASC
     `;
     return db.prepare(sql).all() as ModuleSummary[];
   }

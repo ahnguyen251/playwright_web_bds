@@ -121,7 +121,7 @@ export const SummaryView = {
 
       // 2. 4 Modern KPI Cards Grid
       const kpiGrid = document.createElement('div');
-      kpiGrid.className = 'summary-kpi-grid';
+      kpiGrid.className = 'summary-kpi-grid metrics-grid';
       kpiGrid.innerHTML = `
         <!-- Card 1: Tổng số Test Case -->
         <div class="kpi-modern-card">
@@ -136,7 +136,7 @@ export const SummaryView = {
             </div>
           </div>
           <div class="kpi-value-row">
-            <span class="kpi-big-num">${totalCases}</span>
+            <span class="kpi-big-num metric-value">${totalCases}</span>
             <span class="kpi-badge badge-green">+5 tuần này</span>
           </div>
           <div class="kpi-card-footer">
@@ -157,7 +157,7 @@ export const SummaryView = {
             </div>
           </div>
           <div class="kpi-value-row">
-            <span class="kpi-big-num">${automatedCases}</span>
+            <span class="kpi-big-num metric-value">${automatedCases}</span>
             <span class="kpi-unit-text">/ ${totalCases} cases</span>
           </div>
           <div class="kpi-card-footer">
@@ -179,7 +179,7 @@ export const SummaryView = {
             </div>
           </div>
           <div class="kpi-value-row">
-            <span class="kpi-big-num">${notAutomatedCases}</span>
+            <span class="kpi-big-num metric-value">${notAutomatedCases}</span>
             <span class="kpi-badge badge-amber">${notAutomatedPercent}% tồn đọng</span>
           </div>
           <div class="kpi-card-footer">
@@ -195,7 +195,7 @@ export const SummaryView = {
             <span class="kpi-target-label">Target: 80%</span>
           </div>
           <div class="kpi-value-row" style="margin-bottom: 6px;">
-            <span class="kpi-big-num">${coverage.toFixed(1)}%</span>
+            <span class="kpi-big-num metric-value">${coverage.toFixed(1)}%</span>
             <span class="kpi-unit-text">toàn hệ thống</span>
           </div>
           <div class="kpi-progress-bar-wrap">
@@ -234,7 +234,7 @@ export const SummaryView = {
                   ${isRunSuccess ? 'Thành công' : 'Có lỗi'}
                 </span>
               </div>
-              <a href="#runs/${encodeURIComponent(latestRun ? latestRun.runId : '')}" class="latest-run-id-link">
+              <a href="#runs/${encodeURIComponent(latestRun ? latestRun.runId : '')}" class="latest-run-id-link metric-value">
                 ${latestRun && latestRun.runId ? latestRun.runId : 'RUN-CHƯA-GHI-NHẬN'}
               </a>
               <div class="latest-run-trigger">
@@ -391,16 +391,14 @@ export const SummaryView = {
 
       // Friendly module names & colors
       const moduleMetaMap = {
+        'Authentication': { label: 'Authentication (Xác thực tài khoản)', color: '#10b981' },
+        'Profile': { label: 'Profile (Hồ sơ người dùng)', color: '#f59e0b' },
+        'Home': { label: 'Home (Trang chủ & Tìm kiếm)', color: '#0ea5e9' },
+        'Ranking': { label: 'Ranking (Xếp hạng tin đăng)', color: '#6366f1' },
         'Listings': { label: 'Listings (Bất động sản đăng tin)', color: '#2563eb' },
-        'Authentication Login': { label: 'Authentication & Login (Đăng nhập)', color: '#10b981' },
-        'Authentication Registration': { label: 'Authentication (Đăng ký tài khoản)', color: '#059669' },
-        'Authentication Password Recovery': { label: 'Authentication (Khôi phục mật khẩu)', color: '#0d9488' },
         'Appointments': { label: 'Appointments (Lịch hẹn xem nhà)', color: '#3b82f6' },
-        'Profile': { label: 'Profile & Settings (Hồ sơ cá nhân)', color: '#f59e0b' },
         'Transactions': { label: 'Transactions (Giao dịch & Nạp tiền)', color: '#ef4444' },
         'Packages': { label: 'Packages (Gói thành viên & Dịch vụ)', color: '#8b5cf6' },
-        'Ranking': { label: 'Ranking (Xếp hạng tin đăng)', color: '#6366f1' },
-        'Home': { label: 'Home (Trang chủ & Tìm kiếm)', color: '#0ea5e9' },
         'Chat': { label: 'Chat (Nhắn tin trực tuyến)', color: '#ec4899' }
       };
 

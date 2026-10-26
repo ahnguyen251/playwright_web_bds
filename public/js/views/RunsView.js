@@ -11,6 +11,7 @@ export class RunsViewClass {
     this.pageSize = 20;
     this.searchTerm = '';
     this.statusFilter = 'ALL';
+    this.runType = 'SUITE';
     this.cachedData = null;
   }
 
@@ -19,6 +20,7 @@ export class RunsViewClass {
     this.page = 1;
     this.searchTerm = '';
     this.statusFilter = 'ALL';
+    this.runType = 'SUITE';
     await this.fetchAndRender();
   }
 
@@ -48,7 +50,7 @@ export class RunsViewClass {
     this.root.appendChild(LoadingState('Đang tải danh sách lịch sử chạy test...'));
 
     try {
-      const data = await api.getRuns(this.page, this.pageSize);
+      const data = await api.getRuns(this.page, this.pageSize, { runType: this.runType });
       this.cachedData = data;
       this.render();
     } catch (error) {
@@ -170,7 +172,7 @@ export class RunsViewClass {
     kpiGrid.innerHTML = `
       <div class="kpi-modern-card">
         <div class="kpi-header-row">
-          <span class="kpi-header-label">TỔNG LẦN CHẠY TEST</span>
+          <span class="kpi-header-label">${this.runType === 'SINGLE' ? 'TỔNG LẦN CHẠY RIÊNG LẺ' : 'TỔNG LẦN CHẠY THEO NHÓM'}</span>
           <div class="kpi-icon-box gray">
             <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
@@ -184,7 +186,7 @@ export class RunsViewClass {
         </div>
         <div class="kpi-card-footer">
           <span class="dot blue"></span>
-          <span>Phiên thực thi ghi nhận trên hệ thống</span>
+          <span>${this.runType === 'SINGLE' ? 'Các lần chạy thử từng test case qua Web Runner' : 'Phiên thực thi bộ Test Suite trên hệ thống'}</span>
         </div>
       </div>
 
@@ -251,6 +253,41 @@ export class RunsViewClass {
       </div>
     `;
     container.appendChild(kpiGrid);
+
+    // Segmented Tabs: Chạy Theo Nhóm vs Chạy Riêng Lẻ
+    const modeTabs = document.createElement('div');
+    modeTabs.className = 'runs-mode-tabs-container';
+    modeTabs.innerHTML = `
+      <button type="button" class="runs-mode-tab ${this.runType === 'SUITE' ? 'is-active' : ''}" data-run-type="SUITE">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+          <line x1="8" y1="21" x2="16" y2="21"/>
+          <line x1="12" y1="17" x2="12" y2="21"/>
+        </svg>
+        <span>Chạy Theo Nhóm (Suite Runs)</span>
+      </button>
+      <button type="button" class="runs-mode-tab ${this.runType === 'SINGLE' ? 'is-active' : ''}" data-run-type="SINGLE">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+          <path d="M8 5v14l11-7z"/>
+        </svg>
+        <span>Chạy Riêng Lẻ (Single Runs)</span>
+      </button>
+    `;
+
+    modeTabs.querySelectorAll('.runs-mode-tab').forEach((tabBtn) => {
+      tabBtn.addEventListener('click', () => {
+        const targetType = tabBtn.dataset.runType;
+        if (targetType && targetType !== this.runType) {
+          this.runType = targetType;
+          this.page = 1;
+          this.searchTerm = '';
+          this.statusFilter = 'ALL';
+          this.fetchAndRender();
+        }
+      });
+    });
+
+    container.appendChild(modeTabs);
 
     // 3. Search & Filter Command Bar
     const toolbar = document.createElement('div');
@@ -337,11 +374,14 @@ export class RunsViewClass {
     });
 
     if (filteredItems.length === 0) {
-      tableContainer.appendChild(EmptyState(
-        this.searchTerm || this.statusFilter !== 'ALL'
-          ? 'Không tìm thấy lần chạy nào phù hợp với bộ lọc.'
-          : 'Chưa có dữ liệu lần chạy kiểm thử nào.'
-      ));
+      const emptyMsg = this.runType === 'SINGLE'
+        ? (this.searchTerm || this.statusFilter !== 'ALL'
+            ? 'Không tìm thấy lần chạy riêng lẻ nào phù hợp với bộ lọc.'
+            : 'Chưa có lần chạy riêng lẻ nào. Hãy bấm nút Play ở Danh Sách Test Case để chạy thử.')
+        : (this.searchTerm || this.statusFilter !== 'ALL'
+            ? 'Không tìm thấy lần chạy theo nhóm nào phù hợp với bộ lọc.'
+            : 'Không tìm thấy lần chạy theo nhóm nào.');
+      tableContainer.appendChild(EmptyState(emptyMsg));
       return;
     }
 
@@ -384,6 +424,11 @@ export class RunsViewClass {
       const relativeTime = this.formatRelativeTime(run.started_at);
       const fullDateStr = run.started_at ? new Date(run.started_at).toLocaleString('vi-VN') : 'Không rõ';
 
+      const isSingleRun = (run.run_id && run.run_id.startsWith('adhoc-')) || this.runType === 'SINGLE';
+      const badgeHtml = isSingleRun
+        ? `<span class="run-trigger-badge single">Web Runner • Chạy riêng lẻ</span>`
+        : `<span class="run-trigger-badge suite">Worker Pool #1 • Scheduled CI</span>`;
+
       tr.innerHTML = `
         <!-- Mã Lần Chạy -->
         <td>
@@ -392,7 +437,7 @@ export class RunsViewClass {
               <a href="#runs/${encodeURIComponent(run.run_id)}" class="run-id-text" title="Xem chi tiết lần chạy">
                 ${run.run_id}
               </a>
-              <span class="run-trigger-badge">Worker Pool #1 • Scheduled CI</span>
+              ${badgeHtml}
             </div>
             <button type="button" class="btn-copy-id" title="Sao chép Run ID" data-run-id="${run.run_id}">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">

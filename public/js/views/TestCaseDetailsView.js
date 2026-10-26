@@ -12,6 +12,7 @@ export class TestCaseDetailsViewClass {
     this.page = 1;
     this.pageSize = 20;
     this.statusFilter = '';
+    this.runType = 'SUITE';
     this.searchTerm = '';
     this.abortController = null;
     this.cachedTestCase = null;
@@ -26,6 +27,7 @@ export class TestCaseDetailsViewClass {
     this.page = 1;
     this.pageSize = 20;
     this.statusFilter = '';
+    this.runType = 'SUITE';
     this.searchTerm = '';
 
     const pageTitle = document.getElementById('page-title');
@@ -61,7 +63,7 @@ export class TestCaseDetailsViewClass {
       const [tcData, analyticsData, resultsData] = await Promise.all([
         api.getTestCaseById(this.testCaseId, { signal }),
         api.getTestCaseAnalytics(this.testCaseId, { signal }).catch(() => null),
-        api.getTestCaseResults(this.testCaseId, this.page, this.pageSize, this.statusFilter, { signal })
+        api.getTestCaseResults(this.testCaseId, this.page, this.pageSize, { status: this.statusFilter, runType: this.runType }, { signal })
       ]);
 
       this.cachedTestCase = tcData;
@@ -130,13 +132,21 @@ export class TestCaseDetailsViewClass {
             </svg>
             <span>Xuất Phân Tích JSON</span>
           </button>
+          ${isAutomated ? `
+            <button type="button" class="btn btn-primary" id="btn-run-tc" style="padding: 7px 14px; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span>Chạy Test Case Này</span>
+            </button>
+          ` : ''}
         </div>
       </div>
 
       <div class="apm-title-row">
         <div>
           <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px; flex-wrap: wrap;">
-            <h1 class="apm-title-main" style="font-family: Consolas, monospace;">${tc.test_case_id}</h1>
+            <h1 class="apm-title-main" id="tc-title-id" style="font-family: Consolas, monospace;">${tc.test_case_id}</h1>
             <button type="button" class="btn-copy-id" id="btn-copy-tc-id" title="Sao chép Test Case ID">
               <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
@@ -232,6 +242,36 @@ export class TestCaseDetailsViewClass {
       a.click();
       URL.revokeObjectURL(url);
     });
+
+    // Run Test Case button
+    const runTcBtn = headerSection.querySelector('#btn-run-tc');
+    if (runTcBtn) {
+      runTcBtn.addEventListener('click', async () => {
+        if (runTcBtn.disabled) return;
+        runTcBtn.disabled = true;
+        const origContent = runTcBtn.innerHTML;
+        runTcBtn.innerHTML = `
+          <svg class="spinner" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+          </svg>
+          <span>Đang chạy Playwright...</span>
+        `;
+        try {
+          const res = await api.runTestCase(tc.test_case_id);
+          this.runType = 'SINGLE';
+          this.page = 1;
+          await this.fetchAndRenderAll();
+          if (res.status === 'SKIPPED') {
+            alert(`⚠️ Test case ${tc.test_case_id} được BỎ QUA (SKIPPED) do chính sách an toàn môi trường: Không thực hiện tạo tài khoản thử nghiệm bừa bãi trên Production.`);
+          }
+        } catch (err) {
+          alert('✕ Lỗi thực thi ' + tc.test_case_id + ': ' + (err.message || 'Lỗi không xác định'));
+          runTcBtn.disabled = false;
+          runTcBtn.innerHTML = origContent;
+        }
+      });
+    }
 
     // 2. 4 Modern KPI Cards Grid
     const kpiGrid = document.createElement('div');
@@ -392,6 +432,37 @@ export class TestCaseDetailsViewClass {
     `;
     container.appendChild(resultsHeader);
 
+    // Segmented 2-tab control: Chạy Theo Nhóm vs Chạy Riêng Lẻ
+    const tabsContainer = document.createElement('div');
+    tabsContainer.className = 'runs-mode-tabs-container';
+    tabsContainer.style.marginBottom = '16px';
+    tabsContainer.innerHTML = `
+      <button type="button" class="runs-mode-tab ${this.runType === 'SUITE' ? 'active' : ''}" data-run-type="SUITE">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+        <span>Chạy Theo Nhóm (Suite Runs)</span>
+      </button>
+      <button type="button" class="runs-mode-tab ${this.runType === 'SINGLE' ? 'active' : ''}" data-run-type="SINGLE">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        <span>Chạy Riêng Lẻ (Single Runs)</span>
+      </button>
+    `;
+    container.appendChild(tabsContainer);
+
+    tabsContainer.querySelectorAll('.runs-mode-tab').forEach(tabBtn => {
+      tabBtn.addEventListener('click', async () => {
+        const selectedType = tabBtn.dataset.runType;
+        if (this.runType === selectedType) return;
+        this.runType = selectedType;
+        this.page = 1;
+        await this.fetchResultsOnly();
+      });
+    });
+
     const toolbar = document.createElement('div');
     toolbar.className = 'command-toolbar';
     toolbar.innerHTML = `
@@ -446,7 +517,10 @@ export class TestCaseDetailsViewClass {
 
   async fetchResultsOnly() {
     try {
-      const data = await api.getTestCaseResults(this.testCaseId, this.page, this.pageSize, this.statusFilter);
+      const data = await api.getTestCaseResults(this.testCaseId, this.page, this.pageSize, {
+        status: this.statusFilter,
+        runType: this.runType
+      });
       this.cachedResults = data;
       this.render();
     } catch (err) {
@@ -465,11 +539,17 @@ export class TestCaseDetailsViewClass {
     });
 
     if (filteredItems.length === 0) {
-      tableContainer.appendChild(EmptyState(
-        this.searchTerm || this.statusFilter
-          ? 'Không tìm thấy kết quả thực thi nào phù hợp với bộ lọc.'
-          : 'Chưa có dữ liệu lịch sử thực thi nào cho kịch bản này.'
-      ));
+      if (this.runType === 'SINGLE') {
+        tableContainer.appendChild(EmptyState(
+          'Chưa có lần chạy riêng lẻ nào cho kịch bản này. Bạn có thể bấm nút "Chạy Test Case Này" ở trên để chạy thử nghiệm độc lập.'
+        ));
+      } else {
+        tableContainer.appendChild(EmptyState(
+          this.searchTerm || this.statusFilter
+            ? 'Không tìm thấy kết quả thực thi nào phù hợp với bộ lọc.'
+            : 'Chưa có dữ liệu lịch sử thực thi nào cho kịch bản này trong các đợt chạy nhóm.'
+        ));
+      }
       return;
     }
 
@@ -515,6 +595,7 @@ export class TestCaseDetailsViewClass {
               </svg>
             </button>
           </div>
+          ${res.runId && res.runId.startsWith('adhoc-') ? '<span class="trigger-badge trigger-badge-adhoc" style="margin-top: 4px; display: inline-block;">Chạy riêng lẻ</span>' : ''}
         </td>
 
         <!-- Thời Gian Chạy -->

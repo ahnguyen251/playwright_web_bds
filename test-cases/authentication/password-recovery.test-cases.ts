@@ -20,7 +20,7 @@ const validationData = AuthenticationDataFactory.getValidationData();
 export const successfulPasswordRecoveryTestCase: PasswordRecoveryTestCase = Object.freeze({
   id: 'TC-AUTH-FORGOT-001',
   title: '[Happy Path / E2E] Khôi phục mật khẩu thành công qua OTP Email',
-  module: 'Authentication Password Recovery',
+  module: 'Authentication',
   priority: 'critical',
   tags: externalRecoveryTags,
   preconditions: Object.freeze(['An active account and its test mailbox are configured.']),
@@ -32,7 +32,7 @@ export const successfulPasswordRecoveryTestCase: PasswordRecoveryTestCase = Obje
 export const nonexistentEmailPasswordRecoveryTestCase: PasswordRecoveryTestCase = Object.freeze({
   id: 'TC-AUTH-FORGOT-002',
   title: '[Negative] Email không tồn tại',
-  module: 'Authentication Password Recovery',
+  module: 'Authentication',
   priority: 'high',
   tags: recoveryTags,
   preconditions: Object.freeze(['The visitor is signed out.']),
@@ -44,7 +44,7 @@ export const nonexistentEmailPasswordRecoveryTestCase: PasswordRecoveryTestCase 
 export const invalidOrExpiredPasswordRecoveryOtpTestCase: PasswordRecoveryTestCase = Object.freeze({
   id: 'TC-AUTH-FORGOT-003',
   title: '[Negative / State] OTP sai hoặc hết hạn',
-  module: 'Authentication Password Recovery',
+  module: 'Authentication',
   priority: 'high',
   tags: externalRecoveryTags,
   preconditions: Object.freeze(['A valid password-reset OTP was sent.']),

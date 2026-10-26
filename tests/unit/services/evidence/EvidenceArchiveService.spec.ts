@@ -373,6 +373,17 @@ test.describe('EvidenceArchiveService', () => {
     expect(await exists(path.join(workspace.root, 'unsafe'))).toBe(false);
   });
 
+  test('accepts safe adhoc run IDs for single test executions', async () => {
+    const service = new EvidenceArchiveService({
+      evidenceRoot: workspace.evidenceRoot,
+      randomNonce: () => nonce,
+    });
+
+    const adhocId = 'adhoc-run-1729751234567-abcdef12';
+    await expect(service.beginRun(adhocId)).resolves.toBeUndefined();
+    await service.rollbackRun(adhocId);
+  });
+
   test('rejects an ambiguous attachment with both path and body', async () => {
     const source = path.join(workspace.transientRoot, 'failed.png');
     await writeFile(source, 'source', 'utf8');
