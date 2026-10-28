@@ -1,25 +1,36 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bảng Điều Khiển Automation - Propify Playwright</title>
+  <title>Bảng Điều Khiển Automation - Propify Playwright APM</title>
   <link rel="stylesheet" href="/css/style.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
+    rel="stylesheet">
 </head>
+
 <body>
   <div class="app-container">
     <aside class="sidebar">
       <div class="sidebar-header">
         <div class="logo">
-          <div class="logo-icon-wrap">
-            <svg class="logo-play-icon" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
-              <path d="M8 5v14l11-7z"/>
+          <div class="logo-icon-wrap" aria-hidden="true">
+            <!-- Nexora-style 4-tile geometric tech logo -->
+            <svg class="logo-tiles-icon" viewBox="0 0 28 28" width="22" height="22" fill="none">
+              <rect x="2" y="2" width="10" height="10" rx="3" fill="#2563eb" />
+              <rect x="16" y="2" width="10" height="10" rx="3" fill="#60a5fa" fill-opacity="0.85" />
+              <rect x="2" y="16" width="10" height="10" rx="3" fill="#1d4ed8" />
+              <rect x="16" y="16" width="10" height="10" rx="3" fill="#93c5fd" fill-opacity="0.9" />
             </svg>
           </div>
-          <span class="logo-title">Propify Playwright</span>
+          <div class="logo-text-group">
+            <span class="logo-title">Propify<span class="logo-dot">.</span></span>
+            <span class="logo-subtitle-tag">APM PLATFORM</span>
+          </div>
         </div>
       </div>
 
@@ -27,26 +38,29 @@
         <span class="sidebar-section-label">BẢNG ĐIỀU KHIỂN</span>
         <nav class="nav-menu">
           <a href="#summary" class="nav-item active" id="nav-summary">
-            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
-              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
-              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
-              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" rx="2" />
+              <rect x="14" y="3" width="7" height="7" rx="2" />
+              <rect x="14" y="14" width="7" height="7" rx="2" />
+              <rect x="3" y="14" width="7" height="7" rx="2" />
             </svg>
             <span class="nav-text">Báo Cáo Chung</span>
           </a>
           <a href="#test-cases" class="nav-item" id="nav-test-cases">
-            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 11l3 3L22 4"/>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
             <span class="nav-text">Danh Sách Test Case</span>
             <span class="nav-counter-badge" id="sidebar-test-case-count">83</span>
           </a>
           <a href="#runs" class="nav-item" id="nav-runs">
-            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"/>
-              <polyline points="12 6 12 12 16 14"/>
+            <svg class="nav-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
             </svg>
             <span class="nav-text">Lịch Sử Chạy Test</span>
           </a>
@@ -61,53 +75,35 @@
             <div class="user-version">v1.44.0-playwright</div>
           </div>
           <button type="button" class="user-action-btn" title="Đăng xuất" aria-label="Đăng xuất">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+              <polyline points="16 17 21 12 16 7" />
+              <line x1="21" y1="12" x2="9" y2="12" />
             </svg>
           </button>
         </div>
       </div>
     </aside>
-    
+
     <main class="main-content">
       <header class="topbar">
         <div class="topbar-left">
-          <nav class="breadcrumb-nav" aria-label="Breadcrumb">
-            <span class="breadcrumb-item">Tổng quan</span>
+          <nav class="breadcrumb-nav" id="topbar-breadcrumb" aria-label="Breadcrumb">
+            <span class="breadcrumb-item">Propify</span>
             <span class="breadcrumb-sep">/</span>
-            <span class="breadcrumb-item current" id="breadcrumb-current-label">Danh Sách Test Case</span>
-            <span class="breadcrumb-bullet">•</span>
-            <div class="live-status-pill" title="Hệ thống tự động đồng bộ thời gian thực">
-              <span class="live-status-dot"></span>
-            </div>
+            <span class="breadcrumb-item current" id="breadcrumb-current-label">Báo Cáo Chung</span>
           </nav>
           <h1 id="page-title" class="visually-hidden">Báo Cáo Chung</h1>
         </div>
-
-        <div class="topbar-right" style="display: flex; align-items: center; gap: 8px;">
-          <select id="topbar-browser-select" class="form-select" style="padding: 7px 10px; font-size: 0.8125rem; font-weight: 600; border-radius: 6px; border: 1.5px solid #2563eb; background: #f0f7ff; color: #1d4ed8; cursor: pointer;" title="Chọn dự án / trình duyệt chạy">
-            <option value="chromium" selected>🌐 Chromium (Chrome)</option>
-            <option value="firefox">🦊 Firefox</option>
-            <option value="webkit">🧭 WebKit (Safari)</option>
-          </select>
-          <button type="button" class="btn btn-suite-run" id="topbar-run-suite-btn">
-            <svg class="btn-svg" viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
-              <path d="M8 5v14l11-7z"/>
-            </svg>
-            <span>Chạy Toàn Bộ Test Suite</span>
-          </button>
-          <button type="button" class="btn btn-add-testcase" id="topbar-add-testcase-btn">
-            <svg class="btn-svg" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5">
-              <line x1="12" y1="5" x2="12" y2="19"/>
-              <line x1="5" y1="12" x2="19" y2="12"/>
-            </svg>
-            <span>+ Thêm Test Case Mới</span>
-          </button>
+        <div class="topbar-right">
+          <div class="topbar-system-indicator" title="Trạng thái hệ thống kiểm thử tự động">
+            <span class="status-indicator-dot"></span>
+            <span class="status-indicator-text">Playwright APM • Sẵn Sàng</span>
+          </div>
         </div>
       </header>
-      
+
       <div id="app-root" class="content-area">
         <!-- Views will be injected here by router.js -->
       </div>
@@ -115,6 +111,7 @@
   </div>
 
   <!-- Scripts with cache busting query -->
-  <script type="module" src="/js/app.js?v=2.2.0"></script>
+  <script type="module" src="/js/app.js?v=2.3.0"></script>
 </body>
+
 </html>

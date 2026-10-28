@@ -83,57 +83,38 @@ export class RunDetailsViewClass {
     const container = document.createElement('div');
     container.className = 'run-details-wrapper';
 
-    // 1. Header & Breadcrumbs
+    // 1. Unified Page Header
     const headerSection = document.createElement('div');
-    headerSection.className = 'apm-header-container';
+    headerSection.className = 'page-title-row';
     headerSection.innerHTML = `
-      <div class="apm-breadcrumb-row">
-        <div class="apm-breadcrumb">
-          <a href="#summary" class="apm-breadcrumb-link">Bảng điều khiển</a>
-          <span class="breadcrumb-sep">›</span>
-          <a href="#runs" class="apm-breadcrumb-link">Lịch Sử Chạy Test</a>
-          <span class="breadcrumb-sep">›</span>
-          <span style="color: var(--text-main); font-weight: 600;">${run.run_id}</span>
-        </div>
-        <div class="apm-header-actions">
-          <a href="#runs" class="btn btn-export-file" style="padding: 7px 14px; font-size: 0.8125rem;">
-            ← Quay Lại Lịch Sử
-          </a>
-          <button type="button" class="btn btn-export-file" id="btn-export-run-detail" style="padding: 7px 14px; font-size: 0.8125rem;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
+      <div class="page-title-group">
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+          <h1 class="page-title-text" style="font-family: var(--font-mono); font-size: 1.25rem;">${run.run_id}</h1>
+          <button type="button" class="btn-copy-id" id="btn-copy-header-id" title="Sao chép Run ID">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
-            <span>Xuất Dữ Liệu JSON</span>
           </button>
+          <span class="status-badge-chip ${isSuccess ? 'success' : 'failed'}">
+            <span class="dot-indicator ${isSuccess ? 'green' : 'red'}" style="width: 6px; height: 6px; border-radius: 50%;"></span>
+            <span>${isSuccess ? 'Thành công (100% Pass)' : `${failed} Test Thất Bại`}</span>
+          </span>
         </div>
+        <p class="page-subtitle-text">Bắt đầu: ${startDateStr} • Hoàn thành: ${finishDateStr} (${durationSec}s)</p>
       </div>
-
-      <div class="apm-title-row">
-        <div>
-          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
-            <h1 class="apm-title-main" style="font-family: Consolas, monospace;">${run.run_id}</h1>
-            <button type="button" class="btn-copy-id" id="btn-copy-header-id" title="Sao chép Run ID">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-            </button>
-            <span class="status-badge-chip ${isSuccess ? 'success' : 'failed'}">
-              <span class="dot-indicator ${isSuccess ? 'green' : 'red'}" style="width: 6px; height: 6px; border-radius: 50%;"></span>
-              <span>${isSuccess ? 'Thành công (100% Pass)' : `${failed} Test Thất Bại`}</span>
-            </span>
-          </div>
-          <p class="apm-subtitle">Nhật ký thực thi chi tiết, danh sách kịch bản test và bằng chứng kiểm thử (traces, screenshots, logs).</p>
-        </div>
-        <div class="apm-sync-pill">
-          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
+      <div class="page-title-actions">
+        <a href="#runs" class="btn btn-export-file" style="height: 36px; padding: 0 14px; font-size: 0.8125rem; display: inline-flex; align-items: center; text-decoration: none;">
+          ← Quay Lại Lịch Sử
+        </a>
+        <button type="button" class="btn btn-export-file" id="btn-export-run-detail" style="height: 36px; padding: 0 14px; font-size: 0.8125rem;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          <span>Bắt đầu: <strong>${startDateStr}</strong></span>
-        </div>
+          <span>Xuất JSON</span>
+        </button>
       </div>
     `;
     container.appendChild(headerSection);

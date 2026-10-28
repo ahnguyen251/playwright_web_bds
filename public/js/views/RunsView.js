@@ -105,48 +105,38 @@ export class RunsViewClass {
     const container = document.createElement('div');
     container.className = 'runs-view-wrapper';
 
-    // 1. Header & Breadcrumb
+    // 1. Unified Page Header
     const headerSection = document.createElement('div');
-    headerSection.className = 'apm-header-container';
+    headerSection.className = 'page-title-row';
     headerSection.innerHTML = `
-      <div class="apm-breadcrumb-row">
-        <div class="apm-breadcrumb">
-          <a href="#summary" class="apm-breadcrumb-link">Bảng điều khiển</a>
-          <span class="breadcrumb-sep">›</span>
-          <span style="color: var(--text-main); font-weight: 600;">Lịch Sử Chạy Test</span>
-        </div>
-        <div class="apm-header-actions">
-          <button type="button" class="btn btn-export-file" id="btn-refresh-runs" style="padding: 7px 14px; font-size: 0.8125rem;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="23 4 23 10 17 10"/>
-              <polyline points="1 20 1 14 7 14"/>
-              <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-            </svg>
-            <span>Làm Mới</span>
-          </button>
-          <button type="button" class="btn btn-export-file" id="btn-export-runs" style="padding: 7px 14px; font-size: 0.8125rem;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
-            </svg>
-            <span>Xuất Lịch Sử</span>
-          </button>
-        </div>
+      <div class="page-title-group">
+        <h1 class="page-title-text">Lịch Sử Chạy Test <span class="text-gradient">Playwright APM</span></h1>
+        <p class="page-subtitle-text">Nhật ký thực thi kịch bản kiểm thử tự động, theo dõi thời gian chạy và tỷ lệ thành công.</p>
       </div>
-
-      <div class="apm-title-row">
-        <div>
-          <h1 class="apm-title-main">Lịch Sử Chạy Test - Playwright APM</h1>
-          <p class="apm-subtitle">Nhật ký thực thi kịch bản kiểm thử tự động, theo dõi thời gian chạy và tỷ lệ thành công qua các phiên CI/CD.</p>
-        </div>
+      <div class="page-title-actions">
         <div class="apm-sync-pill">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"/>
             <polyline points="12 6 12 12 16 14"/>
           </svg>
-          <span>Đồng bộ lần cuối: <strong>Vừa xong (${timeStr})</strong></span>
+          <span>Đồng bộ: <strong>${timeStr}</strong></span>
         </div>
+        <button type="button" class="btn btn-refresh-compact" id="btn-refresh-runs" title="Làm mới lịch sử" aria-label="Làm mới lịch sử">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 4 23 10 17 10"/>
+            <polyline points="1 20 1 14 7 14"/>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
+          </svg>
+          <span>Làm Mới</span>
+        </button>
+        <button type="button" class="btn btn-export-file" id="btn-export-runs" style="height: 36px; padding: 0 14px; font-size: 0.8125rem;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Xuất Lịch Sử</span>
+        </button>
       </div>
     `;
     container.appendChild(headerSection);

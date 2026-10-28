@@ -55,17 +55,20 @@ export class TestCasesViewClass {
     this.pageHeaderRow = document.createElement('div');
     this.pageHeaderRow.className = 'page-title-row';
     this.pageHeaderRow.innerHTML = `
-      <div>
-        <h2 class="page-title-text">Danh Sách Test Case - Playwright APM</h2>
-        <p class="page-subtitle-text">Quản lý kịch bản kiểm thử tự động hoá giao diện cho hệ sinh thái quản trị bất động sản</p>
+      <div class="page-title-group">
+        <h2 class="page-title-text">Danh Sách Test Case <span class="text-gradient">Playwright APM</span></h2>
+        <p class="page-subtitle-text">83 kịch bản kiểm thử tự động hoá giao diện cho hệ sinh thái Propify</p>
       </div>
-      <button type="button" class="page-refresh-btn" id="btn-refresh-view" title="Làm mới dữ liệu" aria-label="Làm mới dữ liệu">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="23 4 23 10 17 10"></polyline>
-          <polyline points="1 20 1 14 7 14"></polyline>
-          <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-        </svg>
-      </button>
+      <div class="page-title-actions">
+        <button type="button" class="btn btn-refresh-compact" id="btn-refresh-view" title="Làm mới dữ liệu" aria-label="Làm mới dữ liệu">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          <span>Làm mới</span>
+        </button>
+      </div>
     `;
     this.pageHeaderRow.querySelector('#btn-refresh-view').addEventListener('click', () => {
       this.modulesLoaded = false;
@@ -163,7 +166,7 @@ export class TestCasesViewClass {
         </div>
       </div>
       <div class="kpi-card-footer">
-        <a href="#test-cases" class="kpi-subtext-link">${totalModules} Mô-đun chức năng</a>
+        <span class="kpi-footer-subtext">Phân bố trên <strong>${totalModules} mô-đun chức năng</strong></span>
       </div>
     `;
 
@@ -173,11 +176,16 @@ export class TestCasesViewClass {
     card2.innerHTML = `
       <div>
         <div class="kpi-card-top">
-          <span class="kpi-card-label">BAO PHỦ TỰ ĐỘNG (${activeModuleLabel})</span>
-          <span class="kpi-tag-success">${coveragePercent} %</span>
+          <span class="kpi-card-label">BAO PHỦ TỰ ĐỘNG</span>
+          <div class="kpi-card-icon-wrap kpi-icon-green">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
         </div>
         <div class="kpi-card-body">
-          <span class="kpi-card-value" style="color: #059669;">${moduleAutomated}</span>
+          <span class="kpi-card-value text-green">${coveragePercent}%</span>
           <span class="kpi-card-unit">/ ${moduleTotal} Tự động hoá</span>
         </div>
       </div>
@@ -209,7 +217,7 @@ export class TestCasesViewClass {
         </div>
       </div>
       <div class="kpi-card-footer">
-        <span style="font-size: 0.8125rem; color: var(--text-muted);">Ưu tiên kịch bản core flow</span>
+        <span class="kpi-footer-subtext">Ưu tiên kịch bản core flow</span>
       </div>
     `;
 
@@ -232,7 +240,7 @@ export class TestCasesViewClass {
         </div>
       </div>
       <div class="kpi-card-footer">
-        <span style="font-size: 0.8125rem; color: var(--text-muted);">Chạy dưới dự án chromium</span>
+        <span class="kpi-footer-subtext">Chạy dưới dự án Chromium</span>
       </div>
     `;
 
@@ -324,65 +332,6 @@ export class TestCasesViewClass {
     });
 
     this.toolbar.appendChild(select);
-
-    // Browser Execution Dropdown
-    const browserWrap = document.createElement('div');
-    browserWrap.style.display = 'inline-flex';
-    browserWrap.style.alignItems = 'center';
-    browserWrap.style.gap = '8px';
-    browserWrap.style.background = '#eff6ff';
-    browserWrap.style.border = '1.5px solid #2563eb';
-    browserWrap.style.borderRadius = 'var(--radius-sm, 8px)';
-    browserWrap.style.padding = '3px 10px';
-
-    const browserLabel = document.createElement('span');
-    browserLabel.style.fontSize = '0.75rem';
-    browserLabel.style.fontWeight = '700';
-    browserLabel.style.color = '#1d4ed8';
-    browserLabel.style.whiteSpace = 'nowrap';
-    browserLabel.textContent = 'DỰ ÁN / TRÌNH DUYỆT:';
-    browserWrap.appendChild(browserLabel);
-
-    const browserSelect = document.createElement('select');
-    browserSelect.id = 'execution-browser-select';
-    browserSelect.className = 'filter-dropdown-select';
-    browserSelect.setAttribute('aria-label', 'Chọn trình duyệt thực thi');
-    browserSelect.title = 'Trình duyệt / Dự án sẽ dùng khi bấm chạy kịch bản';
-    browserSelect.style.border = 'none';
-    browserSelect.style.background = 'transparent';
-    browserSelect.style.padding = '6px 26px 6px 4px';
-    browserSelect.style.fontWeight = '600';
-    browserSelect.style.color = '#1e293b';
-
-    const browserOptions = [
-      { value: 'chromium', label: '🌐 Chromium (Chrome)' },
-      { value: 'firefox', label: '🦊 Firefox' },
-      { value: 'webkit', label: '🧭 WebKit (Safari)' },
-    ];
-
-    browserOptions.forEach(({ value, label }) => {
-      const opt = document.createElement('option');
-      opt.value = value;
-      opt.textContent = label;
-      opt.selected = value === (this.executionBrowser || 'chromium');
-      browserSelect.appendChild(opt);
-    });
-
-    browserSelect.addEventListener('change', (e) => {
-      this.executionBrowser = e.target.value;
-      const bNames = { chromium: 'Chromium', firefox: 'Firefox', webkit: 'WebKit' };
-      this.showToast(`Đã chọn trình duyệt chạy mặc định: ${bNames[this.executionBrowser] || this.executionBrowser}`);
-      // Sync row selects
-      document.querySelectorAll('.row-browser-select').forEach((el) => {
-        el.value = this.executionBrowser;
-      });
-      // Sync topbar select
-      const topSelect = document.getElementById('topbar-browser-select');
-      if (topSelect) topSelect.value = this.executionBrowser;
-    });
-
-    browserWrap.appendChild(browserSelect);
-    this.toolbar.appendChild(browserWrap);
 
     // Export File Button
     const exportBtn = document.createElement('button');
@@ -669,15 +618,15 @@ export class TestCasesViewClass {
       const thead = document.createElement('thead');
       thead.innerHTML = `
         <tr>
-          <th style="width: 40px; text-align: center;">
+          <th style="width: 44px; text-align: center;">
             <input type="checkbox" class="table-checkbox" aria-label="Chọn test case trang hiện tại">
           </th>
-          <th style="width: 170px;">MÃ</th>
-          <th style="width: 120px;">MÔ-ĐUN</th>
+          <th style="width: 140px;">MÃ</th>
+          <th style="width: 130px;">MÔ-ĐUN</th>
           <th>TIÊU ĐỀ & MỤC TIÊU KIỂM THỬ</th>
-          <th style="width: 160px;">TRẠNG THÁI</th>
-          <th style="width: 180px;">LẦN CHẠY TRƯỚC</th>
-          <th style="width: 130px; text-align: right;">THAO TÁC</th>
+          <th style="width: 140px;">TRẠNG THÁI</th>
+          <th style="width: 140px;">LẦN CHẠY TRƯỚC</th>
+          <th style="width: 90px; text-align: right; padding-right: 20px;">THAO TÁC</th>
         </tr>
       `;
       this.selectVisibleCheckbox = thead.querySelector('input[aria-label="Chọn test case trang hiện tại"]');
@@ -953,6 +902,10 @@ export class TestCasesViewClass {
   createBulkActionBar() {
     const bulkActionBar = document.createElement('div');
     bulkActionBar.className = 'bulk-action-bar';
+    bulkActionBar.id = 'bulk-action-bar';
+    if (this.selectedTestCaseIds.size === 0) {
+      bulkActionBar.style.display = 'none';
+    }
 
     this.selectedCountElement = document.createElement('span');
     this.selectedCountElement.className = 'bulk-action-status';
@@ -986,8 +939,16 @@ export class TestCasesViewClass {
 
   updateSelectionControls() {
     const selectedCount = this.selectedTestCaseIds.size;
-    this.selectedCountElement.textContent = `${selectedCount} test case đã chọn`;
-    this.runSelectedButton.disabled = selectedCount === 0;
+    const bulkBar = this.contentArea ? this.contentArea.querySelector('#bulk-action-bar') : null;
+    if (bulkBar) {
+      bulkBar.style.display = selectedCount > 0 ? 'flex' : 'none';
+    }
+    if (this.selectedCountElement) {
+      this.selectedCountElement.textContent = `${selectedCount} test case đã chọn`;
+    }
+    if (this.runSelectedButton) {
+      this.runSelectedButton.disabled = selectedCount === 0;
+    }
 
     const selectedVisibleCount = this.visibleTestCaseIds.filter((testCaseId) =>
       this.selectedTestCaseIds.has(testCaseId),

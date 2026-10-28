@@ -56,45 +56,35 @@ export const SummaryView = {
       const viewContainer = document.createElement('div');
       viewContainer.className = 'summary-view-wrapper';
 
-      // 1. Header & Breadcrumb
+      // 1. Unified Page Header
       const headerSection = document.createElement('div');
-      headerSection.className = 'apm-header-container';
+      headerSection.className = 'page-title-row';
       headerSection.innerHTML = `
-        <div class="apm-breadcrumb-row">
-          <div class="apm-breadcrumb">
-            <span class="apm-breadcrumb-link">Bảng điều khiển</span>
-            <span class="breadcrumb-sep">›</span>
-            <span style="color: var(--text-main); font-weight: 600;">Báo Cáo Chung</span>
-          </div>
-          <div class="apm-header-actions">
-            <select class="filter-dropdown-select" style="min-width: 140px; padding: 7px 30px 7px 12px; font-size: 0.8125rem;">
-              <option value="7d">7 ngày qua</option>
-              <option value="30d">30 ngày qua</option>
-              <option value="all">Toàn bộ</option>
-            </select>
-            <button type="button" class="btn btn-export-file" id="btn-export-summary" style="padding: 7px 14px; font-size: 0.8125rem;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                <polyline points="7 10 12 15 17 10"/>
-                <line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              <span>Xuất Báo Cáo</span>
-            </button>
-          </div>
+        <div class="page-title-group">
+          <h1 class="page-title-text">Báo Cáo Chung <span class="text-gradient">Playwright APM</span></h1>
+          <p class="page-subtitle-text">Tổng hợp trạng thái kiểm thử tự động, tiến độ bao phủ kịch bản và kết quả thực thi gần nhất.</p>
         </div>
-
-        <div class="apm-title-row">
-          <div>
-            <h1 class="apm-title-main">Báo Cáo Chung - Playwright APM</h1>
-            <p class="apm-subtitle">Tổng hợp trạng thái kiểm thử tự động, tiến độ bao phủ kịch bản và kết quả thực thi gần nhất.</p>
-          </div>
+        <div class="page-title-actions">
           <div class="apm-sync-pill">
             <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="10"/>
               <polyline points="12 6 12 12 16 14"/>
             </svg>
-            <span>Đồng bộ lần cuối: <strong>Vừa xong (${latestRunTime})</strong></span>
+            <span>Đồng bộ: <strong>${latestRunTime}</strong></span>
           </div>
+          <select class="filter-dropdown-select" style="min-width: 120px; height: 36px; padding: 0 28px 0 12px; font-size: 0.8125rem;">
+            <option value="7d">7 ngày qua</option>
+            <option value="30d">30 ngày qua</option>
+            <option value="all">Toàn bộ</option>
+          </select>
+          <button type="button" class="btn btn-export-file" id="btn-export-summary" style="height: 36px; padding: 0 14px; font-size: 0.8125rem;">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Xuất Báo Cáo</span>
+          </button>
         </div>
       `;
       viewContainer.appendChild(headerSection);
@@ -210,6 +200,50 @@ export const SummaryView = {
         </div>
       `;
       viewContainer.appendChild(kpiGrid);
+
+      // 2.5 Nexora Capability Feature Cards
+      const featureCardsRow = document.createElement('div');
+      featureCardsRow.className = 'nexora-feature-cards-row';
+      featureCardsRow.innerHTML = `
+        <div class="nexora-feature-card">
+          <div class="nexora-icon-box blue">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 2 7 12 12 22 7 12 2"/>
+              <polyline points="2 17 12 22 22 17"/>
+              <polyline points="2 12 12 17 22 12"/>
+            </svg>
+          </div>
+          <h3 class="nexora-card-title">Kiểm thử đa trình duyệt</h3>
+          <p class="nexora-card-desc">Thực thi song song trên Chromium, Firefox, WebKit với zero-flakiness và cơ chế auto-retry thông minh.</p>
+          <a href="#test-cases" class="nexora-card-link">Khám phá test cases →</a>
+        </div>
+
+        <div class="nexora-feature-card">
+          <div class="nexora-icon-box green">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <h3 class="nexora-card-title">Phân tích ổn định & Flaky</h3>
+          <p class="nexora-card-desc">Theo dõi tỷ lệ đổi trạng thái (Stability Index), phát hiện kịch bản chập chờn trước khi merge vào main branch.</p>
+          <a href="#runs" class="nexora-card-link">Xem lịch sử thực thi →</a>
+        </div>
+
+        <div class="nexora-feature-card">
+          <div class="nexora-icon-box purple">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+              <line x1="8" y1="21" x2="16" y2="21"/>
+              <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+          </div>
+          <h3 class="nexora-card-title">Bằng chứng kiểm thử trực quan</h3>
+          <p class="nexora-card-desc">Tự động thu thập Trace Viewer, ảnh chụp màn hình DOM và video quay lại từng bước thao tác khi test fail.</p>
+          <a href="#runs" class="nexora-card-link">Khám phá artifacts →</a>
+        </div>
+      `;
+      viewContainer.appendChild(featureCardsRow);
 
       // 3. Section "Lần Thực Thi Mới Nhất & Phiên Chạy"
       const runnerSection = document.createElement('div');
@@ -500,8 +534,8 @@ function createTrendSvg(runs, tooltip) {
   // Calculate points
   const points = runs.map((run, i) => {
     const x = paddingLeft + (i / (runs.length - 1)) * chartWidth;
-    const passRate = run.total_executions > 0 
-      ? (run.passed_executions / run.total_executions) * 100 
+    const passRate = run.total_executions > 0
+      ? (run.passed_executions / run.total_executions) * 100
       : 100;
     // Map passRate (0 - 100) with slight normalization so curve looks dynamic like mockup
     const normalizedRate = Math.max(40, passRate); // Min 40% floor for visual aesthetics
@@ -572,7 +606,7 @@ function createTrendSvg(runs, tooltip) {
     text.setAttribute('font-family', 'Inter, system-ui, sans-serif');
     text.setAttribute('font-weight', i === points.length - 1 ? '700' : '500');
     text.setAttribute('fill', i === points.length - 1 ? '#2563eb' : '#94a3b8');
-    
+
     const runSuffix = pt.run.run_id ? pt.run.run_id.slice(-4) : `3d${10 + i}`;
     text.textContent = i === points.length - 1 ? `RUN #${runSuffix} (Hiện tại)` : `RUN #${runSuffix}`;
     svg.appendChild(text);

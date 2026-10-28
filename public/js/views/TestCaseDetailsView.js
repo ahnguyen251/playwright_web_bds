@@ -108,90 +108,77 @@ export class TestCaseDetailsViewClass {
     const container = document.createElement('div');
     container.className = 'tc-details-wrapper';
 
-    // 1. Header & Breadcrumbs
+    // 1. Unified Page Header
     const headerSection = document.createElement('div');
-    headerSection.className = 'apm-header-container';
+    headerSection.className = 'page-title-row';
     headerSection.innerHTML = `
-      <div class="apm-breadcrumb-row">
-        <div class="apm-breadcrumb">
-          <a href="#summary" class="apm-breadcrumb-link">Bảng điều khiển</a>
-          <span class="breadcrumb-sep">›</span>
-          <a href="#test-cases" class="apm-breadcrumb-link">Danh Sách Test Case</a>
-          <span class="breadcrumb-sep">›</span>
-          <span style="color: var(--text-main); font-weight: 600;">${tc.test_case_id}</span>
-        </div>
-        <div class="apm-header-actions">
-          <a href="#test-cases" class="btn btn-export-file" style="padding: 7px 14px; font-size: 0.8125rem;">
-            ← Quay Lại Danh Sách
-          </a>
-          <button type="button" class="btn btn-export-file" id="btn-export-tc-json" style="padding: 7px 14px; font-size: 0.8125rem;">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-              <polyline points="7 10 12 15 17 10"/>
-              <line x1="12" y1="15" x2="12" y2="3"/>
+      <div class="page-title-group" style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px; flex-wrap: wrap;">
+          <h1 class="page-title-text" id="tc-title-id" style="font-family: var(--font-mono); font-size: 1.35rem; margin: 0;">${tc.test_case_id}</h1>
+          <button type="button" class="btn-copy-id" id="btn-copy-tc-id" title="Sao chép Test Case ID">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
             </svg>
-            <span>Xuất Phân Tích JSON</span>
           </button>
-          ${isAutomated ? `
-            <div style="display: inline-flex; align-items: center; gap: 8px; background: #eff6ff; padding: 4px 10px; border-radius: 8px; border: 1.5px solid #2563eb;">
-              <span style="font-size: 0.75rem; font-weight: 700; color: #1d4ed8; white-space: nowrap;">TRÌNH DUYỆT:</span>
-              <select id="select-run-browser" class="form-select" style="padding: 6px 10px; font-size: 0.8125rem; font-weight: 600; border-radius: 6px; border: 1px solid #93c5fd; background: #ffffff; color: #1e293b; cursor: pointer;" title="Chọn dự án / trình duyệt để chạy">
-                <option value="chromium" selected>🌐 Chromium (Chrome)</option>
-                <option value="firefox">🦊 Firefox</option>
-                <option value="webkit">🧭 WebKit (Safari)</option>
-              </select>
-              <button type="button" class="btn btn-primary" id="btn-run-tc" style="padding: 7px 14px; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 6px;">
-                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                  <polygon points="5 3 19 12 5 21 5 3"/>
+          <span class="status-pill ${tc.automation_status.toLowerCase().replace('_', '-')}" style="font-size: 0.75rem;">
+            <span class="status-dot-circle"></span>
+            <span>${tc.automation_status}</span>
+          </span>
+        </div>
+        <p class="page-subtitle-text" style="font-size: 0.9375rem; color: var(--text-main); font-weight: 500; margin: 4px 0 8px 0; line-height: 1.4;">
+          ${tc.title}
+        </p>
+        <div class="detail-meta-list" style="margin-top: 6px;">
+          <div class="meta-chip-item">
+            <span>Mô-đun:</span>
+            <strong>${tc.module || 'N/A'}</strong>
+          </div>
+          ${tc.script_path ? `
+            <div class="meta-chip-item">
+              <span>File kịch bản:</span>
+              <span class="code-path-chip" id="script-path-text">${tc.script_path}</span>
+              <button type="button" class="btn-copy-id" id="btn-copy-script-path" title="Sao chép đường dẫn kịch bản" style="padding: 1px 3px;">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
                 </svg>
-                <span>Chạy Test Case Này</span>
               </button>
             </div>
           ` : ''}
+          <div class="meta-chip-item">
+            <span>Cập nhật:</span>
+            <strong>${tc.updated_at ? new Date(tc.updated_at).toLocaleDateString('vi-VN') : 'Không rõ'}</strong>
+          </div>
         </div>
       </div>
-
-      <div class="apm-title-row">
-        <div>
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px; flex-wrap: wrap;">
-            <h1 class="apm-title-main" id="tc-title-id" style="font-family: Consolas, monospace;">${tc.test_case_id}</h1>
-            <button type="button" class="btn-copy-id" id="btn-copy-tc-id" title="Sao chép Test Case ID">
-              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+      <div class="page-title-actions" style="display: flex; align-items: flex-start; gap: 10px; flex-shrink: 0; flex-wrap: wrap;">
+        <a href="#test-cases" class="btn btn-export-file" style="height: 36px; padding: 0 14px; font-size: 0.8125rem; display: inline-flex; align-items: center; text-decoration: none;">
+          ← Quay Lại Danh Sách
+        </a>
+        <button type="button" class="btn btn-export-file" id="btn-export-tc-json" style="height: 36px; padding: 0 14px; font-size: 0.8125rem;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          <span>Xuất JSON</span>
+        </button>
+        ${isAutomated ? `
+          <div style="display: inline-flex; align-items: center; gap: 8px; background: #eff6ff; padding: 0 10px; height: 36px; border-radius: 8px; border: 1.5px solid #2563eb;">
+            <select id="select-run-browser" class="form-select" style="padding: 4px 8px; font-size: 0.8125rem; font-weight: 600; border-radius: 6px; border: 1px solid #93c5fd; background: #ffffff; color: #1e293b; cursor: pointer;" title="Chọn dự án / trình duyệt để chạy">
+              <option value="chromium" selected>🌐 Chromium (Chrome)</option>
+              <option value="firefox">🦊 Firefox</option>
+              <option value="webkit">🧭 WebKit (Safari)</option>
+            </select>
+            <button type="button" class="btn btn-primary" id="btn-run-tc" style="padding: 0 12px; height: 28px; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 6px;">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
               </svg>
+              <span>Chạy Test Case</span>
             </button>
-            <span class="status-pill ${tc.automation_status.toLowerCase().replace('_', '-')}" style="font-size: 0.75rem;">
-              <span class="status-dot-circle"></span>
-              <span>${tc.automation_status}</span>
-            </span>
           </div>
-          <p class="apm-subtitle" style="font-size: 1rem; color: #1e293b; font-weight: 500;">
-            ${tc.title}
-          </p>
-          <div class="detail-meta-list" style="margin-top: 10px;">
-            <div class="meta-chip-item">
-              <span>Mô-đun:</span>
-              <strong>${tc.module || 'N/A'}</strong>
-            </div>
-            ${tc.script_path ? `
-              <div class="meta-chip-item">
-                <span>File kịch bản:</span>
-                <span class="code-path-chip" id="script-path-text">${tc.script_path}</span>
-                <button type="button" class="btn-copy-id" id="btn-copy-script-path" title="Sao chép đường dẫn kịch bản" style="padding: 1px 3px;">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                  </svg>
-                </button>
-              </div>
-            ` : ''}
-            <div class="meta-chip-item">
-              <span>Cập nhật:</span>
-              <strong>${tc.updated_at ? new Date(tc.updated_at).toLocaleDateString('vi-VN') : 'Không rõ'}</strong>
-            </div>
-          </div>
-        </div>
+        ` : ''}
       </div>
     `;
     container.appendChild(headerSection);

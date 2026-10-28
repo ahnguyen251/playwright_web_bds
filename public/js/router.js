@@ -5,7 +5,7 @@ export class Router {
     this.currentView = null;
     this.rootElement = document.getElementById('app-root');
     this.pageTitle = document.getElementById('page-title');
-    
+
     window.addEventListener('hashchange', () => this.handleRouteChange());
   }
 
@@ -15,7 +15,7 @@ export class Router {
 
   handleRouteChange() {
     let hash = window.location.hash.slice(1) || this.defaultRoute;
-    
+
     try {
       hash = decodeURIComponent(hash);
     } catch (e) {
@@ -24,12 +24,12 @@ export class Router {
 
     let matchedRoute = null;
     let params = {};
-    
+
     for (const [routePath, routeDef] of Object.entries(this.routes)) {
       if (routePath.includes(':')) {
         const routeParts = routePath.split('/');
         const hashParts = hash.split('/');
-        
+
         if (routeParts.length === hashParts.length) {
           let isMatch = true;
           for (let i = 0; i < routeParts.length; i++) {
@@ -50,7 +50,7 @@ export class Router {
         break;
       }
     }
-    
+
     if (!matchedRoute) {
       matchedRoute = this.routes[this.defaultRoute];
       hash = this.defaultRoute;
@@ -64,10 +64,32 @@ export class Router {
     this.pageTitle.textContent = matchedRoute.title;
     document.title = `${matchedRoute.title} | Bảng Điều Khiển Automation`;
 
-    const breadcrumbLabel = document.getElementById('breadcrumb-current-label');
-    if (breadcrumbLabel) {
-      const cleanTitle = matchedRoute.title.replace(' - Playwright APM', '');
-      breadcrumbLabel.textContent = cleanTitle;
+    const breadcrumbNav = document.getElementById('topbar-breadcrumb');
+    if (breadcrumbNav) {
+      if (baseHash === 'test-cases' && params.testCaseId) {
+        breadcrumbNav.innerHTML = `
+          <span class="breadcrumb-item">Propify</span>
+          <span class="breadcrumb-sep">/</span>
+          <a href="#test-cases" class="breadcrumb-item">Danh Sách Test Case</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-item current">${params.testCaseId}</span>
+        `;
+      } else if (baseHash === 'runs' && params.runId) {
+        breadcrumbNav.innerHTML = `
+          <span class="breadcrumb-item">Propify</span>
+          <span class="breadcrumb-sep">/</span>
+          <a href="#runs" class="breadcrumb-item">Lịch Sử Chạy Test</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-item current">${params.runId}</span>
+        `;
+      } else {
+        const cleanTitle = matchedRoute.title.replace(' - Playwright APM', '');
+        breadcrumbNav.innerHTML = `
+          <span class="breadcrumb-item">Propify</span>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-item current" id="breadcrumb-current-label">${cleanTitle}</span>
+        `;
+      }
     }
 
     if (this.currentView && this.currentView.unmount) {
