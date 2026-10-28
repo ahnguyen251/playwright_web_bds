@@ -86,7 +86,12 @@
           <h1 id="page-title" class="visually-hidden">Báo Cáo Chung</h1>
         </div>
 
-        <div class="topbar-right">
+        <div class="topbar-right" style="display: flex; align-items: center; gap: 8px;">
+          <select id="topbar-browser-select" class="form-select" style="padding: 7px 10px; font-size: 0.8125rem; font-weight: 600; border-radius: 6px; border: 1.5px solid #2563eb; background: #f0f7ff; color: #1d4ed8; cursor: pointer;" title="Chọn dự án / trình duyệt chạy">
+            <option value="chromium" selected>🌐 Chromium (Chrome)</option>
+            <option value="firefox">🦊 Firefox</option>
+            <option value="webkit">🧭 WebKit (Safari)</option>
+          </select>
           <button type="button" class="btn btn-suite-run" id="topbar-run-suite-btn">
             <svg class="btn-svg" viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
               <path d="M8 5v14l11-7z"/>
@@ -109,7 +114,7 @@
     </main>
   </div>
 
-  <!-- Scripts -->
-  <script type="module" src="/js/app.js"></script>
+  <!-- Scripts with cache busting query -->
+  <script type="module" src="/js/app.js?v=2.2.0"></script>
 </body>
 </html>

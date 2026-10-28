@@ -20,6 +20,7 @@ export class TestCasesViewClass {
     this.debouncer = null;
     this.abortController = null;
     this.visibleTestCaseIds = [];
+    this.executionBrowser = 'chromium';
   }
 
   async mount(rootElement) {
@@ -33,6 +34,7 @@ export class TestCasesViewClass {
     this.modules = [];
     this.summaryData = null;
     this.modulesLoaded = false;
+    this.executionBrowser = this.executionBrowser || 'chromium';
 
     this.renderContainer();
     await this.fetchAndRender();
@@ -322,6 +324,65 @@ export class TestCasesViewClass {
     });
 
     this.toolbar.appendChild(select);
+
+    // Browser Execution Dropdown
+    const browserWrap = document.createElement('div');
+    browserWrap.style.display = 'inline-flex';
+    browserWrap.style.alignItems = 'center';
+    browserWrap.style.gap = '8px';
+    browserWrap.style.background = '#eff6ff';
+    browserWrap.style.border = '1.5px solid #2563eb';
+    browserWrap.style.borderRadius = 'var(--radius-sm, 8px)';
+    browserWrap.style.padding = '3px 10px';
+
+    const browserLabel = document.createElement('span');
+    browserLabel.style.fontSize = '0.75rem';
+    browserLabel.style.fontWeight = '700';
+    browserLabel.style.color = '#1d4ed8';
+    browserLabel.style.whiteSpace = 'nowrap';
+    browserLabel.textContent = 'DỰ ÁN / TRÌNH DUYỆT:';
+    browserWrap.appendChild(browserLabel);
+
+    const browserSelect = document.createElement('select');
+    browserSelect.id = 'execution-browser-select';
+    browserSelect.className = 'filter-dropdown-select';
+    browserSelect.setAttribute('aria-label', 'Chọn trình duyệt thực thi');
+    browserSelect.title = 'Trình duyệt / Dự án sẽ dùng khi bấm chạy kịch bản';
+    browserSelect.style.border = 'none';
+    browserSelect.style.background = 'transparent';
+    browserSelect.style.padding = '6px 26px 6px 4px';
+    browserSelect.style.fontWeight = '600';
+    browserSelect.style.color = '#1e293b';
+
+    const browserOptions = [
+      { value: 'chromium', label: '🌐 Chromium (Chrome)' },
+      { value: 'firefox', label: '🦊 Firefox' },
+      { value: 'webkit', label: '🧭 WebKit (Safari)' },
+    ];
+
+    browserOptions.forEach(({ value, label }) => {
+      const opt = document.createElement('option');
+      opt.value = value;
+      opt.textContent = label;
+      opt.selected = value === (this.executionBrowser || 'chromium');
+      browserSelect.appendChild(opt);
+    });
+
+    browserSelect.addEventListener('change', (e) => {
+      this.executionBrowser = e.target.value;
+      const bNames = { chromium: 'Chromium', firefox: 'Firefox', webkit: 'WebKit' };
+      this.showToast(`Đã chọn trình duyệt chạy mặc định: ${bNames[this.executionBrowser] || this.executionBrowser}`);
+      // Sync row selects
+      document.querySelectorAll('.row-browser-select').forEach((el) => {
+        el.value = this.executionBrowser;
+      });
+      // Sync topbar select
+      const topSelect = document.getElementById('topbar-browser-select');
+      if (topSelect) topSelect.value = this.executionBrowser;
+    });
+
+    browserWrap.appendChild(browserSelect);
+    this.toolbar.appendChild(browserWrap);
 
     // Export File Button
     const exportBtn = document.createElement('button');
@@ -703,6 +764,28 @@ export class TestCasesViewClass {
         actionsGroup.style.justifyContent = 'flex-end';
 
         if (isAutomated) {
+          // Row Browser Select
+          const rowBrowserSelect = document.createElement('select');
+          rowBrowserSelect.className = 'row-browser-select';
+          rowBrowserSelect.style.cssText = 'padding: 4px 6px; font-size: 0.75rem; font-weight: 500; border-radius: 4px; border: 1px solid #cbd5e1; background: #ffffff; color: #1e293b; cursor: pointer; max-width: 105px;';
+          rowBrowserSelect.title = `Chọn trình duyệt chạy cho ${tc.test_case_id}`;
+
+          [
+            { value: 'chromium', label: '🌐 Chrome' },
+            { value: 'firefox', label: '🦊 Firefox' },
+            { value: 'webkit', label: '🧭 Safari' },
+          ].forEach(({ value, label }) => {
+            const opt = document.createElement('option');
+            opt.value = value;
+            opt.textContent = label;
+            opt.selected = value === (this.executionBrowser || 'chromium');
+            rowBrowserSelect.appendChild(opt);
+          });
+
+          rowBrowserSelect.addEventListener('change', (e) => {
+            this.executionBrowser = e.target.value;
+          });
+
           // Play button (Run this test)
           const runBtn = document.createElement('button');
           runBtn.type = 'button';
@@ -717,6 +800,7 @@ export class TestCasesViewClass {
           runBtn.addEventListener('click', async () => {
             if (runBtn.disabled) return;
             runBtn.disabled = true;
+            rowBrowserSelect.disabled = true;
             const originalIcon = runBtn.innerHTML;
             runBtn.innerHTML = `
               <svg class="spinner" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -724,10 +808,13 @@ export class TestCasesViewClass {
                 <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
               </svg>
             `;
-            this.showToast(`Đang chạy ${tc.test_case_id} bằng Playwright (Headed)...`);
+            const selectedBrowser = rowBrowserSelect.value || this.executionBrowser || 'chromium';
+            const bNames = { chromium: 'Chromium', firefox: 'Firefox', webkit: 'WebKit' };
+            const bDisplay = bNames[selectedBrowser] || selectedBrowser;
+            this.showToast(`Đang chạy ${tc.test_case_id} bằng Playwright (${bDisplay} - Headed)...`);
 
             try {
-              const res = await api.runTestCase(tc.test_case_id);
+              const res = await api.runTestCase(tc.test_case_id, { browser: selectedBrowser });
               if (res.status === 'PASSED') {
                 this.showToast(`✓ ${tc.test_case_id} chạy THÀNH CÔNG (${this.formatDuration(res.durationMs)})`);
                 this.renderLatestRunCell(tdLatestRun, 'PASSED', res.durationMs);
@@ -745,6 +832,7 @@ export class TestCasesViewClass {
               this.showToast(`✕ Lỗi thực thi ${tc.test_case_id}: ${err.message || 'Lỗi không xác định'}`);
             } finally {
               runBtn.disabled = false;
+              rowBrowserSelect.disabled = false;
               runBtn.innerHTML = originalIcon;
             }
           });
@@ -782,6 +870,7 @@ export class TestCasesViewClass {
             window.location.hash = `#test-cases/${encodeURIComponent(tc.test_case_id)}`;
           });
 
+          actionsGroup.appendChild(rowBrowserSelect);
           actionsGroup.appendChild(runBtn);
           actionsGroup.appendChild(codeBtn);
           actionsGroup.appendChild(moreBtn);

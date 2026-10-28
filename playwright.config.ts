@@ -62,7 +62,10 @@ export default defineConfig({
     baseURL: environment.baseUrl,
     actionTimeout: TIMEOUTS.action,
     navigationTimeout: TIMEOUTS.navigation,
-    screenshot: 'only-on-failure',
+    screenshot:
+      process.env.CAPTURE_ALL_SCREENSHOTS === 'true'
+        ? ('on' as const)
+        : ('only-on-failure' as const),
     video: 'retain-on-failure',
     trace: 'on-first-retry',
   },
@@ -149,8 +152,55 @@ export default defineConfig({
             retries: 0,
             dependencies: ['auth-setup'],
             use: {
+              ...(process.env.ADHOC_BROWSER === 'firefox'
+                ? devices['Desktop Firefox']
+                : process.env.ADHOC_BROWSER === 'webkit'
+                  ? devices['Desktop Safari']
+                  : devices['Desktop Chrome']),
+              storageState: defaultStorageState,
+              screenshot: 'on' as const,
+              trace: 'off' as const,
+            },
+          },
+          {
+            name: 'adhoc-chromium',
+            testMatch: endToEndTestMatch,
+            fullyParallel: false,
+            workers: 1,
+            retries: 0,
+            dependencies: ['auth-setup'],
+            use: {
               ...devices['Desktop Chrome'],
               storageState: defaultStorageState,
+              screenshot: 'on' as const,
+              trace: 'off' as const,
+            },
+          },
+          {
+            name: 'adhoc-firefox',
+            testMatch: endToEndTestMatch,
+            fullyParallel: false,
+            workers: 1,
+            retries: 0,
+            dependencies: ['auth-setup'],
+            use: {
+              ...devices['Desktop Firefox'],
+              storageState: defaultStorageState,
+              screenshot: 'on' as const,
+              trace: 'off' as const,
+            },
+          },
+          {
+            name: 'adhoc-webkit',
+            testMatch: endToEndTestMatch,
+            fullyParallel: false,
+            workers: 1,
+            retries: 0,
+            dependencies: ['auth-setup'],
+            use: {
+              ...devices['Desktop Safari'],
+              storageState: defaultStorageState,
+              screenshot: 'on' as const,
               trace: 'off' as const,
             },
           },

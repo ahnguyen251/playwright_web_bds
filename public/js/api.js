@@ -72,9 +72,16 @@ export const api = {
   
   getResultEvidence: (resultId, options) => fetchJSON(`${API_BASE}/results/${resultId}/evidence`, options),
 
-  runTestCase: (testCaseId, options = {}) =>
-    fetchJSON(`${API_BASE}/test-cases/${encodeURIComponent(testCaseId)}/run`, {
+  runTestCase: (testCaseId, data = {}, options = {}) => {
+    const { headers = {}, ...restOptions } = options;
+    return fetchJSON(`${API_BASE}/test-cases/${encodeURIComponent(testCaseId)}/run`, {
       method: 'POST',
-      ...options,
-    }),
+      headers: {
+        'Content-Type': 'application/json',
+        ...headers,
+      },
+      body: JSON.stringify(data),
+      ...restOptions,
+    });
+  },
 };

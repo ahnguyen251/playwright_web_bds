@@ -16,8 +16,18 @@ export function createApp({ database, evidenceRoot }: AppDependencies) {
   // API Routes must be authoritative
   app.use('/api', createRoutes(database, evidenceRoot));
 
-  // Serve Dashboard UI statically
-  app.use(express.static(path.join(__dirname, '../public')));
+  // Serve Dashboard UI statically with no-cache headers to prevent stale UI bundles
+  app.use(
+    express.static(path.join(__dirname, '../public'), {
+      etag: false,
+      lastModified: false,
+      setHeaders: (res) => {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      },
+    }),
+  );
 
   // Error Handling Middleware (must be registered last)
   app.use(errorHandler);

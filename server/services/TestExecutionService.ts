@@ -7,6 +7,7 @@ export interface ExecuteTestCaseResult {
   readonly success: boolean;
   readonly testCaseId: string;
   readonly runId: string;
+  readonly resultId?: string | undefined;
   readonly status: 'PASSED' | 'FAILED' | 'SKIPPED' | 'TIMED_OUT' | 'ERROR';
   readonly durationMs: number;
   readonly message?: string | undefined;
@@ -18,7 +19,10 @@ export class TestExecutionService {
 
   constructor(private readonly conn: DatabaseConnection) {}
 
-  public async executeTestCase(testCaseId: string): Promise<ExecuteTestCaseResult> {
+  public async executeTestCase(
+    testCaseId: string,
+    options: { browser?: string | undefined } = {},
+  ): Promise<ExecuteTestCaseResult> {
     if (TestExecutionService.activeRuns.has(testCaseId)) {
       throw new AppError(
         409,
@@ -60,6 +64,12 @@ export class TestExecutionService {
     try {
       const isMutating = testCase.script_path.includes('.mutating.spec.ts');
       const normalizedScriptPath = testCase.script_path.replace(/\\/g, '/');
+      const rawBrowser = (options.browser ?? 'chromium').toLowerCase();
+      const validBrowsers = ['chromium', 'firefox', 'webkit'] as const;
+      const targetBrowser = (validBrowsers as readonly string[]).includes(rawBrowser)
+        ? rawBrowser
+        : 'chromium';
+      const projectName = `adhoc-${targetBrowser}`;
 
       const args = [
         'playwright',
@@ -68,12 +78,14 @@ export class TestExecutionService {
         '-g',
         testCaseId,
         '--headed',
-        '--project=adhoc-runner',
+        `--project=${projectName}`,
       ];
 
       const env: NodeJS.ProcessEnv = {
         ...process.env,
         ADHOC_RUN_ID: adhocRunId,
+        ADHOC_BROWSER: targetBrowser,
+        CAPTURE_ALL_SCREENSHOTS: 'true',
         ...(isMutating
           ? {
               RUN_MUTATING_E2E: 'true',
@@ -122,7 +134,7 @@ export class TestExecutionService {
       const resultRow = db
         .prepare(
           `
-          SELECT status, duration_ms, error_message
+          SELECT result_id, status, duration_ms, error_message
           FROM test_results
           WHERE run_id = ? AND (test_case_id = ? OR parsed_test_case_id = ?)
           ORDER BY created_at DESC
@@ -130,7 +142,7 @@ export class TestExecutionService {
         `,
         )
         .get(adhocRunId, testCaseId, testCaseId) as
-        | { status: string; duration_ms: number; error_message: string | null }
+        | { result_id: string; status: string; duration_ms: number; error_message: string | null }
         | undefined;
 
       if (resultRow) {
@@ -138,6 +150,7 @@ export class TestExecutionService {
           success: resultRow.status === 'PASSED',
           testCaseId,
           runId: adhocRunId,
+          resultId: resultRow.result_id,
           status: resultRow.status as ExecuteTestCaseResult['status'],
           durationMs: resultRow.duration_ms || durationMs,
           errorMessage: resultRow.error_message ?? undefined,

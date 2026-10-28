@@ -133,12 +133,20 @@ export class TestCaseDetailsViewClass {
             <span>Xuất Phân Tích JSON</span>
           </button>
           ${isAutomated ? `
-            <button type="button" class="btn btn-primary" id="btn-run-tc" style="padding: 7px 14px; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 6px;">
-              <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
-                <polygon points="5 3 19 12 5 21 5 3"/>
-              </svg>
-              <span>Chạy Test Case Này</span>
-            </button>
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: #eff6ff; padding: 4px 10px; border-radius: 8px; border: 1.5px solid #2563eb;">
+              <span style="font-size: 0.75rem; font-weight: 700; color: #1d4ed8; white-space: nowrap;">TRÌNH DUYỆT:</span>
+              <select id="select-run-browser" class="form-select" style="padding: 6px 10px; font-size: 0.8125rem; font-weight: 600; border-radius: 6px; border: 1px solid #93c5fd; background: #ffffff; color: #1e293b; cursor: pointer;" title="Chọn dự án / trình duyệt để chạy">
+                <option value="chromium" selected>🌐 Chromium (Chrome)</option>
+                <option value="firefox">🦊 Firefox</option>
+                <option value="webkit">🧭 WebKit (Safari)</option>
+              </select>
+              <button type="button" class="btn btn-primary" id="btn-run-tc" style="padding: 7px 14px; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 6px;">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                <span>Chạy Test Case Này</span>
+              </button>
+            </div>
           ` : ''}
         </div>
       </div>
@@ -245,29 +253,43 @@ export class TestCaseDetailsViewClass {
 
     // Run Test Case button
     const runTcBtn = headerSection.querySelector('#btn-run-tc');
+    const runBrowserSelect = headerSection.querySelector('#select-run-browser');
     if (runTcBtn) {
       runTcBtn.addEventListener('click', async () => {
         if (runTcBtn.disabled) return;
         runTcBtn.disabled = true;
+        if (runBrowserSelect) runBrowserSelect.disabled = true;
         const origContent = runTcBtn.innerHTML;
+        const selectedBrowser = runBrowserSelect?.value || 'chromium';
+        const browserNames = {
+          chromium: 'Chromium',
+          firefox: 'Firefox',
+          webkit: 'WebKit',
+        };
+        const browserDisplay = browserNames[selectedBrowser] || selectedBrowser;
         runTcBtn.innerHTML = `
           <svg class="spinner" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5">
             <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
             <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
           </svg>
-          <span>Đang chạy Playwright...</span>
+          <span>Đang chạy (${browserDisplay})...</span>
         `;
         try {
-          const res = await api.runTestCase(tc.test_case_id);
+          const res = await api.runTestCase(tc.test_case_id, { browser: selectedBrowser });
           this.runType = 'SINGLE';
           this.page = 1;
           await this.fetchAndRenderAll();
+          if (res.resultId) {
+            this.modal.open(res.resultId);
+          }
           if (res.status === 'SKIPPED') {
             alert(`⚠️ Test case ${tc.test_case_id} được BỎ QUA (SKIPPED) do chính sách an toàn môi trường: Không thực hiện tạo tài khoản thử nghiệm bừa bãi trên Production.`);
           }
         } catch (err) {
           alert('✕ Lỗi thực thi ' + tc.test_case_id + ': ' + (err.message || 'Lỗi không xác định'));
+        } finally {
           runTcBtn.disabled = false;
+          if (runBrowserSelect) runBrowserSelect.disabled = false;
           runTcBtn.innerHTML = origContent;
         }
       });

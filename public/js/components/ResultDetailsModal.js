@@ -202,8 +202,14 @@ export class ResultDetailsModalClass {
 
       if (!evidenceData.items || evidenceData.items.length === 0) {
         const p = document.createElement('p');
-        p.textContent = 'Không tìm thấy tài liệu chứng cớ nào cho kết quả này.';
-        p.style.color = 'var(--text-muted)';
+        if (result.status === 'PASSED') {
+          p.textContent = 'Kiểm thử thực thi thành công (PASSED). Không phát sinh lỗi hay cảnh báo.';
+          p.style.color = '#10b981';
+          p.style.fontWeight = '500';
+        } else {
+          p.textContent = 'Không tìm thấy tài liệu chứng cớ nào cho kết quả này.';
+          p.style.color = 'var(--text-muted)';
+        }
         evSection.appendChild(p);
       } else {
         const sortedEvidence = [...evidenceData.items].sort(

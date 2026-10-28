@@ -67,7 +67,11 @@ export default function testCaseRoutes(db: DatabaseConnection) {
   router.post('/:testCaseId/run', async (req, res, next) => {
     try {
       const testCaseId = req.params.testCaseId;
-      const result = await executionService.executeTestCase(testCaseId);
+      const { browser } = (req.body ?? {}) as { browser?: string };
+      const result = await executionService.executeTestCase(
+        testCaseId,
+        browser ? { browser } : {},
+      );
       res.json(result);
     } catch (err) {
       next(err);
