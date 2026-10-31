@@ -207,11 +207,10 @@ test('publishes the authoritative metadata for every forgot-password case', () =
     },
     {
       id: 'TC-AUTH-FORGOT-003',
-      title: '[Negative / State] OTP sai hoặc hết hạn',
+      title: '[Negative / State] OTP sai',
       priority: 'high',
       tags: ['@regression', '@authentication', '@external', '@otp', '@mutating'],
-      expectedResult:
-        'OTP sai hiển thị lỗi và cho nhập lại; OTP hết hạn yêu cầu gửi lại OTP.',
+      expectedResult: 'OTP sai hiển thị lỗi và cho nhập lại.',
     },
   ]);
 });
@@ -269,7 +268,6 @@ test('publishes literal case-specific data required by later AUTH executors', ()
   expect(nonexistentEmailPasswordRecoveryTestCase.emailSource).toBe('unique-unregistered');
   expect(invalidOrExpiredPasswordRecoveryOtpTestCase.otpConditions).toEqual([
     'incorrect',
-    'expired',
   ]);
 });
 

@@ -3,8 +3,8 @@ import { chromium } from 'playwright';
 async function main() {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
-  
-  await page.goto('https://propifyy.duckdns.org/listings/48', { waitUntil: 'networkidle' });
+
+  await page.goto('https://propifyy.duckdns.org/listings/49', { waitUntil: 'networkidle' });
 
   // Get the click event handler or look at the Vue component for the listing detail
   const btnInfo = await page.locator('button[aria-label="Nhắn tin chủ nhà"]').evaluate(el => {

@@ -1,3 +1,4 @@
+import { allTestCases } from '../../test-cases';
 import { TestCaseReadRepository } from '../../database/repositories/TestCaseReadRepository';
 import { TestRunReadRepository } from '../../database/repositories/TestRunReadRepository';
 import { TestCaseAnalyticsRepository } from '../../database/repositories/TestCaseAnalyticsRepository';
@@ -64,7 +65,14 @@ export class ReportingService {
     if (!result) {
       throw new NotFoundError('RESULT_NOT_FOUND', 'Result was not found.');
     }
-    return result;
+    const rawResult = result as Record<string, unknown>;
+    const testCaseId = (rawResult.test_case_id as string | undefined) ?? (rawResult.parsed_test_case_id as string | undefined);
+    const catalogCase = testCaseId ? allTestCases.find((tc) => tc.id === testCaseId) : undefined;
+    return {
+      ...result,
+      expected_result: catalogCase?.expectedResult ?? null,
+      test_steps: catalogCase?.testSteps ?? null,
+    };
   }
 
   public getTestCaseAnalytics(testCaseId: string) {

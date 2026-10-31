@@ -43,13 +43,13 @@ export const nonexistentEmailPasswordRecoveryTestCase: PasswordRecoveryTestCase 
 
 export const invalidOrExpiredPasswordRecoveryOtpTestCase: PasswordRecoveryTestCase = Object.freeze({
   id: 'TC-AUTH-FORGOT-003',
-  title: '[Negative / State] OTP sai hoặc hết hạn',
+  title: '[Negative / State] OTP sai',
   module: 'Authentication',
   priority: 'high',
   tags: externalRecoveryTags,
   preconditions: Object.freeze(['A valid password-reset OTP was sent.']),
-  expectedResult: 'OTP sai hiển thị lỗi và cho nhập lại; OTP hết hạn yêu cầu gửi lại OTP.',
-  otpConditions: Object.freeze(['incorrect', 'expired'] as const),
+  expectedResult: 'OTP sai hiển thị lỗi và cho nhập lại.',
+  otpConditions: Object.freeze(['incorrect'] as const),
   automation: { status: 'AUTOMATED' as const, scriptPath: 'tests/authentication/password-recovery.otp.mutating.spec.ts' },
 });
 

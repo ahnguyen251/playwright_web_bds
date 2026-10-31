@@ -142,8 +142,17 @@ class TestTrackingReporter implements AwaitableTestEndReporter {
     const { testCaseId, traceabilityStatus } = resolveTraceability(test.title);
 
     const projectName = test.parent.project()?.name;
-    const errorMessage = result.error?.message;
+    let errorMessage = result.error?.message;
     const errorStack = result.error?.stack;
+
+    if (!errorMessage && result.status === 'skipped') {
+      const skipAnnotation =
+        result.annotations.find((a) => a.type === 'skip' && Boolean(a.description)) ??
+        test.annotations.find((a) => a.type === 'skip' && Boolean(a.description));
+      if (skipAnnotation?.description) {
+        errorMessage = skipAnnotation.description;
+      }
+    }
 
     const executionIndex = this.executions.length;
     const executionResult: TestExecutionResult = {

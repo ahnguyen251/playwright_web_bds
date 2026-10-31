@@ -30,7 +30,7 @@ export class HomePage extends BasePage {
     this.rentSection = rentHeading.locator('xpath=ancestor::div[2]');
 
     const favoriteHeading = page.getByRole('heading', { name: 'Tin đăng yêu thích', level: 2 });
-    this.favoriteSection = favoriteHeading.locator('xpath=parent::*');
+    this.favoriteSection = favoriteHeading.locator('xpath=ancestor::div[2]');
 
     this.favoriteEmptyMessage = page.getByText('Bạn chưa lưu tin yêu thích nào.').first();
     this.viewAllSalesLink = this.saleSection

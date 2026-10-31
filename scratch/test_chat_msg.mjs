@@ -20,12 +20,12 @@ async function main() {
       try {
         const text = await res.text();
         console.log('Body:', text.slice(0, 300));
-      } catch (e) {}
+      } catch (e) { }
     }
   });
 
-  await page.goto('https://propifyy.duckdns.org/listings/48', { waitUntil: 'networkidle' });
-  
+  await page.goto('https://propifyy.duckdns.org/listings/49', { waitUntil: 'networkidle' });
+
   // Click host chat button
   const hostChatBtn = page.locator('button[aria-label="Nhắn tin chủ nhà"]');
   console.log('Clicking chat button...');

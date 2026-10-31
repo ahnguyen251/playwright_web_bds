@@ -166,13 +166,22 @@ export class ResultDetailsModalClass {
       metaDiv.textContent = `Dự Án: ${result.project_name || 'N/A'} | Truy vết: ${result.traceability_status} | Thời Gian: ${(result.duration_ms / 1000).toFixed(1)}s`;
       this.body.appendChild(metaDiv);
       this.appendFailureClassifications(result);
+      this.appendExpectedVsActualSection(result);
 
       // Error Info
       if (result.error_message) {
         const errorSection = document.createElement('div');
         errorSection.style.marginBottom = '24px';
-        const errorLabel = document.createElement('strong');
-        errorLabel.textContent = 'Thông Báo Lỗi:';
+        const errorLabel = document.createElement('div');
+        errorLabel.className = 'modal-section-title';
+        errorLabel.innerHTML = `
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>${result.status === 'SKIPPED' ? 'Lý Do Bỏ Qua (Skip Reason):' : 'Thông Báo Lỗi:'}</span>
+        `;
         const errorPre = document.createElement('pre');
         errorPre.className = 'code-block';
         errorPre.textContent = result.error_message;
@@ -184,8 +193,15 @@ export class ResultDetailsModalClass {
       if (result.error_stack) {
         const stackSection = document.createElement('div');
         stackSection.style.marginBottom = '24px';
-        const stackLabel = document.createElement('strong');
-        stackLabel.textContent = 'Chi Tiết Lỗi (Stack Trace):';
+        const stackLabel = document.createElement('div');
+        stackLabel.className = 'modal-section-title';
+        stackLabel.innerHTML = `
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="16 18 22 12 16 6"></polyline>
+            <polyline points="8 6 2 12 8 18"></polyline>
+          </svg>
+          <span>Chi Tiết Lỗi (Stack Trace):</span>
+        `;
         const stackPre = document.createElement('pre');
         stackPre.className = 'code-block';
         stackPre.textContent = result.error_stack;
@@ -196,8 +212,17 @@ export class ResultDetailsModalClass {
 
       // Evidence Section
       const evSection = document.createElement('div');
-      const evLabel = document.createElement('h3');
-      evLabel.textContent = 'Bằng chứng';
+      const evLabel = document.createElement('div');
+      evLabel.className = 'modal-section-title';
+      evLabel.innerHTML = `
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <span>Bằng chứng</span>
+      `;
       evSection.appendChild(evLabel);
 
       if (!evidenceData.items || evidenceData.items.length === 0) {
@@ -252,10 +277,23 @@ export class ResultDetailsModalClass {
       Boolean(expectedStatus) && actualStatus !== 'skipped' && actualStatus !== expectedStatus;
     const labels = [];
 
-    if (expectedFailure) labels.push('Expected failure');
-    else if (unexpectedFailure) labels.push('Unexpected failure');
+    if (expectedFailure) {
+      labels.push({
+        text: '🏷️ Lỗi sản phẩm đã ghi nhận (Known Product Gap / test.fail)',
+        className: 'badge-known-gap',
+      });
+    } else if (unexpectedFailure) {
+      labels.push({
+        text: '🚨 Lỗi phát sinh ngoài dự kiến (Defect / Regression)',
+        className: 'badge-defect',
+      });
+    }
+
     if (actualFailure && result.traceability_status === 'MAPPED') {
-      labels.push('Actual failed business execution');
+      labels.push({
+        text: '📋 Kịch bản nghiệp vụ chuẩn (MAPPED)',
+        className: 'badge-mapped-failure',
+      });
     }
 
     if (labels.length === 0) return;
@@ -263,15 +301,160 @@ export class ResultDetailsModalClass {
     container.style.display = 'flex';
     container.style.gap = '8px';
     container.style.flexWrap = 'wrap';
-    container.style.marginBottom = '24px';
-    for (const text of labels) {
+    container.style.marginBottom = '20px';
+    for (const item of labels) {
       const label = document.createElement('span');
-      label.className = 'failure-classification';
-      label.textContent = text;
+      label.className = `failure-classification ${item.className}`;
+      label.textContent = item.text;
       container.appendChild(label);
     }
     this.body.appendChild(container);
   }
+
+  escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  parseAssertionDiff(errorMessage) {
+    if (!errorMessage) return null;
+
+    // Pattern 1: Expected: ... Received: ...
+    const expectedMatch = errorMessage.match(/Expected(?: [a-z]+)?:\s*([^\r\n]+(?:\r?\n(?!(?:Received|at |\s*$))[^\r\n]+)*)/i);
+    const receivedMatch = errorMessage.match(/Received(?: [a-z]+)?:\s*([^\r\n]+(?:\r?\n(?!(?:at |\s*$))[^\r\n]+)*)/i);
+
+    if (expectedMatch && receivedMatch) {
+      return {
+        expected: expectedMatch[1].trim(),
+        received: receivedMatch[1].trim(),
+        type: 'ASSERTION',
+      };
+    }
+
+    // Pattern 2: Timed out waiting for ...
+    const timeoutMatch = errorMessage.match(/Timed?\s*out\s*(\d+ms)?\s*waiting\s*for\s*([^.]+)/i) ||
+      errorMessage.match(/Timeout\s*(\d+ms)?\s*exceeded/i);
+    if (timeoutMatch) {
+      return {
+        expected: 'Phần tử/trạng thái trang hiển thị sẵn sàng trong thời gian cho phép',
+        received: `Quá thời gian chờ (${timeoutMatch[1] || 'Timeout'}). ${timeoutMatch[2] ? 'Không thể hoàn tất: ' + timeoutMatch[2].trim() : 'Phần tử không phản hồi kịp thời.'}`,
+        type: 'TIMEOUT',
+      };
+    }
+
+    return null;
+  }
+
+  appendExpectedVsActualSection(result) {
+    const isFailed = ['FAILED', 'TIMED_OUT', 'ERROR'].includes(result.status);
+    const hasExpected = Boolean(result.expected_result);
+    const diff = this.parseAssertionDiff(result.error_message);
+
+    if (!isFailed && !hasExpected) return;
+
+    const section = document.createElement('div');
+    section.className = 'result-comparison-card';
+
+    // Left Column: EXPECTED
+    const expectedCol = document.createElement('div');
+    expectedCol.className = 'comparison-column comparison-expected';
+    expectedCol.innerHTML = `
+      <div class="comparison-header">
+        <div class="comparison-icon-badge">
+          <svg class="comparison-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"/>
+            <polyline points="12 6 12 12 16 14"/>
+          </svg>
+        </div>
+        <span class="comparison-title">KẾT QUẢ MONG MUỐN (EXPECTED)</span>
+      </div>
+      <div class="comparison-body">
+        ${result.expected_result ? `
+          <div class="comparison-item">
+            <span class="comparison-item-label">Nghiệp vụ kịch bản:</span>
+            <div class="comparison-item-val business-spec">${this.escapeHtml(result.expected_result)}</div>
+          </div>
+        ` : ''}
+        ${diff?.expected ? `
+          <div class="comparison-item">
+            <span class="comparison-item-label">Kỳ vọng kiểm thử (Assertion):</span>
+            <div class="comparison-item-val code-val">${this.escapeHtml(diff.expected)}</div>
+          </div>
+        ` : ''}
+        ${!result.expected_result && !diff?.expected ? `
+          <div class="comparison-item">
+            <span class="comparison-item-label">Mô tả kỳ vọng:</span>
+            <div class="comparison-item-val business-spec">Toàn bộ các bước kiểm thử và xác thực phải vượt qua thành công (PASSED).</div>
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    // Right Column: ACTUAL
+    const actualCol = document.createElement('div');
+    actualCol.className = `comparison-column ${isFailed ? 'comparison-actual-failed' : 'comparison-actual-passed'}`;
+
+    if (isFailed) {
+      actualCol.innerHTML = `
+        <div class="comparison-header">
+          <div class="comparison-icon-badge">
+            <svg class="comparison-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
+          </div>
+          <span class="comparison-title">KẾT QUẢ THỰC TẾ (ACTUAL)</span>
+        </div>
+        <div class="comparison-body">
+          <div class="comparison-item">
+            <span class="comparison-item-label">${diff?.type === 'TIMEOUT' ? 'Hiện tượng thực tế:' : 'Thực tế nhận được:'}</span>
+            <div class="comparison-item-val error-val">${this.escapeHtml(diff?.received || result.error_message?.split('\n')[0] || 'Kiểm thử không thỏa mãn điều kiện mong muốn')}</div>
+          </div>
+          <div class="comparison-item">
+            <span class="comparison-item-label">Đánh giá:</span>
+            <div class="comparison-item-val status-val">
+              <span class="badge-status-failed">✕ FAILED (Không đạt yêu cầu)</span>
+            </div>
+          </div>
+        </div>
+      `;
+    } else {
+      actualCol.innerHTML = `
+        <div class="comparison-header">
+          <div class="comparison-icon-badge">
+            <svg class="comparison-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <span class="comparison-title">KẾT QUẢ THỰC TẾ (ACTUAL)</span>
+        </div>
+        <div class="comparison-body">
+          <div class="comparison-item">
+            <span class="comparison-item-label">Thực tế hệ thống:</span>
+            <div class="comparison-item-val success-val">Hệ thống đã phản hồi đúng và đáp ứng trọn vẹn kết quả mong muốn.</div>
+          </div>
+          <div class="comparison-item">
+            <span class="comparison-item-label">Đánh giá:</span>
+            <div class="comparison-item-val status-val">
+              <span class="badge-status-passed">✓ PASSED (Đạt yêu cầu)</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    section.appendChild(expectedCol);
+    section.appendChild(actualCol);
+    this.body.appendChild(section);
+  }
+
 
   appendEvidenceGroup(parent, title, className, evidenceItems) {
     if (evidenceItems.length === 0) return;
@@ -345,8 +528,14 @@ export class ResultDetailsModalClass {
       actions.className = 'evidence-actions';
       const detailButton = document.createElement('button');
       detailButton.type = 'button';
-      detailButton.className = 'btn';
-      detailButton.textContent = 'Xem chi tiết';
+      detailButton.className = 'btn-evidence-view';
+      detailButton.innerHTML = `
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+        <span>Xem chi tiết</span>
+      `;
       detailButton.addEventListener('click', () => this.openImagePreview(evidence, detailButton));
       actions.appendChild(detailButton);
 
@@ -385,9 +574,16 @@ export class ResultDetailsModalClass {
   createDownloadLink(evidence, text) {
     const link = document.createElement('a');
     link.href = evidence.contentUrl;
-    link.className = 'btn';
-    link.textContent = text;
+    link.className = 'btn-evidence-download';
     link.download = evidence.fileName;
+    link.innerHTML = `
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      <span>${text}</span>
+    `;
     return link;
   }
 
@@ -397,8 +593,14 @@ export class ResultDetailsModalClass {
 
     const viewButton = document.createElement('button');
     viewButton.type = 'button';
-    viewButton.className = 'btn';
-    viewButton.textContent = 'Xem nội dung';
+    viewButton.className = 'btn-evidence-view';
+    viewButton.innerHTML = `
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+        <circle cx="12" cy="12" r="3"/>
+      </svg>
+      <span class="btn-text">Xem nội dung</span>
+    `;
     actions.appendChild(viewButton);
     actions.appendChild(this.createDownloadLink(evidence, 'Tải xuống'));
 
@@ -407,15 +609,20 @@ export class ResultDetailsModalClass {
     logContent.hidden = true;
     let loadError;
 
+    const setViewBtnText = (txt) => {
+      const span = viewButton.querySelector('.btn-text');
+      if (span) span.textContent = txt;
+    };
+
     viewButton.addEventListener('click', async () => {
       if (logContent.dataset.loaded === 'true') {
         logContent.hidden = !logContent.hidden;
-        viewButton.textContent = logContent.hidden ? 'Xem nội dung' : 'Ẩn nội dung';
+        setViewBtnText(logContent.hidden ? 'Xem nội dung' : 'Ẩn nội dung');
         return;
       }
 
       viewButton.disabled = true;
-      viewButton.textContent = 'Đang tải...';
+      setViewBtnText('Đang tải...');
       try {
         const response = await globalThis.fetch(evidence.contentUrl);
         if (!response.ok) throw new Error(`Không thể tải LOG (${response.status})`);
@@ -423,7 +630,7 @@ export class ResultDetailsModalClass {
         logContent.textContent = await response.text();
         logContent.dataset.loaded = 'true';
         logContent.hidden = false;
-        viewButton.textContent = 'Ẩn nội dung';
+        setViewBtnText('Ẩn nội dung');
         loadError?.remove();
         loadError = undefined;
       } catch {
@@ -432,7 +639,7 @@ export class ResultDetailsModalClass {
           loadError.classList.add('evidence-load-error');
           actions.insertAdjacentElement('afterend', loadError);
         }
-        viewButton.textContent = 'Xem lại';
+        setViewBtnText('Xem lại');
       } finally {
         viewButton.disabled = false;
       }

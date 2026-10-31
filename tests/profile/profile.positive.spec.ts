@@ -21,11 +21,11 @@ test(
     const profile = await profilePage.profile().read();
     expect(
       profile.fullName === expectedProfile.fullName &&
-        profile.email === expectedProfile.email &&
-        profile.phone === expectedProfile.phone,
+      profile.email === expectedProfile.email &&
+      profile.phone === expectedProfile.phone,
     ).toBe(true);
     expect(await profilePage.profile().hasAvatar()).toBe(expectedProfile.hasAvatar);
-    expect(expectedProfile.accountStatus.toUpperCase()).toBe('ACTIVE');
+    expect(expectedProfile.accountStatus.toUpperCase()).toBe('A');
     expect(await profilePage.profile().isActiveBadgeVisible()).toBe(true);
     expect(await profilePage.profile().isEmailDisabled()).toBe(true);
     expect(await profilePage.profile().isPhoneDisabled()).toBe(true);

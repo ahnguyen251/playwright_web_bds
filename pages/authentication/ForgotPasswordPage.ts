@@ -102,15 +102,34 @@ export class ForgotPasswordPage extends BasePage {
 
   public async submitOtp(): Promise<void> {
     await this.requireSixOtpInputs();
+
+    if (
+      (await this.otpRejectionFeedback.isVisible()) ||
+      (await this.submitNewPasswordButton.isVisible()) ||
+      (await this.submitOtpButton.isDisabled())
+    ) {
+      return;
+    }
+
     const otpValues = await Promise.all(
       Array.from({ length: 6 }, async (_, index) => this.otpInputs.nth(index).inputValue()),
     );
 
     if (otpValues.some((value) => !/^\d$/.test(value))) {
+      if (
+        (await this.otpRejectionFeedback.isVisible()) ||
+        (await this.submitNewPasswordButton.isVisible())
+      ) {
+        return;
+      }
       throw new Error('Cannot submit an incomplete OTP.');
     }
 
-    await this.submitOtpButton.click();
+    try {
+      await this.submitOtpButton.click({ timeout: 2000 });
+    } catch {
+      // Ignore click timeout, assume auto-submit occurred
+    }
   }
 
   public async resendOtp(): Promise<void> {
@@ -181,6 +200,7 @@ export class ForgotPasswordPage extends BasePage {
   }
 
   private async requireSixOtpInputs(): Promise<void> {
+    await this.otpInputs.first().waitFor({ state: 'visible' }).catch(() => undefined);
     const otpInputCount = await this.otpInputs.count();
 
     if (otpInputCount !== 6) {

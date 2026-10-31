@@ -1,3 +1,4 @@
+/* global document, window, setTimeout, clearTimeout, AbortController, Blob, URL, navigator, CustomEvent */
 import { api } from '../api.js';
 import { Pagination } from '../components/Pagination.js';
 import { LoadingState } from '../components/LoadingState.js';
@@ -97,10 +98,6 @@ export class TestCasesViewClass {
     this.toolbar.className = 'command-toolbar';
     this.commandBar.appendChild(this.toolbar);
 
-    this.activeFiltersContainer = document.createElement('div');
-    this.activeFiltersContainer.className = 'active-filter-chips';
-    this.commandBar.appendChild(this.activeFiltersContainer);
-
     this.renderToolbar();
     this.renderActiveFilters();
 
@@ -120,16 +117,14 @@ export class TestCasesViewClass {
     const totalModules = this.modules.length || 12;
 
     // Determine metrics for card 2 & 3 based on active module or all
-    let activeModuleLabel = 'TOÀN HỆ THỐNG';
-    let moduleTotal = totalAll;
+        let moduleTotal = totalAll;
     let moduleAutomated = this.modules.reduce((sum, m) => sum + (m.automatedCount || 0), 0) || (this.summaryData?.testCases?.automated || 0);
     let moduleNotAutomated = this.modules.reduce((sum, m) => sum + (m.notAutomatedCount || 0), 0) || (this.summaryData?.testCases?.notAutomated || 0);
 
     if (this.activeModule) {
       const found = this.modules.find((m) => m.module === this.activeModule);
       if (found) {
-        activeModuleLabel = found.module.toUpperCase();
-        moduleTotal = found.totalTestCases;
+                moduleTotal = found.totalTestCases;
         moduleAutomated = found.automatedCount;
         moduleNotAutomated = found.notAutomatedCount;
       }
@@ -259,7 +254,7 @@ export class TestCasesViewClass {
   renderToolbar() {
     this.toolbar.innerHTML = '';
 
-    // Search Input Field
+    // Search Input Field with Clear Button
     const searchWrap = document.createElement('div');
     searchWrap.className = 'search-input-wrap';
     searchWrap.innerHTML = `
@@ -268,18 +263,37 @@ export class TestCasesViewClass {
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
       <input type="text" class="search-input-field" placeholder="Search Test Cases..." value="${this.escapeHtml(this.searchQuery)}">
+      <button type="button" class="search-clear-btn" aria-label="Xóa từ khóa tìm kiếm" title="Xóa tìm kiếm" style="display: ${this.searchQuery ? 'flex' : 'none'};">
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
     `;
 
     const searchInput = searchWrap.querySelector('input');
+    const clearBtn = searchWrap.querySelector('.search-clear-btn');
+
+    clearBtn.addEventListener('click', () => {
+      this.searchQuery = '';
+      searchInput.value = '';
+      clearBtn.style.display = 'none';
+      clearTimeout(this.debouncer);
+      this.page = 1;
+      this.selectedTestCaseIds.clear();
+      this.fetchAndRender();
+      searchInput.focus();
+    });
+
     searchInput.addEventListener('input', (e) => {
-      this.searchQuery = e.target.value;
+      this.searchQuery = e.target.value.trim();
+      clearBtn.style.display = this.searchQuery ? 'flex' : 'none';
       clearTimeout(this.debouncer);
       this.debouncer = setTimeout(() => {
         this.page = 1;
         this.selectedTestCaseIds.clear();
-        this.renderActiveFilters();
         this.fetchAndRender();
-      }, 500);
+      }, 400);
     });
     this.toolbar.appendChild(searchWrap);
 
@@ -351,73 +365,7 @@ export class TestCasesViewClass {
   }
 
   renderActiveFilters() {
-    this.activeFiltersContainer.innerHTML = '';
-
-    const automationLabels = {
-      AUTOMATED: 'Đã tự động hóa',
-      NOT_AUTOMATED: 'Chưa tự động hóa',
-    };
-    const latestRunLabels = {
-      PASSED: 'Passed',
-      FAILED: 'Failed',
-      NOT_RUN: 'Chưa chạy',
-    };
-
-    const filters = [
-      {
-        value: this.searchQuery,
-        label: `Tìm kiếm: ${this.searchQuery}`,
-        clear: () => {
-          this.searchQuery = '';
-          this.applyFilterChange();
-        },
-      },
-      {
-        value: this.activeModule,
-        label: `Mô-đun: ${this.activeModule}`,
-        clear: () => {
-          this.activeModule = '';
-          this.applyFilterChange();
-        },
-      },
-      {
-        value: this.automationStatus,
-        label: `Trạng thái: ${automationLabels[this.automationStatus] || this.automationStatus}`,
-        clear: () => {
-          this.automationStatus = '';
-          this.applyFilterChange();
-        },
-      },
-      {
-        value: this.latestRunStatus,
-        label: latestRunLabels[this.latestRunStatus] || this.latestRunStatus,
-        clear: () => {
-          this.latestRunStatus = '';
-          this.applyFilterChange();
-        },
-      },
-    ];
-
-    const activeFilters = filters.filter(({ value }) => Boolean(value));
-
-    activeFilters.forEach(({ label, clear }) => {
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'filter-chip';
-      chip.textContent = label;
-      chip.setAttribute('aria-label', `Bỏ lọc: ${label}`);
-      chip.addEventListener('click', clear);
-      this.activeFiltersContainer.appendChild(chip);
-    });
-
-    if (activeFilters.length > 0) {
-      const clearAllBtn = document.createElement('button');
-      clearAllBtn.type = 'button';
-      clearAllBtn.className = 'clear-filters-button';
-      clearAllBtn.textContent = 'Xóa bộ lọc';
-      clearAllBtn.addEventListener('click', () => this.clearFilters());
-      this.activeFiltersContainer.appendChild(clearAllBtn);
-    }
+    // Active filter chips removed per user request
   }
 
   applyFilterChange() {
@@ -768,7 +716,8 @@ export class TestCasesViewClass {
                 this.showToast(`✓ ${tc.test_case_id} chạy THÀNH CÔNG (${this.formatDuration(res.durationMs)})`);
                 this.renderLatestRunCell(tdLatestRun, 'PASSED', res.durationMs);
               } else if (res.status === 'SKIPPED') {
-                this.showToast(`⚠️ ${tc.test_case_id}: SKIPPED (Bỏ qua do chính sách an toàn)`);
+                const reason = res.errorMessage ? `: ${res.errorMessage}` : ' (Bỏ qua theo điều kiện kịch bản)';
+                this.showToast(`ℹ️ ${tc.test_case_id}: SKIPPED${reason}`);
                 this.renderLatestRunCell(tdLatestRun, 'SKIPPED', res.durationMs);
               } else if (res.status === 'FAILED') {
                 this.showToast(`✕ ${tc.test_case_id} chạy THẤT BẠI: ${res.errorMessage || 'Lỗi kiểm thử'}`);
@@ -880,7 +829,9 @@ export class TestCasesViewClass {
         this.selectedTestCaseIds.clear();
         this.fetchAndRender();
       });
-      this.contentArea.appendChild(paginationEl);
+      if (paginationEl) {
+        this.contentArea.appendChild(paginationEl);
+      }
     } catch (error) {
       if (error.name === 'AbortError') {
         return;
@@ -1050,8 +1001,14 @@ export class TestCasesViewClass {
           </div>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-copy-path">Sao chép đường dẫn</button>
-          <button type="button" class="btn btn-close-modal">Đóng</button>
+          <button type="button" class="btn btn-modal-secondary btn-close-modal">Đóng</button>
+          <button type="button" class="btn btn-modal-primary btn-copy-path">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Sao chép đường dẫn</span>
+          </button>
         </div>
       </div>
     `;
@@ -1067,7 +1024,7 @@ export class TestCasesViewClass {
       try {
         await navigator.clipboard.writeText(scriptPath);
         this.showToast('Đã sao chép đường dẫn script vào clipboard!');
-      } catch (e) {
+      } catch {
         this.showToast('Không thể sao chép vào clipboard');
       }
     });
@@ -1106,8 +1063,14 @@ test('${tc.test_case_id} - ${tc.title}', async ({ page }) => {
           <p style="font-size: 0.8125rem; color: var(--text-muted); margin-top: 10px;">Lưu file tại: <code>${this.escapeHtml(samplePath)}</code></p>
         </div>
         <div class="modal-footer">
-          <button type="button" class="btn btn-copy-template">Sao chép mã mẫu</button>
-          <button type="button" class="btn btn-close-modal">Đóng</button>
+          <button type="button" class="btn btn-modal-secondary btn-close-modal">Đóng</button>
+          <button type="button" class="btn btn-modal-primary btn-copy-template">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span>Sao chép mã mẫu</span>
+          </button>
         </div>
       </div>
     `;
@@ -1123,7 +1086,7 @@ test('${tc.test_case_id} - ${tc.title}', async ({ page }) => {
       try {
         await navigator.clipboard.writeText(templateCode);
         this.showToast('Đã sao chép template kịch bản kiểm thử!');
-      } catch (e) {
+      } catch {
         this.showToast('Không thể sao chép vào clipboard');
       }
     });

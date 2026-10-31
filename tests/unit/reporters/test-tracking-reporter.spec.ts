@@ -398,3 +398,40 @@ test('rolls back a fatal archive error and never publishes a manifest', async ()
   expect(existsSync(path.join(evidenceRoot, fallbackRunId, 'run-result.json'))).toBe(false);
   expect(errors.join('\n')).not.toContain(temporaryPath);
 });
+
+test('captures skip reason from annotations into ErrorMessage when status is skipped', async () => {
+  const outputRoot = test.info().outputPath('reporter-root');
+  const archiver = new RecordingArchiver({
+    persist: () => Promise.resolve({
+      executionKey: 'stable-key',
+      evidence: [],
+      skipped: [],
+    }),
+  });
+  const reporter = new TestTrackingReporter({
+    env: {},
+    now: () => fixedNow,
+    randomSuffix: () => 'cafe',
+    archiveService: archiver,
+  });
+  begin(reporter, suiteWithTitles(), path.join(outputRoot, 'test-results'));
+
+  const skipReason = 'RESEED/CONFIRMED APPOINTMENT REQUIRED: Không tìm thấy bản ghi';
+  await reporter.onTestEnd(
+    testCase({
+      annotations: [{ type: 'skip', description: skipReason }],
+    }),
+    testResult({
+      status: 'skipped',
+      annotations: [{ type: 'skip', description: skipReason }],
+    }),
+  );
+  await reporter.onEnd(passedResult);
+
+  expect(archiver.finalizeRunCalls).toHaveLength(1);
+  expect(archiver.finalizeRunCalls[0]?.manifest.Results[0]).toMatchObject({
+    TestCaseId: 'TC-TRANS-VIEW-001',
+    Status: 'SKIPPED',
+    ErrorMessage: skipReason,
+  });
+});

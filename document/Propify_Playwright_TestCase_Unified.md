@@ -33,7 +33,7 @@
 |---|---|---|---|---|---|---|---|---|---|
 | TC-AUTH-FORGOT-001 | [Happy Path / E2E] Khôi phục mật khẩu thành công qua OTP Email | Tài khoản tồn tại, đang hoạt động. **Cần Gmail API/Test Mailbox lấy OTP.** | Email hợp lệ; Mật khẩu mới: `NewAdmin@123` | 1. Nhập email, nhấn "Gửi OTP". 2. Lấy OTP qua script Gmail API. 3. Nhập OTP, xác nhận. 4. Nhập mật khẩu mới hợp lệ, nhấn "Đổi mật khẩu". | Thông báo khôi phục thành công, redirect về trang Đăng nhập. | - | - | - | - |
 | TC-AUTH-FORGOT-002 | [Negative] Email không tồn tại | Email chưa từng đăng ký | Email không tồn tại | 1. Nhập email không tồn tại. 2. Nhấn "Gửi OTP". | Hiển thị lỗi, dừng luồng, không gửi OTP. | Chromium | Đạt - Khớp kết quả mong đợi | 2026-10-26 | Pass |
-| TC-AUTH-FORGOT-003 | [Negative / State] OTP sai hoặc hết hạn | Đã gửi OTP tới email hợp lệ | OTP sai; OTP hết hạn | 1. Nhập OTP sai, xác nhận → quan sát lỗi. 2. Chờ hết hạn, nhập OTP cũ → quan sát lỗi. | Case 1: lỗi, cho nhập lại. Case 2: yêu cầu gửi lại OTP. | - | - | - | - |
+| TC-AUTH-FORGOT-003 | [Negative / State] OTP sai | Đã gửi OTP tới email hợp lệ | OTP sai | 1. Nhập OTP sai, xác nhận → quan sát lỗi. | OTP sai hiển thị lỗi và cho nhập lại. | - | - | - | - |
 
 ---
 

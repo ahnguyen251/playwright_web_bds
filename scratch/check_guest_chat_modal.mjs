@@ -4,9 +4,9 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   const anonContext = await browser.newContext();
   const page = await anonContext.newPage();
-  
-  await page.goto('https://propifyy.duckdns.org/listings/48', { waitUntil: 'networkidle' });
-  
+
+  await page.goto('https://propifyy.duckdns.org/listings/49', { waitUntil: 'networkidle' });
+
   const hostChatBtn = page.locator('button[aria-label="Nhắn tin chủ nhà"]');
   console.log('Clicking "Nhắn tin chủ nhà"...');
   await hostChatBtn.click();

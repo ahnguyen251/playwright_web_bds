@@ -7,7 +7,8 @@ export function Pagination(paginationData, onPageChange) {
   container.className = 'pagination nexora-pagination';
 
   if (!paginationData || paginationData.totalPages <= 1) {
-    return container; // Empty if no pagination needed
+    container.style.display = 'none';
+    return container; // Return hidden node so appendChild never throws TypeError
   }
 
   const { page, totalPages, totalItems } = paginationData;

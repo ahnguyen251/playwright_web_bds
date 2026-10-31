@@ -201,50 +201,6 @@ export const SummaryView = {
       `;
       viewContainer.appendChild(kpiGrid);
 
-      // 2.5 Nexora Capability Feature Cards
-      const featureCardsRow = document.createElement('div');
-      featureCardsRow.className = 'nexora-feature-cards-row';
-      featureCardsRow.innerHTML = `
-        <div class="nexora-feature-card">
-          <div class="nexora-icon-box blue">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polygon points="12 2 2 7 12 12 22 7 12 2"/>
-              <polyline points="2 17 12 22 22 17"/>
-              <polyline points="2 12 12 17 22 12"/>
-            </svg>
-          </div>
-          <h3 class="nexora-card-title">Kiểm thử đa trình duyệt</h3>
-          <p class="nexora-card-desc">Thực thi song song trên Chromium, Firefox, WebKit với zero-flakiness và cơ chế auto-retry thông minh.</p>
-          <a href="#test-cases" class="nexora-card-link">Khám phá test cases →</a>
-        </div>
-
-        <div class="nexora-feature-card">
-          <div class="nexora-icon-box green">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 6v6l4 2"/>
-            </svg>
-          </div>
-          <h3 class="nexora-card-title">Phân tích ổn định & Flaky</h3>
-          <p class="nexora-card-desc">Theo dõi tỷ lệ đổi trạng thái (Stability Index), phát hiện kịch bản chập chờn trước khi merge vào main branch.</p>
-          <a href="#runs" class="nexora-card-link">Xem lịch sử thực thi →</a>
-        </div>
-
-        <div class="nexora-feature-card">
-          <div class="nexora-icon-box purple">
-            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
-              <line x1="8" y1="21" x2="16" y2="21"/>
-              <line x1="12" y1="17" x2="12" y2="21"/>
-            </svg>
-          </div>
-          <h3 class="nexora-card-title">Bằng chứng kiểm thử trực quan</h3>
-          <p class="nexora-card-desc">Tự động thu thập Trace Viewer, ảnh chụp màn hình DOM và video quay lại từng bước thao tác khi test fail.</p>
-          <a href="#runs" class="nexora-card-link">Khám phá artifacts →</a>
-        </div>
-      `;
-      viewContainer.appendChild(featureCardsRow);
-
       // 3. Section "Lần Thực Thi Mới Nhất & Phiên Chạy"
       const runnerSection = document.createElement('div');
       runnerSection.className = 'runner-section-wrap';
@@ -254,7 +210,6 @@ export const SummaryView = {
             <span class="section-bullet"></span>
             <span>Lần Thực Thi Mới Nhất & Phiên Chạy</span>
           </div>
-          <span class="runner-pool-id">Playwright Test Runner ID: Worker Pool #1</span>
         </div>
 
         <div class="runner-session-card">

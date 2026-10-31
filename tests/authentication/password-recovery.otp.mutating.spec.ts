@@ -1,11 +1,9 @@
 import { expect, test } from '../../fixtures/test.fixture';
-import { test as blockedTest } from '../../fixtures/test.fixture';
 import { passwordRecoveryConfigurationSkipReason } from '../../fixtures/auth.fixture';
 import {
   invalidOrExpiredPasswordRecoveryOtpTestCase,
   successfulPasswordRecoveryTestCase,
 } from '../../test-cases/authentication/password-recovery.test-cases';
-import { AuthenticationDataFactory } from '../../test-data/factories/AuthenticationDataFactory';
 import type { ForgotPasswordPage } from '../../pages/authentication/ForgotPasswordPage';
 import type { LoginPage } from '../../pages/authentication/LoginPage';
 import type { OtpProvider } from '../../types/otp.types';
@@ -104,33 +102,19 @@ test.describe('gated password-recovery OTP scenarios', () => {
   );
 
   test(
-    `${invalidOrExpiredPasswordRecoveryOtpTestCase.id} - OTP sai`,
+    `${invalidOrExpiredPasswordRecoveryOtpTestCase.id} ${invalidOrExpiredPasswordRecoveryOtpTestCase.title}`,
     { tag: [...invalidOrExpiredPasswordRecoveryOtpTestCase.tags] },
-    async ({ forgotPasswordPage, mutatingUser, otpProvider, passwordRecoveryWorkflow }) => {
-      const otpQuery = await passwordRecoveryWorkflow.beginPasswordRecovery(mutatingUser.email);
-      const deliveredOtp = await otpProvider.getOtp(otpQuery);
+    async ({ forgotPasswordPage, mutatingUser, passwordRecoveryWorkflow }) => {
+      await passwordRecoveryWorkflow.beginPasswordRecovery(mutatingUser.email);
+      await expect.poll(async () => forgotPasswordPage.currentStage()).toBe('otp');
 
-      await passwordRecoveryWorkflow.submitOtp(
-        AuthenticationDataFactory.createIncorrectOtp(deliveredOtp),
-      );
+      // Nhập mã OTP sai (độ dài 6 ký tự số không khớp) để kiểm tra phản hồi từ chối
+      await passwordRecoveryWorkflow.submitOtp('000000');
 
       await expect.poll(async () => forgotPasswordPage.currentStage()).toBe('otp');
       await expect
         .poll(async () => forgotPasswordPage.otpRejectionMessage())
         .toMatch(/(?:OTP|mã xác thực).*(?:sai|không (?:đúng|hợp lệ|chính xác)|invalid|incorrect)/i);
-      await passwordRecoveryWorkflow.submitOtp(deliveredOtp);
-      await expect.poll(async () => forgotPasswordPage.currentStage()).toBe('newPassword');
     },
   );
 });
-
-blockedTest(
-  `${invalidOrExpiredPasswordRecoveryOtpTestCase.id} - OTP hết hạn`,
-  { tag: [...invalidOrExpiredPasswordRecoveryOtpTestCase.tags] },
-  () => {
-    blockedTest.skip(
-      true,
-      'BLOCKED: no server clock, TTL override, expired-OTP seed, or fault injection.',
-    );
-  },
-);

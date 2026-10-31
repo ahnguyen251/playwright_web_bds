@@ -129,49 +129,53 @@ export class TestCaseDetailsViewClass {
         <p class="page-subtitle-text" style="font-size: 0.9375rem; color: var(--text-main); font-weight: 500; margin: 4px 0 8px 0; line-height: 1.4;">
           ${tc.title}
         </p>
-        <div class="detail-meta-list" style="margin-top: 6px;">
-          <div class="meta-chip-item">
-            <span>Mô-đun:</span>
-            <strong>${tc.module || 'N/A'}</strong>
+        <div class="tc-meta-row">
+          <div class="tc-meta-item">
+            <span class="tc-meta-label">Mô-đun:</span>
+            <span class="tc-meta-value">${tc.module || 'N/A'}</span>
           </div>
+          <span class="tc-meta-sep">•</span>
           ${tc.script_path ? `
-            <div class="meta-chip-item">
-              <span>File kịch bản:</span>
-              <span class="code-path-chip" id="script-path-text">${tc.script_path}</span>
-              <button type="button" class="btn-copy-id" id="btn-copy-script-path" title="Sao chép đường dẫn kịch bản" style="padding: 1px 3px;">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-                </svg>
-              </button>
+            <div class="tc-meta-item">
+              <span class="tc-meta-label">File:</span>
+              <span class="tc-meta-code-pill">
+                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+                <span id="script-path-text" title="${tc.script_path}">${tc.script_path}</span>
+                <button type="button" class="btn-copy-id" id="btn-copy-script-path" title="Sao chép đường dẫn kịch bản">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+                  </svg>
+                </button>
+              </span>
             </div>
+            <span class="tc-meta-sep">•</span>
           ` : ''}
-          <div class="meta-chip-item">
-            <span>Cập nhật:</span>
-            <strong>${tc.updated_at ? new Date(tc.updated_at).toLocaleDateString('vi-VN') : 'Không rõ'}</strong>
+          <div class="tc-meta-item">
+            <span class="tc-meta-label">Cập nhật:</span>
+            <span class="tc-meta-value">${tc.updated_at ? new Date(tc.updated_at).toLocaleDateString('vi-VN') : 'Không rõ'}</span>
           </div>
         </div>
       </div>
-      <div class="page-title-actions" style="display: flex; align-items: flex-start; gap: 10px; flex-shrink: 0; flex-wrap: wrap;">
-        <a href="#test-cases" class="btn btn-export-file" style="height: 36px; padding: 0 14px; font-size: 0.8125rem; display: inline-flex; align-items: center; text-decoration: none;">
-          ← Quay Lại Danh Sách
-        </a>
-        <button type="button" class="btn btn-export-file" id="btn-export-tc-json" style="height: 36px; padding: 0 14px; font-size: 0.8125rem;">
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-            <polyline points="7 10 12 15 17 10"/>
-            <line x1="12" y1="15" x2="12" y2="3"/>
-          </svg>
-          <span>Xuất JSON</span>
-        </button>
+      <div class="page-title-actions" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0;">
         ${isAutomated ? `
-          <div style="display: inline-flex; align-items: center; gap: 8px; background: #eff6ff; padding: 0 10px; height: 36px; border-radius: 8px; border: 1.5px solid #2563eb;">
-            <select id="select-run-browser" class="form-select" style="padding: 4px 8px; font-size: 0.8125rem; font-weight: 600; border-radius: 6px; border: 1px solid #93c5fd; background: #ffffff; color: #1e293b; cursor: pointer;" title="Chọn dự án / trình duyệt để chạy">
-              <option value="chromium" selected>🌐 Chromium (Chrome)</option>
-              <option value="firefox">🦊 Firefox</option>
-              <option value="webkit">🧭 WebKit (Safari)</option>
-            </select>
-            <button type="button" class="btn btn-primary" id="btn-run-tc" style="padding: 0 12px; height: 28px; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 6px;">
+          <div class="runner-btn-group">
+            <div class="runner-select-pill">
+              <svg class="runner-select-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              <select id="select-run-browser" class="runner-browser-select" title="Chọn trình duyệt chạy test">
+                <option value="chromium" selected>Chromium (Chrome)</option>
+                <option value="firefox">Firefox</option>
+                <option value="webkit">WebKit (Safari)</option>
+              </select>
+              <svg class="runner-select-arrow" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
+            </div>
+            <button type="button" class="btn-run-pill" id="btn-run-tc" title="Thực thi test case này với Playwright">
               <svg viewBox="0 0 24 24" width="13" height="13" fill="currentColor">
                 <polygon points="5 3 19 12 5 21 5 3"/>
               </svg>
@@ -179,6 +183,12 @@ export class TestCaseDetailsViewClass {
             </button>
           </div>
         ` : ''}
+        <a href="#test-cases" class="btn btn-back-pill" style="height: 38px; padding: 0 16px; font-size: 0.8125rem; display: inline-flex; align-items: center; gap: 6px; text-decoration: none;">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Quay Lại Danh Sách</span>
+        </a>
       </div>
     `;
     container.appendChild(headerSection);
@@ -227,16 +237,19 @@ export class TestCaseDetailsViewClass {
     }
 
     // Export JSON
-    headerSection.querySelector('#btn-export-tc-json').addEventListener('click', () => {
-      const exportObj = { testCase: tc, analytics, results: items };
-      const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `test-case-${tc.test_case_id}-analytics.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+    const exportTcBtn = headerSection.querySelector('#btn-export-tc-json');
+    if (exportTcBtn) {
+      exportTcBtn.addEventListener('click', () => {
+        const exportObj = { testCase: tc, analytics, results: items };
+        const blob = new Blob([JSON.stringify(exportObj, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `test-case-${tc.test_case_id}-analytics.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+    }
 
     // Run Test Case button
     const runTcBtn = headerSection.querySelector('#btn-run-tc');
@@ -270,7 +283,8 @@ export class TestCaseDetailsViewClass {
             this.modal.open(res.resultId);
           }
           if (res.status === 'SKIPPED') {
-            alert(`⚠️ Test case ${tc.test_case_id} được BỎ QUA (SKIPPED) do chính sách an toàn môi trường: Không thực hiện tạo tài khoản thử nghiệm bừa bãi trên Production.`);
+            const skipReason = res.errorMessage ? `:\n${res.errorMessage}` : ' theo điều kiện kịch bản.';
+            alert(`ℹ️ Test case ${tc.test_case_id} được BỎ QUA (SKIPPED)${skipReason}`);
           }
         } catch (err) {
           alert('✕ Lỗi thực thi ' + tc.test_case_id + ': ' + (err.message || 'Lỗi không xác định'));
@@ -689,7 +703,9 @@ export class TestCaseDetailsViewClass {
         this.page = newPage;
         this.fetchResultsOnly();
       });
-      paginationContainer.appendChild(paginationEl);
+      if (paginationEl && paginationEl.style.display !== 'none') {
+        paginationContainer.appendChild(paginationEl);
+      }
     }
   }
 }

@@ -385,6 +385,23 @@ test.describe.serial('API Endpoints against Isolated DB', () => {
       expect(body.error_stack).not.toContain('\u001b');
     });
 
+    test('GET /api/results/:resultId includes expected_result and test_steps from catalog', async ({
+      request,
+    }) => {
+      conn.db
+        .prepare('INSERT OR IGNORE INTO test_cases (test_case_id, module, title, automation_status, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)')
+        .run('TC-PROFILE-EDIT-002', 'Profile', 'Title', 'AUTOMATED', '2026-08-25T00:00:00.000Z', '2026-08-25T00:00:00.000Z');
+      conn.db
+        .prepare('UPDATE test_results SET test_case_id = ? WHERE result_id = ?')
+        .run('TC-PROFILE-EDIT-002', 'RES-01');
+
+      const response = await request.get(`http://localhost:${port}/api/results/RES-01`);
+      expect(response.status()).toBe(200);
+      const body = await response.json();
+      expect(body.expected_result).toBe("Hiển thị \"Không có thay đổi dữ liệu\"; không gọi API Update.");
+      expect(body.test_steps).toBeDefined();
+    });
+
     test('GET /api/runs/:runId/results strips ANSI from every stored result row', async ({
       request,
     }) => {

@@ -27,7 +27,7 @@ const authoritativeAuthenticationStatuses = Object.freeze({
   'TC-AUTH-LOGIN-005': 'EXCLUDED',
   'TC-AUTH-FORGOT-001': 'Automated',
   'TC-AUTH-FORGOT-002': 'BLOCKED',
-  'TC-AUTH-FORGOT-003': 'Partial',
+  'TC-AUTH-FORGOT-003': 'Automated',
 } as const);
 
 const authenticationSupportPaths = Object.freeze({
@@ -107,7 +107,6 @@ const authenticationSupportPaths = Object.freeze({
     'pages/authentication/ForgotPasswordPage.ts',
     'workflows/authentication/PasswordRecoveryWorkflow.ts',
     'fixtures/auth.fixture.ts',
-    'helpers/otp/GmailOtpProvider.ts',
     'tests/authentication/password-recovery.otp.mutating.spec.ts',
   ],
 } as const);
@@ -219,11 +218,14 @@ test('maps every unified authentication row to existing repository support paths
     '`test-data/factories/AuthenticationDataFactory.ts`',
   );
 
-  for (const id of ['TC-AUTH-REGISTER-007', 'TC-AUTH-FORGOT-003']) {
+  for (const id of ['TC-AUTH-REGISTER-007']) {
     const row = rows.find((cells) => cells[1] === `\`${id}\``);
     expect(row?.[4], id).toContain('OTP sai:');
     expect(row?.[4], id).toContain('OTP hết hạn:');
   }
+
+  const forgotOtpRow = rows.find((cells) => cells[1] === '`TC-AUTH-FORGOT-003`');
+  expect(forgotOtpRow?.[4], 'TC-AUTH-FORGOT-003').toContain('OTP sai:');
 });
 
 test('documents exact environment and project contracts for conditional authentication flows', () => {

@@ -3,27 +3,27 @@ import fs from 'node:fs';
 
 async function main() {
   const browser = await chromium.launch({ headless: true });
-  
+
   // 1. Check unauthenticated click on aria-label="Nhắn tin chủ nhà"
   console.log('--- Checking unauthenticated click on aria-label="Nhắn tin chủ nhà" ---');
   const anonContext = await browser.newContext();
   const anonPage = await anonContext.newPage();
-  
+
   anonPage.on('dialog', dialog => {
     console.log('Dialog:', dialog.message());
   });
 
-  await anonPage.goto('https://propifyy.duckdns.org/listings/48', { waitUntil: 'networkidle' });
+  await anonPage.goto('https://propifyy.duckdns.org/listings/49', { waitUntil: 'networkidle' });
   const hostChatBtn = anonPage.locator('button[aria-label="Nhắn tin chủ nhà"]');
   console.log('Host chat button count:', await hostChatBtn.count());
-  
+
   if (await hostChatBtn.count() > 0) {
     // Listen for navigation or toast
     console.log('Clicking "Nhắn tin chủ nhà" as guest...');
     await hostChatBtn.click();
     await anonPage.waitForTimeout(2000);
     console.log('Anon Page URL after click:', anonPage.url());
-    
+
     // Check for toasts or modals
     const toasts = await anonPage.locator('.toast-item, [role="alert"], [class*="toast"]').allInnerTexts();
     console.log('Toasts after click:', toasts);
@@ -34,18 +34,18 @@ async function main() {
   const authContext = await browser.newContext({ storageState: '.auth/defaultUser.json' });
   const authPage = await authContext.newPage();
   await authPage.goto('https://propifyy.duckdns.org/listings/48', { waitUntil: 'networkidle' });
-  
+
   const authHostChatBtn = authPage.locator('button[aria-label="Nhắn tin chủ nhà"]');
   if (await authHostChatBtn.count() > 0) {
     console.log('Clicking "Nhắn tin chủ nhà" as auth user...');
     await authHostChatBtn.click();
     await authPage.waitForTimeout(2000);
     console.log('Auth Page URL after click:', authPage.url());
-    
+
     const activeChat = await authPage.locator('.chat-window-root').evaluateAll(els => els.map(e => e.outerHTML));
     if (activeChat.length > 0) {
       console.log('Active chat window innerText:\n', await authPage.locator('.chat-window-root').first().innerText());
-      
+
       const inputs = await authPage.locator('.chat-window-root textarea, .chat-window-root input').evaluateAll(els => els.map(e => ({
         tag: e.tagName,
         placeholder: e.placeholder,

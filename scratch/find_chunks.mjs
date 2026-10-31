@@ -3,7 +3,7 @@ import { chromium } from 'playwright';
 async function main() {
   const browser = await chromium.launch({ headless: true });
   const page = await browser.newPage();
-  
+
   const jsRequests = [];
   page.on('request', req => {
     if (req.url().endsWith('.js')) {
@@ -11,7 +11,7 @@ async function main() {
     }
   });
 
-  await page.goto('https://propifyy.duckdns.org/listings/48', { waitUntil: 'networkidle' });
+  await page.goto('https://propifyy.duckdns.org/listings/49', { waitUntil: 'networkidle' });
   console.log('All JS requests on listing detail:', jsRequests);
 
   for (const url of jsRequests) {

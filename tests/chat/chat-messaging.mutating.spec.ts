@@ -4,8 +4,7 @@ import { chatCaseTitle } from '../../test-cases/chat/chat.test-cases';
 test.describe('Chat Messaging Mutating Scenarios', () => {
   test.use({ storageState: '.auth/defaultUser.json' });
 
-  test(
-    chatCaseTitle('TC-CHAT-CREATE-001'),
+  test(chatCaseTitle('TC-CHAT-CREATE-001'),
     async ({ listingDetailPage }) => {
       // 1. Visit listing detail page as authenticated user
       await listingDetailPage.open(48);
